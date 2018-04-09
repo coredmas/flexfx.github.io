@@ -1,7 +1,7 @@
-FlexFX&trade; Firmware Development Kit
+FlexFX&trade; Kit
 ==================================
 
-FlexFX&trade; Kit - Introduction
+Introduction
 --------------------------------
 
 The FlexFX&trade; Kit provides a light framework for developing audio processing applications running on FlexFX&trade;
@@ -23,7 +23,7 @@ run-time algorithm control.
 * Functions for I2C bus (for peripheral control) and port input/output
 * I2S supports up to 8-slot TDM and up to four separate ADCs and four separate DACs
 
-FlexFX&trade; Kit - Getting Started
+Getting Started
 --------------------------------
 
 1) Download and install the free XMOS development tools from www.xmos.com.   
@@ -249,7 +249,7 @@ void app_thread4( int samples[32], const int property[6] );
 void app_thread5( int samples[32], const int property[6] );
 ```
 
-FlexFX&trade; Kit - Control Properties
+Control Properties
 --------------------------------------
 
 FlexFX applications can be controlled using FlexFX property exchanges via USB MIDI.
@@ -313,7 +313,7 @@ ID        DIRECTION        SUMMARY
 #### FlexFX ID = 0x000E
 #### FlexFX ID = 0x000F
 
-FlexFX&trade; Kit - Programming Tools
+Programming Tools
 -------------------------------------
 
 The Python script 'flexfx.py' implements various host functions for testing FlexFX firmware via USB.
@@ -381,7 +381,7 @@ bash$ python flexfx.py 0 your_IR_file.wav
 Done.
 ```
 
-FlexFX&trade; Kit - Design Tools
+Design Tools
 --------------------------------
 
 There are four Python scripts to aid with algorithm and filter design.  The FIR and IIR design scripts require that the Python packeges 'scipy' and 'matplotlib' are installed.
@@ -610,7 +610,7 @@ The FlexFX HTML5 control javascript source code is returned via USB MIDI if the 
 Here's an example of HTML5 controller for the 'efx_cabsim' effect:
 ![alt tag](https://raw.githubusercontent.com/markseel/flexfx_kit/master/efx_cabsim.png)
 
-FlexFX&trade; Kit - Reading Pots/Knobs
+Reading Pots/Knobs
 --------------------------------------
 
 ```C
@@ -743,7 +743,7 @@ void dsp_thread1( int* samples, const int* property )
 
 ```
 
-FlexFX&trade; Kit - Cabsim Example
+Cabsim Example
 ----------------------------------
 
 Stereo Cabinet Simulation with Tone/Volume and USB Audio Mixing. See this video for a demonstration. The firmware is first
@@ -950,7 +950,7 @@ void dsp_thread5( int* samples, const int* property )
 }
 ```
 
-FlexFX&trade; Kit - Chorus Example
+Chorus Example
 ----------------------------------
 
 Chorus example with two voices showing how to create LFO's and how to use 2nd order interpolation. See this video for a demonstration of building and loading the firmware exmaple, and the chorus audio effect.
@@ -1058,7 +1058,7 @@ void dsp_thread5( int* samples, const int* property )
 }
 ```
 
-FlexFX&trade; Kit - Overdrive Example
+Overdrive Example
 -------------------------------------
 
 Overdrive example demonstrating up/down sampling, anti-aliasing filters, and the use of look-up tables and Lagrange interpolation to 
@@ -1234,7 +1234,7 @@ void dsp_thread5( int* samples, const int* property ) // Downsample
 }
 ```
 
-FlexFX&trade; Kit - Reverb Example
+Reverb Example
 ----------------------------------
 
 Reverb example implemting a port of the FreeVerb algorithm based on the Schroeder-Moorer reverberation model.  A nice improvement would be to use a potentiometer (sensed via an ADC attached via I2C in the 'control' function) to select the reverb type.  The potentiometer code would perhaps generate a value of 1 through 9 depending on the pot's rotation setting.  The value would then be used to select the reverb's wet/dry mix, stereo width, room size, and room reflection/damping.  Note that there's plenty of processing power left over to implement other algorithms along with this reverb such as graphic EQ's, flanger/chorus, etc.
