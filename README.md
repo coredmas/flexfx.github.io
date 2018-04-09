@@ -49,9 +49,9 @@ xcc  -report  -O3  -lquadflash  flexfx.xn  flexfx.a  application.c  -o  applioca
 
 6) Burn the firmware executable directly to FLASH or create a binary image for loading over USB/MIDI using the firwmare upgrade process.  Firmware can be upgraded via via Pyhon and "flexfx.py", via Google Chrome and "flexfx.html", or via a custom application that uses USB/MIDI and FlexFX property data to perform a firmware upgrade.
 ```
-xflash  --no-compression  --factory-version  14.3  —upgrade  1  application.xe
+xflash  --no-compression  --factory-version  14.3  —-upgrade  1  application.xe
  — or —
-xflash  --no-compression  --factory-version  14.3  —upgrade  1  application.xe  -o  application.bin
+xflash  --no-compression  --factory-version  14.3  —-upgrade  1  application.xe  -o  application.bin
 python flexfx.py  0  application.bin
 ```
 
