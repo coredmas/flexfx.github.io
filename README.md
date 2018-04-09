@@ -47,7 +47,7 @@ OS X or Linux   /Applications/XMOS_xTIMEcomposer_Community_14.3.3/SetEnv.command
 xcc  -report  -O3  -lquadflash  flexfx.xn  flexfx.a  application.c  -o  appliocation.xe
 ```
 
-6) Burn the firmware executable directly to FLASH or create a binary image for loading over USB/MIDI or to be written to FLASH.  Firmware can be upgraded via via Pyhon and ‘flexfx.py’, via Google Chrome and flexfx.html’, or via a custom application that uses USB/MIDI and FlexFX property data to perform a firmware upgrade.
+6) Burn the firmware executable directly to FLASH or create a binary image for loading over USB/MIDI using the firwmare upgrade process.  Firmware can be upgraded via via Pyhon and ‘flexfx.py’, via Google Chrome and flexfx.html’, or via a custom application that uses USB/MIDI and FlexFX property data to perform a firmware upgrade.
 ```
 xflash  --no-compression  --factory-version  14.3  —upgrade  1  application.xe
  — or —
