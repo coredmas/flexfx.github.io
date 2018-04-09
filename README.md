@@ -1380,7 +1380,7 @@ void dsp_thread3( int* samples, const int* property )
 }
 
 void dsp_thread4( int* samples, const int* property )
-{
+{ 
 }
 
 void dsp_thread5( int* samples, const int* property )
