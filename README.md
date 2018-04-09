@@ -26,25 +26,35 @@ run-time algorithm control.
 Getting Started
 --------------------------------
 
-1) Download and install the free XMOS development tools from www.xmos.com.   
-2) Obtain the FlexFX&trade; dev-kit for building your own apps from "https://github.com/markseel/flexfx_kit".  
-3) Set environment variables for using XMOS command-line build tools.  
-4) Add your own source code to a new 'C' file (e.g. 'your_application.c').   
-5) Build the application using the build script / batch file (uses the XMOS command line compiler/linker).   
-6) Burn the firmware binary via USB using the 'flexfx.py' Python script.   
+1) Download and install the free XMOS development tools from www.xmos.com.
 
+2) Obtain the FlexFX™ dev-kit for building your own apps from “https://github.com/markseel/flexfxkit”.    
+     Download the ZIP file or use GIT …
 ```
-Get the kit ............... git clone https://github.com/markseel/flexfx_kit.git
-Set XMOS build tools environment variables
-  on Windows .............. c:\Program Files (x86)\XMOS\xTIMEcomposer\Community_14.2.0\SetEnv.bat
-  on OS X / Linux ......... /Applications/XMOS_xTIMEcomposer_Community_14.1.1/SetEnv.command
-Build your custom application (be sure to exclude the .c file extension)
-  on Windows .............. build.bat your_application
-  on OS X / Linux ......... ./build.sh your_application
-Burn to FLASH via USB ..... flexfx.py 0 your_application.bin
+git clone https://github.com/markseel/flexfx_kit.git
 ```
 
-One can create custom audio processing effects by downloading the FlexFX&trade; audio processing framework, adding custom audio processing DSP code and property handling code, and then compiling and linking using XMOS tools (xTIMEcomposer, free to download).
+3) Set environment variables for using XMOS command-line build tools …
+```
+Windows		c:\Program Files (x86)\XMOS\xTIMEcomposer\Community_14.2.0\SetEnv.bat
+OS X or Linux		/Applications/XMOS_xTIMEcomposer_Community_14.1.1/SetEnv.command
+```
+
+4) Add your own source code to a new 'C' file (e.g. ‘application.c’).
+
+5) Build the application …
+```
+xcc  -report  -O3  -lquadflash  flexfx.xn  flexfx.a  application.c  -o  appliocation.xe
+```
+
+6) Burn the firmware executable directly to FLASH or create a binary image for loading over USB/MIDI (using ‘flexfx.py’, flexfx.html’, or a custom application) or to be written to FLASH.
+```
+xflash  --no-compression  --factory-version  14.3  —upgrade  1  application.xe
+ — or —
+xflash  --no-compression  --factory-version  14.3  —upgrade  1  application.xe  -o  application.bin
+```
+
+You can create custom audio processing effects by downloading the FlexFX&trade; audio processing framework, adding custom audio processing DSP code and property handling code, and then compiling and linking using XMOS tools (xTIMEcomposer, free to download).
 The custom firmware can then be burned to FLASH using xTIMEcomposer and the XTAG-2 or XTAG-3 JTAG board ($20 from Digikey), via USB/MIDI (there are special properties defined for firmware upgrading and boot image selection).
 
 FlexFX&trade; implements the USB class 2.0 audio and USB MIDI interfaces, the I2S/CODEC interface, sample data transfer from USB/I2S/DSP threads, property/parameter routing, and firmware upgrading. FlexFX provides functions for peripheral control (GPIO's and I2C), FLASH memory access, fixed point scalar adn vector math, and a wide range of DSP functions.
