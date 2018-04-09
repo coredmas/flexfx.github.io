@@ -36,8 +36,8 @@ git clone https://github.com/markseel/flexfx_kit.git
 
 3) Set environment variables for using XMOS command-line build tools …
 ```
-Windows		c:\Program Files (x86)\XMOS\xTIMEcomposer\Community_14.2.0\SetEnv.bat
-OS X or Linux		/Applications/XMOS_xTIMEcomposer_Community_14.1.1/SetEnv.command
+Windows         c:\Program Files (x86)\XMOS\xTIMEcomposer\Community_14.3.3\SetEnv.bat
+OS X or Linux   /Applications/XMOS_xTIMEcomposer_Community_14.3.3/SetEnv.command
 ```
 
 4) Add your own source code to a new 'C' file (e.g. ‘application.c’).
