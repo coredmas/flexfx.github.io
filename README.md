@@ -3,16 +3,13 @@ FlexFX&trade; Kit
 
 FlexFX hardware supports USB Audio and MIDI, 32/64-bit DSP, up to 32 audio channels, 48 to 384 kHz sampling rates, input to output latency of 350 microseconds. Devices can be updated with pre-built effects or custom designed effects at any time using standard USB/MIDI. No apps purchases, download costs, or user accounts are needed to load FlexFX pre-built effects to to develop your own custom applications/effects.
 
-**Customization**
-FlexFX development Kit:  https://github.com/markseel/flexfx_kit
-Compiler and Linker:     xTIMEcomposer (current version for FlexFX is 14.3.3) is available from www.xmos.com
+**Customization**  
+FlexFX development Kit:  https://github.com/markseel/flexfx_kit  
+Compiler and Linker:     xTIMEcomposer (current version for FlexFX is 14.3.3) is available from www.xmos.com  
 
-**Support**
-
-FlexFX user's forum:     https://flexfx.discussion.community
-
-XMOS xCORE Forum:        https://www.xcore.com
-
+**Support**  
+FlexFX user's forum:     https://flexfx.discussion.community  
+XMOS xCORE Forum:        https://www.xcore.com  
 
 Introduction
 --------------------------------
