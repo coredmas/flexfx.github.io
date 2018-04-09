@@ -53,7 +53,7 @@ All one has to do then is add DSP code and any relevant custom property handling
 Each processing thread is allocated approximately 100 MIPS and executes once per audio cycle.
 All threads are executed once per audio cycle and therefore operate on USB and I2S sample data one audio frame at a time.
 
-FlexFX&trade; Kit - Programming Interface
+Programming Interface
 -----------------------------------------
 
 The application programmer only needs to add control and audip processing code to create a complete application.  The code below is a complete application (that does nothing).  Just add code to the 'app\_control', 'app\_mixer', and 'app\_thread' functions.  The complete FlexFX programming interface is show below:
