@@ -1,0 +1,45 @@
+# Three-stage tube preamp. Each stage implements a triode preamp model. The three stages are
+# followed by a grapic EQ. Preamp and tone parameters range from 1 (lowest frequency, minimum
+# level, etc) to 9 (highest frequency, maximum level, etc) with 5 being the middle or neutral
+# value.
+#
+# The FlexFX audio sample rate must be set to 192 kHz. The guitar samples are up-sampled to 960
+# kHz for non-linear preamp/tube model processing and then down-sampled back to 192 kHz. Therefore
+# the ADC, DAC and USB audio sample rates are all 192 khz.
+#
+# Each preamp stage incorporates adjustable pre-filtering (bass attenuation), a 12AX7 amplifier
+# model with slew-rate limiting and adjustable bias, and post-filtering, all creating a simple
+# 12AX7-based guitar preamp stage. The graphic EQ is at the end of the three-stage-preamp chain and
+# is used as the final tone-shaping component (a.k.a the preamp's the tone stack).
+#
+# Property layout for control (knobs, pushbuttons, etc) Values shown are 32-bit
+# values represented in ASCII/HEX format or as floating point values ranging
+# from +0.0 up to (not including) +1.0.
+#
+# +------- Effect parameter identifier (Property ID)
+# |
+# |    +-------------------------------- Volume level
+# |    |     +-------------------------- Tone setting
+# |    |     |     +-------------------- Reserved
+# |    |     |     |     +-------------- Reserved
+# |    |     |     |     |     +-------- Preset selection (1 through 9)
+# |    |     |     |     |     |+------- Enabled (1=yes,0=bypassed)
+# |    |     |     |     |     ||+------ InputL  (1=plugged,0=unplugged)
+# |    |     |     |     |     |||+----- OutputL (1=plugged,0=unplugged)
+# |    |     |     |     |     ||||+---- InputR  (1=plugged,0=unplugged)
+# |    |     |     |     |     |||||+--- OutputR (1=plugged,0=unplugged)
+# |    |     |     |     |     ||||||+-- Expression (1=plugged,0=unplugged)
+# |    |     |     |     |     |||||||+- USB Audio (1=active)
+# |    |     |     |     |     ||||||||
+# 1001 0.500 0.500 0.500 0.500 91111111
+#
+# Property layout for preset data loading (loading IR data). Values shown are
+# 32-bit values represented in ASCII/HEX format.
+#
+# +---------- Effect parameter identifier (Property ID)
+# |
+# |+--- Preset number (1 through 9)
+# ||
+# 1n02 0 0 0 0 0 # Begin IR data loading for preset N
+# 1n03 A B C D E # Five of the next IR data words to load into preset N
+# 1n04 0 0 0 0 0 # End IR data loading for preset N
