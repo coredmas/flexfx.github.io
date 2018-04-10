@@ -54,15 +54,15 @@ OS X or Linux   /Applications/XMOS_xTIMEcomposer_Community_14.3.3/SetEnv.command
 
 5) Build the application …
 ```
-xcc  -report  -O3  -lquadflash  flexfx.xn  flexfx.a  application.c  -o  appliocation.xe
+xcc -report -O3 -lquadflash flexfx.xn flexfx.a application.c -o appliocation.xe
 ```
 
 6) Burn the firmware executable directly to FLASH or create a binary image for loading over USB/MIDI using the firwmare upgrade process.  Firmware can be upgraded via via Pyhon and "flexfx.py", via Google Chrome and "flexfx.html", or via a custom application that uses USB/MIDI and FlexFX property data to perform a firmware upgrade.
 ```
-xflash  --no-compression  --factory-version  14.3  —-upgrade  1  application.xe
+xflash --no-compression --factory-version 14.3 —-upgrade 1 application.xe
  — or —
-xflash  --no-compression  --factory-version  14.3  —-upgrade  1  application.xe  -o  application.bin
-python flexfx.py  0  application.bin
+xflash --no-compression --factory-version 14.3 —-upgrade 1  application.xe -o application.bin
+python flexfx.py 0 application.bin
 ```
 
 You can create custom audio processing effects by downloading the FlexFX&trade; audio processing framework, adding custom audio processing DSP code and property handling code, and then compiling and linking using XMOS tools (xTIMEcomposer, free to download).
