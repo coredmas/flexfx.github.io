@@ -608,8 +608,8 @@ Reading Pots/Knobs
 --------------------------------------
 
 ```C
-#include "flexfx.h"
-#include <math.h>
+#include "flexfx.h" // Defines config variables, I2C and GPIO functions, DSP functions, etc.
+#include <math.h>   // Floating point for filter coeff calculations in the background process.
 
 const char* product_name_string    = "Example"; // Your company/product name
 const int   audio_sample_rate      = 48000;     // Audio sampling frequency
@@ -657,7 +657,7 @@ void copy_data( int dst[5], const int src[5] )
     dst[0]=src[0]; dst[1]=src[1]; dst[2]=src[2]; dst[3]=src[3]; dst[4]=src[4];
 }
 
-void control( int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
+void app control( int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
 {
     static bool intialized = 0, state = 0;
 
@@ -697,9 +697,9 @@ void control( int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
     }
 }
 
-void mixer( const int* usb_output, int* usb_input,
-            const int* i2s_output, int* i2s_input,
-            const int* dsp_output, int* dsp_input, const int* property )
+void app_mixer( const int[32] usb_output, int[32] usb_input,
+                const int[32] i2s_output, int[32] i2s_input,
+                const int[32] dsp_output, int[32] dsp_input, const int[6] property )
 {
     static int volume = FQ(0.0), blend = FQ(0.5); // Initial volume and blend/mix levels.
 
@@ -729,10 +729,6 @@ void mixer( const int* usb_output, int* usb_input,
     if( port_read(1) == 0 ) { i2s_input[0] = i2s_output[0]; i2s_input[1] = i2s_output[1]; }
     // Light an LED attached to I/O port #2 if the bypass switch on I/O port #1 is pressed.
     port_write( 2, port_read(1) != 0 );
-}
-
-void dsp_thread1( int* samples, const int* property )
-{
 }
 
 ```
@@ -749,199 +745,124 @@ using 32/64 bit fixed-point DSP.
 https://raw.githubusercontent.com/markseel/flexfx_kit/master/app_cabsim.mp4
 
 ```C
-#include "flexfx.h" // Defines config variables, I2C and GPIO functions, DSP functions, etc.
-#include <math.h>   // Floating point for filter coeff calculations in the background process.
-#include <string.h>
+#include "flexfx.h"
 
-const char* product_name_string    = "Example"; // Your company/product name
-const int   audio_sample_rate      = 48000;     // Audio sampling frequency
-const int   usb_output_chan_count  = 2;         // 2 USB audio class 2.0 output channels
-const int   usb_input_chan_count   = 2;         // 2 USB audio class 2.0 input channels
-const int   i2s_channel_count      = 2;         // ADC/DAC channels per SDIN/SDOUT wire
-const char  interface_text[]       = "No interface is specified";
-const char  controller_app[]       = "No controller is available";
+const char* product_name_string   = "FlexFX Example";   // Your product name
+const char* usb_audio_output_name = "FlexFX Audio Out"; // USB audio output name
+const char* usb_audio_input_name  = "FlexFX Audio In";  // USB audio input name
+const char* usb_midi_output_name  = "FlexFX MIDI Out";  // USB MIDI output name
+const char* usb_midi_input_name   = "FlexFX MIDI In";   // USB MIDI input name
 
-const int   i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
+const int audio_sample_rate     = 48000; // Audio sampling frequency
+const int usb_output_chan_count = 2;     // 2 USB audio class 2.0 output channels
+const int usb_input_chan_count  = 2;     // 2 USB audio class 2.0 input channels
+const int i2s_channel_count     = 2;     // ADC/DAC channels per SDIN/SDOUT wire
 
-#define PROP_PRODUCT_ID      0x0101                      // Your product ID, must not be 0x0000!
-#define PROP_EXAMPLE_PROPS   (PROP_PRODUCT_ID << 16)     // Base property ID value
-#define PROP_EXAMPLE_VOL_MIX (PROP_EXAMPLE_PROPS+0x0001) // prop[1:5] = [volume,blend,0,0,0]
-#define PROP_EXAMPLE_TONE    (PROP_EXAMPLE_PROPS+0x0002) // Coeffs, prop[1:5]=[B0,B1,B2,A1,A2]
-#define PROP_EXAMPLE_IRDATA  (PROP_EXAMPLE_PROPS+0x8000) // 5 IR samples values per property
+const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
-#define IR_PROP_ID(xx)  ((xx) & 0xFFFF8000) // IR property ID has two parts (ID and offset)
-#define IR_PROP_IDX(xx) ((xx) & 0x00000FFF) // Up to 5*0xFFF samples (5 samples per property)
-
-static void adc_read( double values[4] ) // I2C controlled 4-channel ADC (0.0 <= value < 1.0).
-{
-    byte ii, hi, lo, value;
-    i2c_start( 100000 ); // Set bit clock to 400 kHz and assert start condition.
-    i2c_write( 0x52+1 ); // Select I2C peripheral for Read.
-    for( ii = 0; ii < 4; ++ii ) {
-        hi = i2c_read(); i2c_ack(0); // Read low byte, assert ACK.
-        lo = i2c_read(); i2c_ack(ii==3); // Read high byte, assert ACK (NACK on last read).
-        value = (hi<<4) + (lo>>4); // Select correct value and store ADC sample.
-        values[hi>>4] = ((double)value)/256.0; // Convert from byte to double (0<=val<1.0).
-    }
-    i2c_stop();
-}
-
-void make_prop( int prop[6], int id, int val1, int val2, int val3, int val4, int val5 )
-{
-    prop[0]=id; prop[1]=val1; prop[2]=val2; prop[3]=val3; prop[4]=val4; prop[5]=val5;
-}
 void copy_prop( int dst[6], const int src[6] )
 {
     dst[0]=src[0]; dst[1]=src[1]; dst[2]=src[2]; dst[3]=src[3]; dst[4]=src[4]; dst[5]=src[5];
 }
-void copy_data( int dst[5], const int src[5] )
+
+void app_control( const int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
 {
-    dst[0]=src[0]; dst[1]=src[1]; dst[2]=src[2]; dst[3]=src[3]; dst[4]=src[4];
-}
-
-void control( int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
-{
-    static bool intialized = 0, state = 0;
-
-    // Initialize CODEC/ADC/DAC and other I2C-based peripherals here.
-    if( !intialized ) { intialized = 1; }
-
-    // If outgoing USB or DSP properties are still use then come back later ...
-    if( usb_prop[0] != 0 || usb_prop[0] != 0 ) return;
-
     // Pass cabsim IR data to the DSP threads if usb and dsp send properties are available for use.
-    if( IR_PROP_ID(rcv_prop[0]) == IR_PROP_ID(PROP_EXAMPLE_IRDATA) )
-    {
-        copy_prop(dsp_prop,rcv_prop); // Send to DSP threads.
-        copy_prop(usb_prop,rcv_prop); // Send to USB host as an acknowledge and for flow-control.
-        rcv_prop[0] = 0; // Mark the incoming USB property as consumed (allow RX of the next prop).
-    }
-    else // Generate property for the DSP threads if the prop buffer is free.
-    {
-        // Read the potentiometers -- Pot[2] is volume, Pot[1] is tone, Pot[0] is blend.
-        double pot_values[4]; adc_read( pot_values );
-        double volume = pot_values[2], tone = pot_values[1], blend = pot_values[0];
-
-        // Send a CONTROL property containing knob settings (volume and blend) to the mixer thread.
-        if( state == 0 ) { // State 1 is for generating and sending the VOLUME/MIX property.
-            state = 1;
-            dsp_prop[0] = PROP_EXAMPLE_VOL_MIX; dsp_prop[3] = dsp_prop[4] = dsp_prop[5] = 0;
-            dsp_prop[1] = FQ(volume); dsp_prop[2] = FQ(blend); // float to Q28.
-        }
-        // Compute tone (12 dB/octave low-pass) coefficients and send them to DSP threads.
-        else if( state == 1 ) { // State 2 is for generating and sending the tone coeffs property.
-            state = 0;
-            // This lowpass filter -3dB frequency value ranges from 1 kHz to 11 kHz via Pot[2]
-            double freq = 2000.0/48000 + tone * 10000.0/48000;
-            dsp_prop[0] = PROP_EXAMPLE_TONE;
-            make_lowpass( dsp_prop+1, freq, 0.707 ); // Compute coefficients and populate property.
-        }
-    }
+    copy_prop( dsp_prop, rcv_prop ); // Send to DSP threads.
 }
 
-// Single-pole low pass filter implemented with a biquad IIR (only uses B0,B1,A1 coeffs).
-int lopass_coeffs[5] = {FQ(1.0),0,0,0,0};
-int lopass_stateL[4] = {0,0,0,0}, lopass_stateR[4] = {0,0,0,0}; // Initial filter state/history.
-
-void mixer( const int* usb_output, int* usb_input,
-            const int* i2s_output, int* i2s_input,
-            const int* dsp_output, int* dsp_input, const int* property )
+void app_mixer( const int usb_output[32], int usb_input[32],
+                const int i2s_output[32], int i2s_input[32],
+                const int dsp_output[32], int dsp_input[32], const int property[6] )
 {
-    static int volume = FQ(0.0), blend = FQ(0.5); // Initial volume and blend/mix levels.
-
     // Convert the two ADC inputs into a single pseudo-differential mono input (mono = L - R).
-    // Route the guitar signal to the USB input and to the DSP input.
-    //usb_input[0] = usb_input[1] = dsp_input[0] = dsp_input[1] = i2s_output[6] - i2s_output[7];
-    usb_input[0] = usb_input[1] = dsp_input[0] = dsp_input[1] = usb_output[0];
-
-    // Check for incoming properties from USB (volume, DSP/USB audio blend, and tone control).
-    if( property[0] == PROP_EXAMPLE_VOL_MIX ) { volume = property[1]; blend = property[3]; }
-    // Update coeffs B1 and A1 of the low-pass biquad but leave B0=1.0,B2=0,A2=0.
-    if( property[0] == PROP_EXAMPLE_TONE ) { copy_data( lopass_coeffs, &(property[2]) ); }
-
-    // Apply tone filter to left and right DSP outputs and route this to the I2S driver inputs.
-    i2s_input[6] = dsp_iir_filt( dsp_output[0], lopass_coeffs, lopass_stateL, 1 );
-    i2s_input[7] = dsp_iir_filt( dsp_output[1], lopass_coeffs, lopass_stateR, 1 );
-
-    // Blend/mix USB output audio with the processed guitar audio from the DSP output.
-    i2s_input[6] = dsp_multiply(blend,i2s_input[6])/2 + dsp_multiply(FQ(1)-blend,usb_output[0])/2;
-    i2s_input[7] = dsp_multiply(blend,i2s_input[7])/2 + dsp_multiply(FQ(1)-blend,usb_output[1])/2;
-
-    // Apply master volume to the I2S driver inputs (i.e. to the data going to the audio DACs).
-    i2s_input[6] = dsp_multiply( i2s_input[6], volume );
-    i2s_input[7] = dsp_multiply( i2s_input[7], volume );
-
-    // Bypass DSP processing (pass ADC samples to the DAC) if a switch on I/O port #0 is pressed.
-    if( port_read(1) == 0 ) { i2s_input[0] = i2s_output[0]; i2s_input[1] = i2s_output[1]; }
-    // Light an LED attached to I/O port #2 if the bypass switch on I/O port #1 is pressed.
-    port_write( 2, port_read(1) != 0 );
+    int guitar_in = i2s_output[0] - i2s_output[1];
+    // Route instrument input to the left USB input and to the DSP input.
+    dsp_input[0] = (usb_input[0] = guitar_in) / 8; // DSP samples need to be Q28 formatted.
+    // Route DSP result to the right USB input and the audio DAC.
+    usb_input[1] = i2s_input[0] = i2s_input[1] = dsp_output[0] * 8; // Q28 (DSP) to Q31 (USB/I2S)
 }
 
-// Cabinet simulation impulse response (IR) data (e.g. filter coefficients) and filter state.
 int ir_coeff[2400], ir_state[2400]; // DSP data *must* be non-static global!
 
-void dsp_initialize( void ) // Called once upon boot-up.
+void app_thread1( int samples[32], const int property[6] )
 {
-    memset( &ir_coeff, 0, sizeof(ir_coeff) );
-    memset( &ir_state, 0, sizeof(ir_state) );
-    ir_coeff[0] = ir_coeff[1200] = FQ(+1.0);
-}
-
-void dsp_thread1( int* samples, const int* property )
-{
+    static int first = 1;
+    if( first ) { first = 0; ir_coeff[0] = ir_coeff[1200] = FQ(+1.0); }
     // Check for properties containing new cabsim IR data, save new data to RAM
-    if( IR_PROP_ID( property[0] ) == IR_PROP_ID( PROP_EXAMPLE_IRDATA ) &&
-        IR_PROP_IDX( property[0] ) > 0 && IR_PROP_IDX( property[0] ) < 2400/5 )
-    {
-        int offset = 5 * IR_PROP_IDX( property[0] ); // Five samples per property
-        ir_coeff[offset+0] = property[1] / 32; ir_coeff[offset+1] = property[2] / 32;
-        ir_coeff[offset+2] = property[3] / 32; ir_coeff[offset+3] = property[4] / 32;
-        ir_coeff[offset+4] = property[5] / 32;
+    if( (property[0] & 0xF000) == 0x9000 ) {
+    	int offset = 5 * (property[0] & 0x0FFF);
+    	if( offset <= 2400-5 ) {
+			ir_coeff[offset+0] = property[1] / 32; ir_coeff[offset+1] = property[2] / 32;
+			ir_coeff[offset+2] = property[3] / 32; ir_coeff[offset+3] = property[4] / 32;
+			ir_coeff[offset+4] = property[5] / 32;
+		}
     }
     samples[2] = 0; samples[3] = 1 << 31; // Initial 64-bit Q1.63 accumulator value
     samples[4] = 0; samples[5] = 1 << 31; // Initial 64-bit Q1.63 accumulator value
     // Perform 240-sample convolution (1st 240 of 1220 total) of sample with IR data
-    samples[0] = dsp_convolve( samples[0], ir_coeff+240*0, ir_state+240*0, samples+2, samples+3 );
-    samples[1] = dsp_convolve( samples[1], ir_coeff+240*5, ir_state+240*5, samples+4, samples+5 );
+    samples[0] = dsp_convolve( samples[0], ir_coeff+240*0, ir_state+240*0, samples+2,samples+3 );
+    samples[1] = dsp_convolve( samples[1], ir_coeff+240*5, ir_state+240*5, samples+4,samples+5 );
 }
 
-void dsp_thread2( int* samples, const int* property )
+void app_thread2( int samples[32], const int property[6] )
 {
     // Perform 240-sample convolution (2nd 240 of 1220 total) of sample with IR data
-    samples[0] = dsp_convolve( samples[0], ir_coeff+240*1, ir_state+240*1, samples+2, samples+3 );
-    samples[1] = dsp_convolve( samples[1], ir_coeff+240*6, ir_state+240*6, samples+4, samples+5 );
+    samples[0] = dsp_convolve( samples[0], ir_coeff+240*1, ir_state+240*1, samples+2,samples+3 );
+    samples[1] = dsp_convolve( samples[1], ir_coeff+240*6, ir_state+240*6, samples+4,samples+5 );
 }
 
-void dsp_thread3( int* samples, const int* property )
+void app_thread3( int samples[32], const int property[6] )
 {
     // Perform 240-sample convolution (3rd 240 of 1220 total) of sample with IR data
-    samples[0] = dsp_convolve( samples[0], ir_coeff+240*2, ir_state+240*2, samples+2, samples+3 );
-    samples[1] = dsp_convolve( samples[1], ir_coeff+240*7, ir_state+240*7, samples+4, samples+5 );
+    samples[0] = dsp_convolve( samples[0], ir_coeff+240*2, ir_state+240*2, samples+2,samples+3 );
+    samples[1] = dsp_convolve( samples[1], ir_coeff+240*7, ir_state+240*7, samples+4,samples+5 );
 }
 
-void dsp_thread4( int* samples, const int* property )
+void app_thread4( int samples[32], const int property[6] )
 {
     // Perform 240-sample convolution (4th 240 of 1220 total) of sample with IR data
-    samples[0] = dsp_convolve( samples[0], ir_coeff+240*3, ir_state+240*3, samples+2, samples+3 );
-    samples[1] = dsp_convolve( samples[1], ir_coeff+240*8, ir_state+240*8, samples+4, samples+5 );
+    samples[0] = dsp_convolve( samples[0], ir_coeff+240*3, ir_state+240*3, samples+2,samples+3 );
+    samples[1] = dsp_convolve( samples[1], ir_coeff+240*8, ir_state+240*8, samples+4,samples+5 );
 }
 
-void dsp_thread5( int* samples, const int* property )
+void app_thread5( int samples[32], const int property[6] )
 {
     static bool muted = 0;
     // Check IR property -- Mute at start of new IR loading, un-mute when done.
-    if( IR_PROP_ID( property[0] ) == IR_PROP_ID( PROP_EXAMPLE_IRDATA ) )
-    {
-        if( IR_PROP_IDX( property[0] ) == 0 )        muted = 1; // First IR property -- Mute
-        if( IR_PROP_IDX( property[0] ) == 2400/5-1 ) muted = 0; // Last IR property -- Un-Mute
-    }
+    if( property[0] == 0x9000 ) muted = 1;
+    if( property[0] == 0x9000 + 480 ) muted = 0;
     // Perform 240-sample convolution (5th and last 240 of 1220 total) of sample with IR data
-    samples[0] = dsp_convolve( samples[0], ir_coeff+240*4, ir_state+240*4, samples+2, samples+3 );
-    samples[1] = dsp_convolve( samples[1], ir_coeff+240*9, ir_state+240*9, samples+4, samples+5 );
+    samples[0] = dsp_convolve( samples[0], ir_coeff+240*4, ir_state+240*4, samples+2,samples+3 );
+    samples[1] = dsp_convolve( samples[1], ir_coeff+240*9, ir_state+240*9, samples+4,samples+5 );
     // Extract 32-bit Q28 from 64-bit Q63 and then apply mute/un-mute based on IR loading activity.
-    DSP_EXT( samples[0], samples[2], samples[3] ); samples[0] = muted ? 0 : samples[0];
-    DSP_EXT( samples[1], samples[4], samples[5] ); samples[1] = muted ? 0 : samples[1];
+    DSP_EXT( samples[0], samples[2], samples[3] );
+    DSP_EXT( samples[1], samples[4], samples[5] );
+    samples[0] = muted ? 0 : samples[0];
+    samples[1] = muted ? 0 : samples[1];
 }
+
+const char controller_script[] =
+""\
+"function flexfx_create( key )"\
+"{"\
+"	var x = \"\";"\
+"	x += \"<p>\";"\
+"	x += \"This FlexFX device does not have effects firmware loaded into it. Use the \";"\
+"	x += \"'LOAD FIRMWARE' button to select a firmware image to load into this device.\";"\
+"	x += \"</p>\";"\
+"	return x;"\
+"}"\
+""\
+"function flexfx_initialize( key )"\
+"{"\
+"	return _on_property_received;"\
+"}"\
+""\
+"function _on_property_received( property )"\
+"{"\
+"}"\
+"";
 ```
 
 Chorus Example
@@ -951,41 +872,44 @@ Chorus example with two voices showing how to create LFO's and how to use 2nd or
 https://raw.githubusercontent.com/markseel/flexfx_kit/master/app_chorus.mp4
 
 ```C
-#include "flexfx.h" // Defines config variables, I2C and GPIO functions, DSP functions, etc.
+#include "flexfx.h" // Defines config variables, I2C and GPIO functions, etc.
 #include <math.h>   // Floating point for filter coeff calculations in the background process.
-#include <string.h>
+#include <string.h> // Memory and string functions
 
-const char* product_name_string    = "Example"; // Your company/product name
-const int   audio_sample_rate      = 48000;     // Audio sampling frequency
-const int   usb_output_chan_count  = 2;         // 2 USB audio class 2.0 output channels
-const int   usb_input_chan_count   = 2;         // 2 USB audio class 2.0 input channels
-const int   i2s_channel_count      = 2;         // ADC/DAC channels per SDIN/SDOUT wire
-const char  interface_text[]       = "No interface is specified";
-const char  controller_app[]       = "No controller is available";
+const char* product_name_string   = "FlexFX Example";   // Your product name
+const char* usb_audio_output_name = "FlexFX Audio Out"; // USB audio output name
+const char* usb_audio_input_name  = "FlexFX Audio In";  // USB audio input name
+const char* usb_midi_output_name  = "FlexFX MIDI Out";  // USB MIDI output name
+const char* usb_midi_input_name   = "FlexFX MIDI In";   // USB MIDI input name
 
-const int   i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
+const int audio_sample_rate     = 48000; // Audio sampling frequency
+const int usb_output_chan_count = 2;     // 2 USB audio class 2.0 output channels
+const int usb_input_chan_count  = 2;     // 2 USB audio class 2.0 input channels
+const int i2s_channel_count     = 2;     // ADC/DAC channels per SDIN/SDOUT wire
 
-void control( int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
-{
-    // If outgoing USB or DSP properties are still use then come back later ...
-    if( usb_prop[0] != 0 || usb_prop[0] != 0 ) return;
-}
+const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
-void mixer( const int* usb_output, int* usb_input,
-            const int* i2s_output, int* i2s_input,
-            const int* dsp_output, int* dsp_input, const int* property )
-{
-    dsp_input[0] = i2s_output[6]/2 - i2s_output[7]/2; // DSP left input channel = guitar input.
-    dsp_input[1] = i2s_output[6]/2 - i2s_output[7]/2; // DSP right input channel = guitar input.
-    i2s_input[6] = dsp_output[0]; // Line out left channel = DSP output left channel
-    i2s_input[7] = dsp_output[1]; // Line out right channel = DSP output right channel
-}
-
-void dsp_initialize( void ) // Called once upon boot-up.
+void app_control( const int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
 {
 }
 
-void dsp_thread1( int* samples, const int* property )
+void app_mixer( const int usb_output[32], int usb_input[32],
+                const int i2s_output[32], int i2s_input[32],
+                const int dsp_output[32], int dsp_input[32], const int property[6] )
+{
+    // Convert the two ADC inputs into a single pseudo-differential mono input (mono = L - R).
+    int guitar_in = i2s_output[0] - i2s_output[1];
+    // Route instrument input to the left USB input and to the DSP input.
+    dsp_input[0] = (usb_input[0] = guitar_in) / 8; // DSP samples need to be Q28 formatted.
+    // Route DSP result to the right USB input and the audio DAC.
+    usb_input[1] = i2s_input[0] = i2s_input[1] = dsp_output[0] * 8; // Q28 to Q31
+}
+
+void app_initialize( void )
+{
+}
+
+void app_thread1( int samples[32], const int property[6] )
 {
     // Define LFO frequencies
     static int delta1 = FQ(1.7/48000.0); // LFO frequency 1.7 Hz @ 48 kHz
@@ -998,19 +922,19 @@ void dsp_thread1( int* samples, const int* property )
     // Index and fraction portion of Q28 sample value: snnniiii,iiiiiiff,ffffffff,ffffffff
     int ii, ff;
     ii = (time1 & 0x0FFFFFFF) >> 18, ff = (time1 & 0x0003FFFF) << 10;
-    samples[2] = dsp_lagrange( ff, dsp_sine_lut[ii+0], dsp_sine_lut[ii+1], dsp_sine_lut[ii+2] );
+    samples[2] = dsp_lagrange( ff, dsp_sine_10[ii+0], dsp_sine_10[ii+1], dsp_sine_10[ii+2] );
     ii = (time2 & 0x0FFFFFFF) >> 18, ff = (time2 & 0x0003FFFF) << 10;
-    samples[3] = dsp_lagrange( ff, dsp_sine_lut[ii+0], dsp_sine_lut[ii+1], dsp_sine_lut[ii+2] );
+    samples[3] = dsp_lagrange( ff, dsp_sine_10[ii+0], dsp_sine_10[ii+1], dsp_sine_10[ii+2] );
     // Send LFO values downstream for use by other DSP threads, ensure that they're less than +1.0.
-    samples[2] = dsp_multiply( samples[2], FQ(0.999) ); // LFO #1 stored in sample 2 for later use.
-    samples[3] = dsp_multiply( samples[3], FQ(0.999) ); // LFO #2 stored in sample 3 for later use.
+    samples[2] = dsp_multiply( samples[2], FQ(0.999) ); // LFO #1 in sample 2 for later use.
+    samples[3] = dsp_multiply( samples[3], FQ(0.999) ); // LFO #2 in sample 3 for later use.
 }
 
-void dsp_thread2( int* samples, const int* property )
+void app_thread2( int samples[32], const int property[6] )
 {
     // --- Generate wet signal #1 using LFO #1
     static int delay_fifo[1024], delay_index = 0; // Chorus delay line
-    static int depth = FQ(+0.10);
+    static int depth = FQ(+0.20);
     // Scale lfo by chorus depth and convert from [-1.0 < lfo < +1.0] to [+0.0 < lfo < +1.0].
     int lfo = (dsp_multiply( samples[2], depth ) / 2) + FQ(0.4999);
     // Index and fraction portion of Q28 LFO value: snnniiii,iiiiiiff,ffffffff,ffffffff
@@ -1022,11 +946,11 @@ void dsp_thread2( int* samples, const int* property )
     samples[2] = dsp_lagrange( ff, delay_fifo[i1], delay_fifo[i2], delay_fifo[i3] );
 }
 
-void dsp_thread3( int* samples, const int* property )
+void app_thread3( int samples[32], const int property[6] )
 {
     // --- Generate wet signal #2 using LFO #2
     static int delay_fifo[1024], delay_index = 0; // Chorus delay line
-    static int depth = FQ(+0.05);
+    static int depth = FQ(+0.10);
     // Scale lfo by chorus depth and convert from [-1.0 < lfo < +1.0] to [+0.0 < lfo < +1.0].
     int lfo = (dsp_multiply( samples[3], depth ) / 2) + FQ(0.4999);
     // Index and fraction portion of Q28 LFO value: snnniiii,iiiiiiff,ffffffff,ffffffff
@@ -1038,18 +962,40 @@ void dsp_thread3( int* samples, const int* property )
     samples[3] = dsp_lagrange( ff, delay_fifo[i1], delay_fifo[i2], delay_fifo[i3] );
 }
 
-void dsp_thread4( int* samples, const int* property )
+void app_thread4( int samples[32], const int property[6] )
 {
     int blend1 = FQ(+0.50), blend2 = FQ(+0.30);;
     // Mix dry signal with wet #1 and wet #2 and send to both left and right channels (0 and 1).
-    samples[2] = dsp_multiply(samples[0],FQ(1.0)-blend1)/2 + dsp_multiply(samples[2],blend1)/2;
-    samples[3] = dsp_multiply(samples[0],FQ(1.0)-blend2)/2 + dsp_multiply(samples[3],blend2)/2;
-    samples[0] = samples[1] = samples[2]/2 + samples[3]/2;
+    samples[2] = dsp_blend( samples[0], samples[2], blend1 );
+    samples[3] = dsp_blend( samples[0], samples[3], blend2 );
+    samples[0] = samples[0]/2 + samples[2]/2 + samples[3]/2;
 }
 
-void dsp_thread5( int* samples, const int* property )
+void app_thread5( int samples[32], const int property[6] )
 {
 }
+
+const char controller_script[] =
+""\
+"function flexfx_create( key )"\
+"{"\
+"	var x = \"\";"\
+"	x += \"<p>\";"\
+"	x += \"This FlexFX device does not have effects firmware loaded into it. Use the \";"\
+"	x += \"'LOAD FIRMWARE' button to select a firmware image to load into this device.\";"\
+"	x += \"</p>\";"\
+"	return x;"\
+"}"\
+""\
+"function flexfx_initialize( key )"\
+"{"\
+"	return _on_property_received;"\
+"}"\
+""\
+"function _on_property_received( property )"\
+"{"\
+"}"\
+"";
 ```
 
 Overdrive Example
@@ -1060,39 +1006,37 @@ create a simple preamp model. Up/down sampling by a factor of 2 brings the inter
 aliasing of harmonics created from the nonlinear behavior of the preamp.
 
 ```C
-#include "flexfx.h"
-#include <math.h>
-#include <string.h>
+#include "flexfx.h" // Defines config variables, I2C and GPIO functions, etc.
+#include <math.h>   // Floating point for filter coeff calculations in the background process.
+#include <string.h> // Memory and string functions
 
-const char* product_name_string    = "Example"; // Your company/product name
-const int   audio_sample_rate      = 192000;    // Audio sampling frequency
-const int   usb_output_chan_count  = 2;         // 2 USB audio class 2.0 output channels
-const int   usb_input_chan_count   = 2;         // 2 USB audio class 2.0 input channels
-const int   i2s_channel_count      = 2;         // ADC/DAC channels per SDIN/SDOUT wire
-const char  interface_text[]       = "No interface is specified";
-const char  controller_app[]       = "No controller is available";
+const char* product_name_string   = "FlexFX Example";   // Your product name
+const char* usb_audio_output_name = "FlexFX Audio Out"; // USB audio output name
+const char* usb_audio_input_name  = "FlexFX Audio In";  // USB audio input name
+const char* usb_midi_output_name  = "FlexFX MIDI Out";  // USB MIDI output name
+const char* usb_midi_input_name   = "FlexFX MIDI In";   // USB MIDI input name
 
-const int   i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
+const int audio_sample_rate     = 192000; // Audio sampling frequency
+const int usb_output_chan_count = 2;      // 2 USB audio class 2.0 output channels
+const int usb_input_chan_count  = 2;      // 2 USB audio class 2.0 input channels
+const int i2s_channel_count     = 2;      // 2,4,or 8 I2S channels per SDIN/SDOUT wire
 
-void control( int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
+const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
+
+void app_control( const int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
 {
-    // If outgoing USB or DSP properties are still use then come back later ...
-    if( usb_prop[0] != 0 || usb_prop[0] != 0 ) return;
 }
 
-void mixer( const int* usb_output, int* usb_input,
-            const int* i2s_output, int* i2s_input,
-            const int* dsp_output, int* dsp_input, const int* property )
+void app_mixer( const int usb_output[32], int usb_input[32],
+                const int i2s_output[32], int i2s_input[32],
+                const int dsp_output[32], int dsp_input[32], const int property[6] )
 {
     // Convert the two ADC inputs into a single pseudo-differential mono input (mono = L - R).
-    int guitar_in = i2s_output[6] - i2s_output[7];
-
-    // Route instrument input to the USB input and to the DSP input.
-    usb_input[0] = usb_input[1] = guitar_in;
-    dsp_input[0] = dsp_input[1] = guitar_in / 8; // Convert from Q31 to Q28
-
-    // Reduce DSP result to avoid clipping, convert it from Q28 to Q31, send it to the audio DAC.
-    i2s_input[6] = i2s_input[7] = 8 * dsp_multiply( dsp_output[0], FQ(+0.8) );
+    int guitar_in = i2s_output[0] - i2s_output[1];
+    // Route instrument input to the left USB input and to the DSP input.
+    dsp_input[0] = (usb_input[0] = guitar_in) / 8; // DSP samples need to be Q28 formatted.
+    // Route DSP result to the right USB input and the audio DAC.
+    usb_input[1] = i2s_input[0] = i2s_input[1] = dsp_output[0] * 8; // Q28 to Q31
 }
 
 // util_fir.py 0.001 0.125 1.0 -100
@@ -1113,23 +1057,23 @@ int antialias_state1[64], antialias_state2[64], antialias_coeff[64] =
     FQ(-0.000014901),FQ(-0.000005357),FQ(-0.000001205),FQ(-0.000000077)
 };
 
-// util_iir.py highpass 0.0003 0.707 0, util_iir.py peaking 0.001 0.707 +6.0
+// util_iir.py highpass 0.0004 0.707 0, util_iir.py peaking 0.002 0.707 +6.0
 int emphasis1_state[8] = {0,0,0,0,0,0,0,0}, emphasis1_coeff[10] =
 {
-    FQ(+0.998667822),FQ(-1.997335644),FQ(+0.998667822),FQ(+1.997333870),FQ(-0.997337419),
-    FQ(+1.003121053),FQ(-1.993688826),FQ(+0.990607128),FQ(+1.993688826),FQ(-0.993728181),
+    FQ(+0.998224158),FQ(-1.996448315),FQ(+0.998224158),FQ(+1.996445162),FQ(-0.996451468),
+    FQ(+1.006222470),FQ(-1.987338895),FQ(+0.981273349),FQ(+1.987338895),FQ(-0.987495819),
 };
 // util_iir.py highpass 0.0002 0.707 0, util_iir.py peaking 0.002 0.707 +6.0
 int emphasis2_state[8] = {0,0,0,0,0,0,0,0}, emphasis2_coeff[10] =
 {
-    FQ(+0.999111684),FQ(-1.998223368),FQ(+0.999111684),FQ(+1.998222579),FQ(-0.998224157),
+    FQ(+1.006222470),FQ(-1.987338895),FQ(+0.981273349),FQ(+1.987338895),FQ(-0.987495819),
     FQ(+1.006222470),FQ(-1.987338895),FQ(+0.981273349),FQ(+1.987338895),FQ(-0.987495819),
 };
-// util_iir.py highpass 0.0001 0.707 0, util_iir.py lowpass 0.001 0.707 -3.0
+// util_iir.py highpass 0.0001 0.707 0, util_iir.py peaking 0.002 0.707 +6.0
 int emphasis3_state[8] = {0,0,0,0,0,0,0,0}, emphasis3_coeff[10] =
 {
-    FQ(+0.999555743),FQ(-1.999111487),FQ(+0.999555743),FQ(+1.999111289),FQ(-0.999111684),
-    FQ(+0.996194429),FQ(-1.973695761),FQ(+0.977744852),FQ(+1.973695761),FQ(-0.973939281),
+    FQ(+1.003121053),FQ(-1.993688826),FQ(+0.990607128),FQ(+1.993688826),FQ(-0.993728181),
+    FQ(+1.006222470),FQ(-1.987338895),FQ(+0.981273349),FQ(+1.987338895),FQ(-0.987495819),
 };
 
 // util_iir.py lowpass 0.09 0.707 0
@@ -1152,80 +1096,102 @@ int lowpass3_state[4] = {0,0,0,0}, lowpass3_coeff[5] =
 // Apply gain factor. Lookup the preamp transfer function and interpolate to smooth out the lookup
 // result. Apply slew-rate limiting to the output.
 
-int preamp1[3], preamp2[3], preamp3[3];
+int preamp1[4+3], preamp2[4+3], preamp3[4+3];
 
 int preamp_model( int xx, int gain, int bias, int slewlim, int* state )
 {
-    // Apply gain (total preamp gain = 8 * gain)
-    xx = dsp_multiply( xx, gain );
+    // Add bias to input signal and apply additional gain (total preamp gain = 8 * gain)
+    xx = dsp_multiply( xx + bias, gain );
     // Table lookup
     if( xx >= 0 ) {
         int ii = (xx & 0xFFFFC000) >> 14, ff = (xx & 0x00003FFF) << 14;
-        if( ii > 16383 ) ii = 16383;
+        if( ii > 16381 ) ii = 16381;
         xx = dsp_lagrange( ff, dsp_tanh_14[ii+0], dsp_tanh_14[ii+1], dsp_tanh_14[ii+2] );
     } else {
         int ii = (-xx & 0xFFFFC000) >> 14, ff = (-xx & 0x00003FFF) << 14;
-        if( ii > 16383 ) ii = 16383;
-        xx = -dsp_lagrange( ff, dsp_tanh_14[ii+0], dsp_tanh_14[ii+1], dsp_tanh_14[ii+2] );
+        if( ii > 16381 ) ii = 16381;
+        xx = -dsp_lagrange( ff, dsp_nexp_14[ii+0], dsp_nexp_14[ii+1], dsp_nexp_14[ii+2] );
     }
-    // Slew rate limit
-    if( xx > state[2] + slewlim ) { xx = state[2] + slewlim; state[2] = xx; }
-    if( xx < state[2] - slewlim ) { xx = state[2] - slewlim; state[2] = xx; }
-    return xx;
+    // Slew rate limit and invert
+    if( xx > state[6] + slewlim ) { xx = state[6] + slewlim; state[6] = xx; }
+    if( xx < state[6] - slewlim ) { xx = state[6] - slewlim; state[6] = xx; }
+    return -xx;
 }
 
-void dsp_initialize( void ) // Called once upon boot-up.
+void app_initialize( void ) // Called once upon boot-up.
 {
     memset( antialias_state1, 0, sizeof(antialias_state1) );
     memset( antialias_state2, 0, sizeof(antialias_state2) );
 }
 
-void dsp_thread1( int* samples, const int* property ) // Upsample
+void app_thread1( int samples[32], const int property[6] ) // Upsample
 {
     // Up-sample by 2x by inserting zeros then apply the anti-aliasing filter
-    samples[0] = 4 * dsp_fir_filt( samples[0], antialias_coeff, antialias_state1, 64 );
-    samples[1] = 4 * dsp_fir_filt( 0,          antialias_coeff, antialias_state1, 64 );
+    samples[0] = 4 * dsp_fir( samples[0], antialias_coeff, antialias_state1, 64 );
+    samples[1] = 4 * dsp_fir( 0,              antialias_coeff, antialias_state1, 64 );
 }
 
-void dsp_thread2( int* samples, const int* property ) // Preamp stage 1
+void app_thread2( int samples[32], const int property[6] ) // Preamp stage 1
 {
     // Perform stage 1 overdrive on the two up-sampled samples for the left channel.
-    samples[0] = dsp_iir_filt( samples[0], emphasis1_coeff, emphasis1_state, 2 );
-    samples[0] = preamp_model( samples[0], FQ(1.0), FQ(0.0), FQ(0.40), preamp1 );
-    samples[0] = dsp_iir_filt( samples[0], lowpass1_coeff, lowpass1_state, 1 );
-    samples[1] = dsp_iir_filt( samples[1], emphasis1_coeff, emphasis1_state, 2 );
-    samples[1] = preamp_model( samples[1], FQ(1.0), FQ(0.0), FQ(0.40), preamp1 );
-    samples[1] = dsp_iir_filt( samples[1], lowpass1_coeff, lowpass1_state, 1 );
+    samples[0] = dsp_iir     ( samples[0], emphasis1_coeff, emphasis1_state, 2 );
+    samples[0] = preamp_model( samples[0], FQ(1.3), FQ(+0.0), FQ(0.4), preamp1 );
+    samples[0] = dsp_iir     ( samples[0], lowpass1_coeff, lowpass1_state, 1 );
+    samples[1] = dsp_iir     ( samples[1], emphasis1_coeff, emphasis1_state, 2 );
+    samples[1] = preamp_model( samples[1], FQ(1.3), FQ(+0.0), FQ(0.4), preamp1 );
+    samples[1] = dsp_iir     ( samples[1], lowpass1_coeff, lowpass1_state, 1 );
 }
 
-void dsp_thread3( int* samples, const int* property ) // Preamp stage 2
+void app_thread3( int samples[32], const int property[6] ) // Preamp stage 2
 {
     // Perform stage 2 overdrive on the two up-sampled samples for the left channel.
-    samples[0] = dsp_iir_filt( samples[0], emphasis2_coeff, emphasis2_state, 2 );
-    samples[0] = preamp_model( samples[0], FQ(1.0), FQ(0.0), FQ(0.20), preamp2 );
-    samples[0] = dsp_iir_filt( samples[0], lowpass2_coeff, lowpass2_state, 1 );
-    samples[1] = dsp_iir_filt( samples[1], emphasis2_coeff, emphasis2_state, 2 );
-    samples[1] = preamp_model( samples[1], FQ(1.0), FQ(0.0), FQ(0.20), preamp2 );
-    samples[1] = dsp_iir_filt( samples[1], lowpass2_coeff, lowpass2_state, 1 );
+    samples[0] = dsp_iir     ( samples[0], emphasis2_coeff, emphasis2_state, 2 );
+    samples[0] = preamp_model( samples[0], FQ(1.0), FQ(+0.0), FQ(0.3), preamp2 );
+    samples[0] = dsp_iir     ( samples[0], lowpass2_coeff, lowpass2_state, 1 );
+    samples[1] = dsp_iir     ( samples[1], emphasis2_coeff, emphasis2_state, 2 );
+    samples[1] = preamp_model( samples[1], FQ(1.0), FQ(+0.0), FQ(0.3), preamp2 );
+    samples[1] = dsp_iir     ( samples[1], lowpass2_coeff, lowpass2_state, 1 );
 }
 
-void dsp_thread4( int* samples, const int* property ) // Preamp stage 3
+void app_thread4( int samples[32], const int property[6] ) // Preamp stage 3
 {
     // Perform stage 3 overdrive on the two up-sampled samples for the left channel.
-    samples[0] = dsp_iir_filt( samples[0], emphasis3_coeff, emphasis3_state, 2 );
-    samples[0] = preamp_model( samples[0], FQ(1.0), FQ(0.0), FQ(0.05), preamp3 );
-    samples[0] = dsp_iir_filt( samples[0], lowpass3_coeff, lowpass3_state, 1 );
-    samples[1] = dsp_iir_filt( samples[1], emphasis3_coeff, emphasis3_state, 2 );
-    samples[1] = preamp_model( samples[1], FQ(1.0), FQ(0.0), FQ(0.05), preamp3 );
-    samples[1] = dsp_iir_filt( samples[1], lowpass3_coeff, lowpass3_state, 1 );
+    samples[0] = dsp_iir     ( samples[0], emphasis3_coeff, emphasis3_state, 2 );
+    samples[0] = preamp_model( samples[0], FQ(0.7), FQ(+0.0), FQ(0.2), preamp3 );
+    samples[0] = dsp_iir     ( samples[0], lowpass3_coeff, lowpass3_state, 1 );
+    samples[1] = dsp_iir     ( samples[1], emphasis3_coeff, emphasis3_state, 2 );
+    samples[1] = preamp_model( samples[1], FQ(0.7), FQ(+0.0), FQ(0.2), preamp3 );
+    samples[1] = dsp_iir     ( samples[1], lowpass3_coeff, lowpass3_state, 1 );
 }
 
-void dsp_thread5( int* samples, const int* property ) // Downsample
+void app_thread5( int samples[32], const int property[6] ) // Downsample
 {
     // Down-sample by 2x by band-limiting via anti-aliasing filter and then discarding 1 sample.
-    samples[0] = dsp_fir_filt( samples[0], antialias_coeff, antialias_state2, 64 );
-                 dsp_fir_filt( samples[1], antialias_coeff, antialias_state2, 64 );
+    samples[0] = dsp_fir( samples[0], antialias_coeff, antialias_state2, 64 );
+                     dsp_fir( samples[1], antialias_coeff, antialias_state2, 64 );
 }
+
+const char controller_script[] =
+""\
+"function flexfx_create( key )"\
+"{"\
+"	var x = \"\";"\
+"	x += \"<p>\";"\
+"	x += \"This FlexFX device does not have effects firmware loaded into it. Use the \";"\
+"	x += \"'LOAD FIRMWARE' button to select a firmware image to load into this device.\";"\
+"	x += \"</p>\";"\
+"	return x;"\
+"}"\
+""\
+"function flexfx_initialize( key )"\
+"{"\
+"	return _on_property_received;"\
+"}"\
+""\
+"function _on_property_received( property )"\
+"{"\
+"}"\
+"";
 ```
 
 Reverb Example
@@ -1234,29 +1200,28 @@ Reverb Example
 Reverb example implemting a port of the FreeVerb algorithm based on the Schroeder-Moorer reverberation model.  A nice improvement would be to use a potentiometer (sensed via an ADC attached via I2C in the 'control' function) to select the reverb type.  The potentiometer code would perhaps generate a value of 1 through 9 depending on the pot's rotation setting.  The value would then be used to select the reverb's wet/dry mix, stereo width, room size, and room reflection/damping.  Note that there's plenty of processing power left over to implement other algorithms along with this reverb such as graphic EQ's, flanger/chorus, etc.
 
 ```C
-#include "flexfx.h"
-#include <math.h>
-#include <string.h>
+#include "flexfx.h" // Defines config variables, I2C and GPIO functions, etc.
+#include <math.h>   // Floating point for filter coeff calculations in the background process.
+#include <string.h> // Memory and string functions
 
-const char* product_name_string   = "Example"; // Your company/product name
-const int   audio_sample_rate     = 48000;     // Audio sampling frequency
-const int   usb_output_chan_count = 2;         // 2 USB audio class 2.0 output channels
-const int   usb_input_chan_count  = 2;         // 2 USB audio class 2.0 input channels
-const int   i2s_channel_count     = 2;         // ADC/DAC channels per SDIN/SDOUT wire
-const char  interface_string[]    = "No interface is specified";
-const char  controller_string[]   = "No controller is available";
+const char* product_name_string   = "FlexFX Example";   // Your product name
+const char* usb_audio_output_name = "FlexFX Audio Out"; // USB audio output name
+const char* usb_audio_input_name  = "FlexFX Audio In";  // USB audio input name
+const char* usb_midi_output_name  = "FlexFX MIDI Out";  // USB MIDI output name
+const char* usb_midi_input_name   = "FlexFX MIDI In";   // USB MIDI input name
 
-const int   i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
+const int audio_sample_rate     = 48000; // Audio sampling frequency
+const int usb_output_chan_count = 2;     // 2 USB audio class 2.0 output channels
+const int usb_input_chan_count  = 2;     // 2 USB audio class 2.0 input channels
+const int i2s_channel_count     = 2;     // ADC/DAC channels per SDIN/SDOUT wire
 
-void control( int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
+void app_control( const int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
 {
-    // If outgoing USB or DSP properties are still use then come back later ...
-    if( usb_prop[0] != 0 || dsp_prop[0] != 0 ) return;
 }
 
-void mixer( const int* usb_output, int* usb_input,
-            const int* i2s_output, int* i2s_input,
-            const int* dsp_output, int* dsp_input, const int* property )
+void app_mixer( const int usb_output[32], int usb_input[32],
+                const int i2s_output[32], int i2s_input[32],
+                const int dsp_output[32], int dsp_input[32], const int property[6] )
 {
     // Convert the two ADC inputs into a single pseudo-differential mono input (mono = L - R).
     int guitar_in = i2s_output[0] - i2s_output[1];
@@ -1280,7 +1245,7 @@ int _stereo_width   = FQ(0.2); // Parameter: Stereo width setting
 int _comb_damping   = FQ(0.2); // Parameter: Reflection damping factor (aka 'reflectivity')
 int _comb_feedbk    = FQ(0.2); // Parameter: Reflection feedback ratio (aka 'room size')
 
-void dsp_initialize( void ) // Called once upon boot-up.
+void app_initialize( void ) // Called once upon boot-up.
 {
     memset( _comb_bufferL, 0, sizeof(_comb_bufferL) );
     memset( _comb_stateL,  0, sizeof(_comb_stateL) );
@@ -1324,7 +1289,7 @@ inline int _allpass_filterR( int xx, int ii, int nn ) // yy[k] = xx[k] + g * xx[
     return yy;
 }
 
-void dsp_thread1( int* samples, const int* property )
+void app_thread1( int samples[32], const int property[6] )
 {
     // ----- Left channel reverb
     static int index = 0; ++index; // Used to index into the sample FIFO delay buffer
@@ -1340,7 +1305,7 @@ void dsp_thread1( int* samples, const int* property )
     samples[2] = _allpass_filterL( samples[2], index, 3 );
 }
 
-void dsp_thread2( int* samples, const int* property )
+void app_thread2( int samples[32], const int property[6] )
 {
     // ----- Right channel reverb
     static int index = 0; ++index; // Used to index into the sample FIFO delay buffer
@@ -1356,7 +1321,7 @@ void dsp_thread2( int* samples, const int* property )
     samples[3] = _allpass_filterR( samples[3], index, 3 );
 }
 
-void dsp_thread3( int* samples, const int* property )
+void app_thread3( int samples[32], const int property[6] )
 {
     // Final mixing and stereo synthesis
     int dry = _wet_dry_blend, wet = FQ(1.0) - _wet_dry_blend;
@@ -1373,11 +1338,33 @@ void dsp_thread3( int* samples, const int* property )
                                     dsp_multiply( samples[3], wet1 ) );
 }
 
-void dsp_thread4( int* samples, const int* property )
-{ 
-}
-
-void dsp_thread5( int* samples, const int* property )
+void app_thread4( int samples[32], const int property[6] )
 {
 }
+
+void app_thread5( int samples[32], const int property[6] )
+{
+}
+
+const char controller_script[] =
+""\
+"function flexfx_create( key )"\
+"{"\
+"	var x = \"\";"\
+"	x += \"<p>\";"\
+"	x += \"This FlexFX device does not have effects firmware loaded into it. Use the \";"\
+"	x += \"'LOAD FIRMWARE' button to select a firmware image to load into this device.\";"\
+"	x += \"</p>\";"\
+"	return x;"\
+"}"\
+""\
+"function flexfx_initialize( key )"\
+"{"\
+"	return _on_property_received;"\
+"}"\
+""\
+"function _on_property_received( property )"\
+"{"\
+"}"\
+"";
 ```
