@@ -23,8 +23,9 @@ void app_mixer( const int usb_output[32], int usb_input[32],
                 const int i2s_output[32], int i2s_input[32],
                 const int dsp_output[32], int dsp_input[32], const int property[6] )
 {
-    i2s_input[0] = usb_output[0]; i2s_input[1] = usb_output[1]; // ADC --> USB Audio
-    usb_input[0] = i2s_output[0]; usb_input[1] = i2s_output[1]; // USB Audio --> DAC
+	// USB audio input and I2S input (DAC) = USB output + I2S output (ADC)
+    usb_input[0] = i2s_input[0] = usb_output[0]/2 + i2s_output[0]/2;
+    usb_input[1] = i2s_input[1] = usb_output[1]/2 + i2s_output[1]/2;
 }
 
 void app_initialize( void ) // Called once upon boot-up.
