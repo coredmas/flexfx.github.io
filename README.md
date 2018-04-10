@@ -1,6 +1,16 @@
 FlexFX&trade; Kit
 ==================================
 
+FlexFX hardware supports USB Audio and MIDI, 32/64-bit DSP, up to 32 audio channels, 48 to 384 kHz sampling rates, input to output latency of 350 microseconds. Devices can be updated with pre-built effects or custom designed effects at any time using standard USB/MIDI. No apps purchases, download costs, or user accounts are needed to load FlexFX pre-built effects to to develop your own custom applications/effects.
+
+**Customization**  
+FlexFX development Kit:  https://github.com/markseel/flexfx_kit  
+Compiler and Linker:     xTIMEcomposer (current version for FlexFX is 14.3.3) is available from www.xmos.com  
+
+**Support**  
+FlexFX user's forum:     https://flexfx.discussion.community  
+XMOS xCORE Forum:        https://www.xcore.com  
+
 Introduction
 --------------------------------
 
@@ -507,36 +517,9 @@ bash$ python util_plot.py output.txt time 0 150
 Prebuilt Effects
 ----------------------------------
 
-The FlexFX kit contains some highly optimized effects. These effects are in binary form and can be used for free on FlexFX boards. Here's an example of how to use the optimzied stereo Cabinet simulator that supports 37.5 msec of IR processing in stereo mode at 48 kHz, and 75 msec of IR processing in mono mode at 48 kHz.
+The FlexFX kit contains some highly optimized effects. These effects are in binary (\*.bin) form and can be used for free on FlexFX boards. The FlexFX properties definitions for prebuilt effects are documented in the effect's respective text file (e.g. efx_cabsim.txt for the prebuild efx_cabsim.bin effect). These properties allow for full control over each effect via FlexFX properties sent and received over USB/MIDI.
 
-The FlexFX properties definitions for uploading IR data (stored in wave files on a USB atteched host computer) is documented in 'efx_cabsim.txt' and is also available via USB MIDI by issueing the FlexFX USB/MIDI property for returning a device's MIDI interface (the text is returned via USB).  
-
-This effect also supports the HTML5 interface for controlling the device (firmware upgrading, uploading IR data, etc). The javascript code for the effect is returned via USB MIDI by issueing the FlexFX USB/MIDI property for returning a device's javascript controller interface.  The HTML5 application called 'flexfx.html' does this automatically and will displayt this device's GUI interface if the device is pluuged into the host computer via a USB cable. Google Chrome must be used.
-
-```
-#include "efx_cabsim.h"
-
-const char* product_name_string = "FlexFX Cabsim";  // Your company/product name
-
-void control( int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
-{
-    efx_cabsim__control( rcv_prop, usb_prop, dsp_prop );
-}
-
-void mixer( const int* usb_output, int* usb_input,
-            const int* i2s_output, int* i2s_input,
-            const int* dsp_output, int* dsp_input, const int* property )
-{
-    efx_cabsim__mixer( usb_output, usb_input, i2s_output, i2s_input,
-                       dsp_output, dsp_input, property );
-}
-
-void dsp_thread1( int* samples, const int* property ) {efx_cabsim__dsp_thread1(samples,property);}
-void dsp_thread2( int* samples, const int* property ) {efx_cabsim__dsp_thread2(samples,property);}
-void dsp_thread3( int* samples, const int* property ) {efx_cabsim__dsp_thread3(samples,property);}
-void dsp_thread4( int* samples, const int* property ) {efx_cabsim__dsp_thread4(samples,property);}
-void dsp_thread5( int* samples, const int* property ) {efx_cabsim__dsp_thread5(samples,property);}
-```
+The effects also supports the HTML5 interface for controlling the device (firmware upgrading, uploading IR data, etc) since the web interfaces uses FlexFX properties and USB/MIDI for control. Javascript code for an effect is returned via USB MIDI by issueing the FlexFX USB/MIDI property for returning a device's javascript controller interface.  The HTML5 application called 'flexfx.html' does this automatically and will displayt this device's GUI interface if the device is pluged into the host computer via a USB cable. Google Chrome must be used.
 
 Discovery and Control
 ----------------------------
