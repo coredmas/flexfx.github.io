@@ -211,16 +211,18 @@ void make_highshelf( int cc[5], double ff, double qq, double gg );
 
 // Functions and variables to be implemented by the application ...
 
-const char* product_name_string   = "Example";   // Your product name
-const char* usb_audio_output_name = "Audio Out"; // Your USB audio output name
-const char* usb_audio_input_name  = "Audio In";  // Your USB audio input name
-const char* usb_midi_output_name  = "MIDI Out";  // Your USB MIDI output name
-const char* usb_midi_input_name   = "MIDI In";   // Your USB MIDI input name
+extern const char* product_name_string;   // Your product name
+extern const char* usb_audio_output_name; // Your USB audio output name
+extern const char* usb_audio_input_name;  // Your USB audio input name
+extern const char* usb_midi_output_name;  // Your USB MIDI output name
+extern const char* usb_midi_input_name;   // Your USB MIDI input name
 
-const int audio_sample_rate     = 48000; // Audio sampling frequency (48K,96K,192K,or 384K)
-const int usb_output_chan_count = 2;     // 2 USB audio output channels (32 max)
-const int usb_input_chan_count  = 2;     // 2 USB audio input channels (32 max)
-const int i2s_channel_count     = 2;     // 2,4,or8 I2S channels per SDIN/SDOUT wire
+extern const int audio_sample_rate;       // Audio sampling frequency (48K,96K,192K,or 384K)
+extern const int usb_output_chan_count;   // 2 USB audio output channels (32 max)
+extern const int usb_input_chan_count;    // 2 USB audio input channels (32 max)
+extern const int i2s_channel_count;       // 2,4,or8 I2S channels per SDIN/SDOUT wire
+
+extern const int i2s_sync_word[8];        // I2S WCLK words for each slot
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK words for each slot
 
@@ -231,7 +233,7 @@ const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK 
 // will be sent out if their ID is non-zero.  It's OK to use floating point calculations here since
 // this thread is not a real-time audio/DSP thread.
 
-void app_control( const int rcv_prop[6], int usb_prop[6], int dsp_prop[6] );
+extern void app_control( const int rcv_prop[6], int usb_prop[6], int dsp_prop[6] );
 
 // The mixer function is called once per audio sample and is used to route USB, I2S and DSP samples.
 // This function should only be used to route samples and for very basic DSP processing - not for
@@ -240,9 +242,9 @@ void app_control( const int rcv_prop[6], int usb_prop[6], int dsp_prop[6] );
 // should be performed using fixed-point math.
 // NOTE: IIR, FIR, and BiQuad coeff and state data *must* be declared non-static global!
 
-void app_mixer( const int usb_output[32], int usb_input[32],
-                const int i2s_output[32], int i2s_input[32],
-                const int dsp_output[32], int dsp_input[32], const int property[6] );
+extern void app_mixer( const int usb_output[32], int usb_input[32],
+                       const int i2s_output[32], int i2s_input[32],
+                       const int dsp_output[32], int dsp_input[32], const int property[6] );
 
 // Audio Processing Threads. These functions run on tile 1 and are called once for each audio sample
 // cycle. They cannot share data with the controller task or the mixer functions above that run on
@@ -252,22 +254,22 @@ void app_mixer( const int usb_output[32], int usb_input[32],
 // NOTE: IIR, FIR, and BiQuad coeff and state data *must* be declared non-static global!
 
 // Initialize DSP thread data (filter data and other algorithm data) here.
-void app_initialize( void ); // Called once upon boot-up.
+extern void app_initialize( void ); // Called once upon boot-up.
 
 // Process samples (from the mixer function) and properties. Send results to stage 2.
-void app_thread1( int samples[32], const int property[6] );
+extern void app_thread1( int samples[32], const int property[6] );
 
 // Process samples (from stage 1) and properties. Send results to stage 3.
-void app_thread2( int samples[32], const int property[6] );
+extern void app_thread2( int samples[32], const int property[6] );
 
 // Process samples (from stage 2) and properties. Send results to stage 4.
-void app_thread3( int samples[32], const int property[6] );
+extern void app_thread3( int samples[32], const int property[6] );
 
 // Process samples (from stage 3) and properties. Send results to stage 5.
-void app_thread4( int samples[32], const int property[6] );
+extern void app_thread4( int samples[32], const int property[6] );
 
 // Process samples (from stage 4) and properties. Send results to the mixer function.
-void app_thread5( int samples[32], const int property[6] );
+extern void app_thread5( int samples[32], const int property[6] );
 ```
 
 Control Properties
