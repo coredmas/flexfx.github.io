@@ -41,7 +41,7 @@ Getting Started
 2) Obtain the FlexFX™ dev-kit for building your own apps from “https://github.com/markseel/flexfxkit”.    
      Download the ZIP file or use GIT …
 ```
-git clone https://github.com/markseel/flexfx_kit.git
+git clone https://flexfx.github.io
 ```
 
 3) Set environment variables for using XMOS command-line build tools …
