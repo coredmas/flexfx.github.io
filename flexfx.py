@@ -269,12 +269,12 @@ if name[len(name)-4:] == ".bin": # Usage 3 - Burn firmware image to FLASH boot p
     sys.stdout.write("Erasing...")
     sys.stdout.flush()
     midi_write( midi, property_to_midi_sysex( [0x7100,0,0,0,0,0] ))
-	while True:
+    while True:
         prop = midi_sysex_to_property( midi_wait( midi ))
         if prop[0] == 0x7100: break
 
     sys.stdout.write("Writing")
-	sys.stdout.flush()
+    sys.stdout.flush()
     
     while True:
         line = file.read( 16 )
@@ -285,28 +285,25 @@ if name[len(name)-4:] == ".bin": # Usage 3 - Burn firmware image to FLASH boot p
                          (ord(line[ 8])<<24)+(ord(line[ 9])<<16)+(ord(line[10])<<8)+ord(line[11]), \
                          (ord(line[12])<<24)+(ord(line[13])<<16)+(ord(line[14])<<8)+ord(line[15]), \
                          0, 0, 0, 0 ]
-		sys.stdout.write(".")
-		sys.stdout.flush()
+        sys.stdout.write(".")
+        sys.stdout.flush()
         midi_write( midi, property_to_midi_sysex( data ))
-		while True:
-			prop = midi_sysex_to_property( midi_wait( midi ))
-			if prop[0] == 0x7200: break
+        while True:
+            prop = midi_sysex_to_property( midi_wait( midi ))
+            if prop[0] == 0x7200: break
         
     midi_write( midi, property_to_midi_sysex( [0x7300,0,0,0,0,0] ))
-	while True:
-        prop = midi_sysex_to_property( midi_wait( midi ))
-        if prop[0] == 0x7300: break
         
     file.close()
-	midi_close( midi )
-	print( "Done." )
+    midi_close( midi )
+    print( "Done." )
 
 elif name[len(name)-4:] == ".dat": # Usage 4 - Burn raw data file info FLASH data partition
 
     midi = midi_open( int(sys.argv[1]) )
     file = open( sys.argv[2], "rb" )
     file.close()
-	midi_close( midi )
+    midi_close( midi )
 	
 elif name[len(name)-4:] == ".wav": # Usage 5 - Load IR data (WAVE file) to DSP RAM
 
@@ -315,7 +312,7 @@ elif name[len(name)-4:] == ".wav": # Usage 5 - Load IR data (WAVE file) to DSP R
     samples = _parse_wave( file )
 
     sys.stdout.write("Writing")
-	sys.stdout.flush()
+    sys.stdout.flush()
     
     index = 0
     while len(samples) > 0:
@@ -329,16 +326,16 @@ elif name[len(name)-4:] == ".wav": # Usage 5 - Load IR data (WAVE file) to DSP R
         data = [ 0x4000+index, block[0],block[1],block[2],block[3],block[4] ]
 
         midi_write( midi, property_to_midi_sysex( data ))
-		while True:
-			prop = midi_sysex_to_property( midi_wait( midi ))
-        	if prop[0] == 0x4000+index: break
+        while True:
+            prop = midi_sysex_to_property( midi_wait( midi ))
+            if prop[0] == 0x4000+index: break
 
-		sys.stdout.write(".")
-		sys.stdout.flush()
+        sys.stdout.write(".")
+        sys.stdout.flush()
         index += 1
 
     file.close()
-	midi_close( midi )
+    midi_close( midi )
     print( "Done." )
 
 elif name[len(name)-4:] == ".txt": # Usage 6
@@ -354,12 +351,12 @@ elif name[len(name)-4:] == ".txt": # Usage 6
         print "%08x %08x %08x %08x %08x %08x" % (data[0],data[1],data[2],data[3],data[4],data[5])
         
         midi_write( midi, property_to_midi_sysex( data ))
-		while True:
-			prop = midi_sysex_to_property( midi_wait( midi ))
-        	if prop[0] == data[0]: break
+        while True:
+            prop = midi_sysex_to_property( midi_wait( midi ))
+            if prop[0] == data[0]: break
       
     file.close()
-	midi_close( midi )
+    midi_close( midi )
 	
 elif len(sys.argv) == 8: # Usage 7
 
@@ -367,8 +364,8 @@ elif len(sys.argv) == 8: # Usage 7
             int(sys.argv[6],16),int(sys.argv[7],16)]
     print "%08x %08x %08x %08x %08x %08x" % (data[0],data[1],data[2],data[3],data[4],data[5])
     midi = midi_open( int(sys.argv[1]) )
-	midi_write( midi, property_to_midi_sysex( data ))
-	while True:
-		prop = midi_sysex_to_property( midi_wait( midi ))
-		if prop[0] == data[0]: break
-	midi_close( midi )
+    midi_write( midi, property_to_midi_sysex( data ))
+    while True:
+        prop = midi_sysex_to_property( midi_wait( midi ))
+        if prop[0] == data[0]: break
+    midi_close( midi )
