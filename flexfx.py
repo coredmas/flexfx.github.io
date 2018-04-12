@@ -276,6 +276,7 @@ if name[len(name)-4:] == ".bin": # Usage 3 - Burn firmware image to FLASH boot p
     sys.stdout.write("Writing")
     sys.stdout.flush()
     
+    count = 0
     while True:
         line = file.read( 16 )
         if len(line) == 0: break
@@ -285,12 +286,15 @@ if name[len(name)-4:] == ".bin": # Usage 3 - Burn firmware image to FLASH boot p
                          (ord(line[ 8])<<24)+(ord(line[ 9])<<16)+(ord(line[10])<<8)+ord(line[11]), \
                          (ord(line[12])<<24)+(ord(line[13])<<16)+(ord(line[14])<<8)+ord(line[15]), \
                          0, 0, 0, 0 ]
-        sys.stdout.write(".")
         sys.stdout.flush()
         midi_write( midi, property_to_midi_sysex( data ))
         while True:
             prop = midi_sysex_to_property( midi_wait( midi ))
             if prop[0] == 0x7200: break
+        count += 1
+        if count == 256:
+	        sys.stdout.write(".")
+	        count = 0
         
     midi_write( midi, property_to_midi_sysex( [0x7300,0,0,0,0,0] ))
         

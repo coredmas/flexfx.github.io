@@ -190,12 +190,11 @@ function _load_javascript( unit )
 
     var x = "";
     x += "<div class='row'><div class='column' style='margin-top:3%'>";
-    x += "<h4 id='"+key+"_title'>" + _device_name[unit] + "</h4>";
 
     x += "<table class='flexfx'><tbody><tr>";
-    x += "<td><input type='file' style='display:none' id='"+key+"_input1'/><button id='"+key+"_button1'>Write Firmware</button></td>";
-    x += "<td><input type='file' style='display:none' id='"+key+"_input2'/><button id='"+key+"_button2'>UpLoad Data</button></td>";
-    //x += "<td><input type='file' style='display:none' id='"+key+"_input3'/><button id='"+key+"_button3'>Show Interface</button></td>";
+    x += "<td align='right'><h4 id='"+key+"_title'>" + _device_name[unit] + "</h4></td>";
+    x += "<td><h4>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h4></td>";
+    x += "<td><input type='file' style='display:none' id='"+key+"_input1'/><button id='"+key+"_button1'>Update Firmware</button></td>";
     x += "</tr></tbody></table>";
 
     x += flexfx_create( key );
@@ -203,8 +202,8 @@ function _load_javascript( unit )
 
     $(key).innerHTML = x;
 
-    for (var i=1;i<=2;++i) $(key+"_button"+i).onclick = _on_factory_button;
-    for (var i=1;i<=2;++i) $(key+"_input"+i).onchange = _on_factory_input;
+    $(key+"_button"+1).onclick = _on_factory_button;
+    $(key+"_input"+1).onchange = _on_factory_input;
 
     flexfx_initialize( key );
 }
@@ -224,7 +223,7 @@ function _on_factory_input( event )
     var num  = parseInt( event.target.id[10] );
     file_object = $(key+"_input"+num).files[0];
     if(      num == 1 ) flexfx_write_firmware( unit, file_object );
-    else if( num == 2 ) flexfx_upload_data( unit, file_object );
+    //else if( num == 2 ) flexfx_upload_data( unit, file_object );
 }
 
 function _on_factory_button( event )
@@ -525,7 +524,7 @@ body {
   line-height: 1.5;
   font-weight: 400;
   font-family: "Raleway", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  color: #222; }
+  background-color: #000000; color:#CCCCCC }
 
 h1, h2, h3, h4, h5, h6 { margin-top: 0; margin-bottom: 1rem; font-weight: 300; }
 h1 { font-size: 4.0rem; line-height: 1.2;  letter-spacing: -.1rem;}
@@ -619,7 +618,7 @@ input[type="button"] {
   display: inline-block;
   height: 32px;
   padding: 0 10px;
-  color: #555;
+  color: #cccccc;
   text-align: center;
   font-size: 11px;
   font-weight: 600;
@@ -651,25 +650,30 @@ input[type="button"]:disabled { color: #555; border-color: #AAA; outline: 0; }
 
 .slider {
     -webkit-appearance: none;
-    width: 96px; height: 8px;
-    border-radius: 5px;
-    background: #d3d3d3;
+    width: 96px; height: 11px;
+    border-radius: 3px;
+    background: #333333;
     outline: none;
     opacity: 0.7;
     -webkit-transition: .2s;
     transition: opacity .2s;
+  	border: 1px solid #cccccc;
 }
 .slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 15px; height: 15px;
-    border-radius: 50%;
-    background: #1144CC;
+    width: 11px; height: 13px;
+    border-radius: 3px;
+    background: #cccccc;
     cursor: pointer;
+  	border: 0px solid #cccccc;
 }
 .slider::-moz-range-thumb { width:15px; height:15px; border-radius:50%; background:#1122CC; cursor:pointer; x}
 .slider:hover,
-slider:hover { color: #FFF; background-color: #75a3e5; border-color: #111111; }
+slider:hover { color: #FFFFFF; background-color: #000000; border-color: #cccccc; }
+
+.slider::-webkit-slider-thumb:hover { color: #FFFFFF; background-color: #75bbff; border-color: #75bbff; } {
+}
 
 @media (min-width: 400px) {}
 @media (min-width: 550px) {}
