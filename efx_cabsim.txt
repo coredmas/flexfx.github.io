@@ -1,16 +1,4 @@
-# Three-stage tube preamp. Each stage implements a triode preamp model. The three stages are
-# followed by a grapic EQ. Preamp and tone parameters range from 1 (lowest frequency, minimum
-# level, etc) to 9 (highest frequency, maximum level, etc) with 5 being the middle or neutral
-# value.
-#
-# The FlexFX audio sample rate must be set to 192 kHz. The guitar samples are up-sampled to 960
-# kHz for non-linear preamp/tube model processing and then down-sampled back to 192 kHz. Therefore
-# the ADC, DAC and USB audio sample rates are all 192 khz.
-#
-# Each preamp stage incorporates adjustable pre-filtering (bass attenuation), a 12AX7 amplifier
-# model with slew-rate limiting and adjustable bias, and post-filtering, all creating a simple
-# 12AX7-based guitar preamp stage. The graphic EQ is at the end of the three-stage-preamp chain and
-# is used as the final tone-shaping component (a.k.a the preamp's the tone stack).
+# Cabinet simulator using impulse response convolution.
 #
 # All FlexFX apps support the standard FlexFX properties via the FlexFX framework ...
 #
