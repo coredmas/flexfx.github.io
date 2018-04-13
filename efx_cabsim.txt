@@ -12,34 +12,29 @@
 # 12AX7-based guitar preamp stage. The graphic EQ is at the end of the three-stage-preamp chain and
 # is used as the final tone-shaping component (a.k.a the preamp's the tone stack).
 #
-# Property layout for control (knobs, pushbuttons, etc) Values shown are 32-bit
-# values represented in ASCII/HEX format or as floating point values ranging
-# from +0.0 up to (not including) +1.0.
+# All FlexFX apps support the standard FlexFX properties via the FlexFX framework ...
 #
-# +------- Effect parameter identifier (Property ID)
-# |
-# |    +-------------------------------- Volume level
-# |    |     +-------------------------- Tone setting
-# |    |     |     +-------------------- Reserved
-# |    |     |     |     +-------------- Reserved
-# |    |     |     |     |     +-------- Preset selection (1 through 9)
-# |    |     |     |     |     |+------- Enabled (1=yes,0=bypassed)
-# |    |     |     |     |     ||+------ InputL  (1=plugged,0=unplugged)
-# |    |     |     |     |     |||+----- OutputL (1=plugged,0=unplugged)
-# |    |     |     |     |     ||||+---- InputR  (1=plugged,0=unplugged)
-# |    |     |     |     |     |||||+--- OutputR (1=plugged,0=unplugged)
-# |    |     |     |     |     ||||||+-- Expression (1=plugged,0=unplugged)
-# |    |     |     |     |     |||||||+- USB Audio (1=active)
-# |    |     |     |     |     ||||||||
-# 1001 0.500 0.500 0.500 0.500 91111111
+# ID        DIRECTION        SUMMARY
+# 1000      Bidirectional    Identify; return ID (3DEGFLEX) and versions
+# 1100      Bidirectional    Return volume,tone,preset,bypass settings
+# 120t      Bidirectional    Return tile T's DSP processing loads
+# 200n      Bidirectional    Load page buffer from FLASH block N
+# 210n      Bidirectional    Store page buffer to FLASH block N
+# 3iii      Bidirectional    Read 5-word property I from the page buffer
+# 4iii      Bidirectional    Write 5-word property I to the page buffer
+# 5xxx      Undefined        Reserved for future use
+# 6xxx      Undefined        Reserved for future use
+# 7100      Bidirectional    Begin firmware upgrade, echoed back to host
+# 7200      Bidirectional    Next 32 bytes of firmware image data, echoed
+# 7300      Host to Device   End firmware upgrade and reset
+# 8001      Device to Host   Send raw MIDI data from device to host
+# 8002      Host to Device   Send raw MIDI data from host to device
+# 8003      Internal         MIDI beat clock control (start/stop/setBPM)
+# 8004      Internal         MIDI MTC/MPC control (MPC commands,MTC settings)
 #
-# Property layout for preset data loading (loading IR data). Values shown are
-# 32-bit values represented in ASCII/HEX format.
+# To load a preset with new IR data ...
 #
-# +---------- Effect parameter identifier (Property ID)
-# |
-# |+--- Preset number (1 through 9)
-# ||
-# 1n02 0 0 0 0 0 # Begin IR data loading for preset N
-# 1n03 A B C D E # Five of the next IR data words to load into preset N
-# 1n04 0 0 0 0 0 # End IR data loading for preset N
+# 1) Send property 0x200n (n = property page number) to load FLASH data into RAM for preset N.
+# 2) Send property 0x4iii (iii = line number) to send five 32-bit words of IR data.
+# 3) Repeat #2 incrementing iii for each five-word upload.
+# 4) Send property 0x210n (n = property page number) to save new IR data FLASH for preset N.
