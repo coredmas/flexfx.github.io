@@ -272,16 +272,16 @@ extern void app_thread4( int samples[32], const int property[6] );
 extern void app_thread5( int samples[32], const int property[6] );
 ```
 
-Control Properties
---------------------------------------
+FlexFX Properties
+----------------------------------
 
-FlexFX applications can be controlled using FlexFX property exchanges via USB MIDI.
-A property is composed of a 16-bit IDC and five 32-bit data words for a total of 44 bytes of data.
+FlexFX applications are controlled using FlexFX property exchanges over USB MIDI.
+A property is composed of a 16-bit IDC and five 32-bit data words.
 
 An example property is shown below:
 
 ```
-Property ID = 0x01011301     The ID must have a non-zero 16-bit upper word (0x0101 in this example)
+Property ID = 0x1234       The ID must have a non-zero 16-bit upper word (0x0101 in this example)
 Param 1     = 0x11223344
 Param 2     = 0x55667788
 Param 3     = 0x99aabbcc
@@ -289,52 +289,111 @@ Param 4     = 0x01234567
 Param 5     = 0x89abcdef
 ```
 
-Since FlexFX properties are transfered via MIDI the 44 bytes of data must be encapsulated withing a MIDI SYSEX message when
-parsing and rendering FlexFX properties on the USB host.
+Since FlexFX properties are transfered via MIDI SYSEX message when
 The FlexFX framework handles parsing and rendering of MIDI SYSEX encapulated FlexFX data transfer therefore the user
-application need not deal with MIDi SYSEX. The FlexFX SDK handles the USB MIDI and MIDI sysex rendering/parsing -
-the audio firmware only sees 16-bit ID and five 32-word properties and is not aware of USB MIDI and sysex rendering/parsing as this is handled by the FlexFX SDK.
+application need not deal with MIDi SYSEX - the audio firmware only sees 16-bit ID and five 32-word propertie.
 
-For detailed information regarding the rendering/parsing process and MIDI SYSEX formatting see the 'flexfx.py' script
+For detailed information regarding the encapsulation of FlexFX properties within MIDI SYSEX see the 'flexfx.py' script
 that's used to send/receive properties to FlexFX applications via USB.
 
-FlexFX supports predeifned properties with the 16-bit ID being less than 0x1000.
-User defined properties should therefore use 16-bit ID's greater then or equal to 0x1000.
+FlexFX supports predeifned properties with the 16-bit ID being non-zero and less than 0x9FFF.
+User defined properties should therefore use 16-bit ID's greater then or equal to 0xA000.
+The predefied properties (0x0001 <= ID <= 0x8FFF) are all handled automatically by the FlexFX framework.
 
 ```
 ID        DIRECTION        SUMMARY
-0001      Bidirectional    Return 3DEGFLEX, versions and props[4:5] to host
-0002      Bidirectional    Return the device product name (up to 40 bytes)
-0003      Device to Host   Start dumping the text in this file
-0004      Bidirectional    Next 40 bytes of property interface text
-0005      Host to Device   End of property interface text dump
-0006      Device to Host   Start a controller javascript code dump
-0007      Bidirectional    Next 40 bytes of javascript code text
-0008      Host to Device   End of controller javascript code text
-0009      Bidirectional    Begin firmware upgrade, echoed back to host
-000A      Bidirectional    Next 32 bytes of firmware image data, echoed
-000B      Bidirectional    End firmware upgrade, echoed back to host
-000C      Bidirectional    Begin flash user data load, echoed back to host
-000D      Bidirectional    Next 32 bytes of flash user data, echoed
-000E      Bidirectional    End flash data loading, echoed back to host
-000F      Bidirectional    Query/return DSP thread run-time (audio cycles)
+1000      Bidirectional    Identify; return ID (3DEGFLEX) and versions
+1100      Bidirectional    Return volume,tone,preset,bypass settings
+120t      Bidirectional    Return tile T's DSP processing loads
+200n      Bidirectional    Load page buffer from FLASH block N
+210n      Bidirectional    Store page buffer to FLASH block N
+3iii      Bidirectional    Read 5-word property I from the page buffer
+4iii      Bidirectional    Write 5-word property I to the page buffer
+5xxx      Undefined        Reserved for future use
+6xxx      Undefined        Reserved for future use
+7100      Bidirectional    Begin firmware upgrade, echoed back to host
+7200      Bidirectional    Next 32 bytes of firmware image data, echoed
+7300      Host to Device   End firmware upgrade and reset
+8001      Device to Host   Send raw MIDI data from device to host
+8002      Host to Device   Send raw MIDI data from host to device
+8003      Internal         MIDI beat clock control (start/stop/setBPM)
+8004      Internal         MIDI MTC/MPC control (MPC commands,MTC settings)
+9xxx      Undefined        Reserved for future use
 ```
 
-#### FlexFX ID = 0x0001
-#### FlexFX ID = 0x0002
-#### FlexFX ID = 0x0003
-#### FlexFX ID = 0x0004
-#### FlexFX ID = 0x0005
-#### FlexFX ID = 0x0006
-#### FlexFX ID = 0x0007
-#### FlexFX ID = 0x0008
-#### FlexFX ID = 0x0009
-#### FlexFX ID = 0x000A
-#### FlexFX ID = 0x000B
-#### FlexFX ID = 0x000C
-#### FlexFX ID = 0x000D
-#### FlexFX ID = 0x000E
-#### FlexFX ID = 0x000F
+#### FlexFX ID = 0x1000
+#### FlexFX ID = 0x1100
+#### FlexFX ID = 0x120t
+#### FlexFX ID = 0x200n
+#### FlexFX ID = 0x210n
+#### FlexFX ID = 0x3iii
+#### FlexFX ID = 0x4iii
+#### FlexFX ID = 0x7100
+#### FlexFX ID = 0x7200
+#### FlexFX ID = 0x7300
+#### FlexFX ID = 0x8001/2
+#### FlexFX ID = 0x8003
+#### FlexFX ID = 0x8004
+
+Property Pages
+----------------------------
+
+A property page is a collection of property values stored in RAM or in FLASH where each page's property is identified by the
+property ID using the least significat 12 bits (ID = iii).  Each page being 64 Kbytes can store 3276 full property values (five 32-bit words).
+One property page is stored in RAM while up to 15 property pages can be stored in FLASH.
+A property exchange over USB/MIDI using properties 0x200n and 0x210n can be used to move property pages between RAM and FLASH memory where N specifies the property page in FLASH to load or store.
+
+Writing and reading prioperties to/from the RAM property page in occurs via properties 0x3iii (read) and 0x4iii (write) where
+iii is the property number.
+If the USB/MIDI host writes to the property page via property 0x3iii then that property's data (five 32-bit words) will be copied into the property page as well as sent to the 'app_control' function.
+If the 'app_control' function writes to the properties page via 0x3iii then that property's data (five 32-bit words) will be send to the USB/MIDI host.
+The RAM property page then always reflects the current state or property value transfers regardless of the transfer direction (e.g host to device or device to host).  The 'app_control' function and the USB/MIDI host can read the properties page at any time using property 0x4iii.
+
+Note that it's the responsibility of either the FlexFX firmware (via the 'app_control' function or the USB/MIDI host application) to move RAM property pages betwen FLASH.  Such would be the case for if an effects preset state, reflected by the properties page values, changed in some way and needed to be persisted to FLASH for later recall.
+
+Discovery and Control
+----------------------------
+
+All FlexFX devices support a discovery process whereby the host computer can querry a FlexFX device for its Javascript control source-code via FlexFX property exchanges as soon as the FlexFX firwmare starts.
+After a FlexFX device boots up it loads its RAM properties page with javascript code (stored as part of the firwmare program in FLASH memory) that can be used to control the effect. The 'flexfx.html' file will read the javascript from the properties page upon a FLexFX USB plug-in event and then use that javasscript to display the control interface (Google Chrome must be used).
+
+Adding your own javascript control code to your custom effect is easy. Given a custom effect called 'myeffect.c' create a correspinding javascript file 'myeffect.js' that is aware of the custom effects properies used for configuration and control.  The build script (build.sh or build.bat) will embed the jaascript source code in the custom effects firmware image.
+
+Here's minimal javascript controller example:
+
+```
+// Called by 'flexfx.html' when a FlexFX device is plugged in to USB. This function is
+// used to create DOM elements that correspond to the effects FlexFX properties interface.
+
+function flexfx_create( key ) // 'Key' identifer this instance of a controller instance
+{
+    var x = "";
+    x += "<p>";
+    x += "This FlexFX device does not have effects firmware loaded into it. Use the ";
+    x += "'LOAD FIRMWARE' button to select a firmware image to load into this device.";
+    x += "</p>";
+    return x;
+}
+
+// Called by 'flexfx.html' after the web page has been rendered and is ready for user input.
+// This function is used to initialize any custom data and relaaed DOM elements and also tp return
+// a handler function for non build-in FlexFX (i.e. custom effects) properties that arrive from
+// the FlexFX device via USB/MIDI.
+
+function flexfx_initialize( key ) // 'Key' identifer this instance of a controller instance
+{
+    return _on_property_received;
+}
+
+// Handle a property arriving from the associated FlexFX device. Optionally send a property
+// to the associated FlexFX device.
+
+function _on_property_received( property ) // Property is [ID, value1, ...value5]
+{
+  // Send a property to the FlexFX device ...
+  // flexfx_send_property( property ) // Property is [ID, value1, ...value5]
+}
+```
 
 Programming Tools
 -------------------------------------
@@ -522,89 +581,6 @@ Prebuilt Effects
 The FlexFX kit contains some highly optimized effects. These effects are in binary (\*.bin) form and can be used for free on FlexFX boards. The FlexFX properties definitions for prebuilt effects are documented in the effect's respective text file (e.g. efx_cabsim.txt for the prebuild efx_cabsim.bin effect). These properties allow for full control over each effect via FlexFX properties sent and received over USB/MIDI.
 
 The effects also supports the HTML5 interface for controlling the device (firmware upgrading, uploading IR data, etc) since the web interfaces uses FlexFX properties and USB/MIDI for control. Javascript code for an effect is returned via USB MIDI by issueing the FlexFX USB/MIDI property for returning a device's javascript controller interface.  The HTML5 application called 'flexfx.html' does this automatically and will displayt this device's GUI interface if the device is pluged into the host computer via a USB cable. Google Chrome must be used.
-
-Discovery and Control
-----------------------------
-
-All USB MIDI data flow between a host computer and FlexFX devices occurs via FlexFX properties (see 'Run-time' Control above). FlexFX devices, including the optimized prebuilt effects (see 'Prebuilt Effects' above), support a discovery process whereby any host computer can querry a FlexFX device for both its MIDI interface and its Javascript control code via a FlexFX property.
-
-The FlexFx property interface data, returned in a human readable text) is returned via USB MIDI if the device receives FlexFX properties with ID's of 0x21 (begin), 0x22 (next), and 0x23 (end). The returned text can be used to provide additonal FlexFX property definitions for device specific (or effect specific) control. This textual data is automatically included in the FlexFX firmware image (see 'Development Steps' above) if a .txt file with the same name as the effect being built exists (e.g. efx_cabsim.txt for efx_cabsim.c firmware).
-
-Here's an example of a textual property interface definition for the 'efx_cabsim' effect. Note that this exact text
-is returned upon issuing a FlexFX proeprty with ID = 0x0004 to the target FlexFX device.
-
-```
-# FLEXFX STEREO CABSIM Property Interface
-#
-# Stereo Cabinet Simulator using impulse responses. Impulse responses to upload
-# must be stored in a wave file (RIFF/WAV format) and have a sampling frequency
-# of 48 kHz. Both mono and stereo source data is supported.  Stereo can also be
-# employed by specifying two mono WAV files.
-#
-# PROP ID   DIRECTION        DESCRIPTION
-# 0001      Bidirectional    Return 3DEGFLEX, versions and props[4:5] to host
-# 0002      Bidirectional    Return the device product name (up to 40 bytes)
-# 0003      Device to Host   Start dumping the text in this file
-# 0004      Bidirectional    Next 40 bytes of property interface text
-# 0005      Host to Device   End of property interface text dump
-# 0006      Device to Host   Start a controller javascript code dump
-# 0007      Bidirectional    Next 40 bytes of javascript code text
-# 0008      Host to Device   End of controller javascript code text
-# 0009      Bidirectional    Begin firmware upgrade, echoed back to host
-# 000A      Bidirectional    Next 32 bytes of firmware image data, echoed
-# 000B      Bidirectional    End firmware upgrade, echoed back to host
-# 000C      Bidirectional    Begin flash user data load, echoed back to host
-# 000D      Bidirectional    Next 32 bytes of flash user data, echoed
-# 000E      Bidirectional    End flash data loading, echoed back to host
-# 000F      Bidirectional    Query/return DSP thread run-time (audio cycles)
-# PROP ID   DIRECTION        DESCRIPTION
-# 1000      Host to Device   Return volume,tone,preset control settings
-# 1001      Bidirectional    Update controls (overrides physical controls)
-# 1n01      Bidirectional    Up to 20 charactr name for preset N (1<=N<=9)
-# 1n02      Bidirectional    Begin data upload for preset N, begin upload ACK
-# 1n03      Bidirectional    Five IR data words for preset N or echoed data
-# 1n04      Bidirectional    End data upload for preset N or end upload ACK
-# 1n05      Bidirectional    First 20 chars of data file name for preset N
-# 1n06      Bidirectional    Next 20 chars of data file name for preset N
-# 1n07      Bidirectional    Last 20 chars of data file name for preset N
-#
-# Property layout for control (knobs, pushbuttons, etc) Values shown are 32-bit
-# values represented in ASCII/HEX format or as floating point values ranging
-# from +0.0 up to (not including) +1.0.
-#
-# +------- Effect parameter identifier (Property ID)
-# |
-# |    +-------------------------------- Volume level
-# |    |     +-------------------------- Tone setting
-# |    |     |     +-------------------- Reserved
-# |    |     |     |     +-------------- Reserved
-# |    |     |     |     |     +-------- Preset selection (1 through 9)
-# |    |     |     |     |     |+------- Enabled (1=yes,0=bypassed)
-# |    |     |     |     |     ||+------ InputL  (1=plugged,0=unplugged)
-# |    |     |     |     |     |||+----- OutputL (1=plugged,0=unplugged)
-# |    |     |     |     |     ||||+---- InputR  (1=plugged,0=unplugged)
-# |    |     |     |     |     |||||+--- OutputR (1=plugged,0=unplugged)
-# |    |     |     |     |     ||||||+-- Expression (1=plugged,0=unplugged)
-# |    |     |     |     |     |||||||+- USB Audio (1=active)
-# |    |     |     |     |     ||||||||
-# 1001 0.500 0.500 0.500 0.500 91111111
-#
-# Property layout for preset data loading (loading IR data). Values shown are
-# 32-bit values represented in ASCII/HEX format.
-#
-# +---------- Effect parameter identifier (Property ID)
-# |
-# |+--- Preset number (1 through 9)
-# ||
-# 1n02 0 0 0 0 0 # Begin IR data loading for preset N
-# 1n03 A B C D E # Five of the next IR data words to load into preset N
-# 1n04 0 0 0 0 0 # End IR data loading for preset N
-```
-
-The FlexFX HTML5 control javascript source code is returned via USB MIDI if the device receives FlexFX properties with ID's of 0x31 (begin), 0x32 (next), and 0x33 (end). The returned code can be used in HTML5 applications to access and control FlexFX devices via HTML MIDI whoch is supported by Google Chrome. The HTML5 application called 'flexfx.html' will sense USB MIDI events, including the plugging and unplugging of FlexFX devices, querry the device for its javascript controller code, and display the device's GUI interface on a webpage. This javascript codeis automatically included in the FlexFX firmware image (see 'Development Steps' above) if a .js file with the same name as the effect being built exists (e.g. efx_cabsim.js for efx_cabsim.c firmware).
-
-Here's an example of HTML5 controller for the 'efx_cabsim' effect:
-![alt tag](https://raw.githubusercontent.com/markseel/flexfx_kit/master/efx_cabsim.png)
 
 Reading Pots/Knobs
 --------------------------------------
