@@ -24,8 +24,48 @@ function unit_to_key( unit ) { return "KEY" + unit.toString(16); }
 function key_to_unit( key  ) { return parseInt(key.slice(3,4),16); }
 function id_to_key  ( id   ) { return id.slice(0,4); }
 
+function flexfx_create( key, preset )
+{
+	var t = ["Stage","Low-Cut","Emphasis","Bias","Drive","High-Cut"];
+	
+	var x = "";
+	x += flexfx_ui_label  ( key, preset, 'F',  0, "1" );
+	x += flexfx_ui_label  ( key, preset, 'N',  0, "2" );
+	x += flexfx_ui_label  ( key, preset, 'L',  0, "3" );
+	x += flexfx_ui_hslider( key, preset, 'F',  1, 96 );
+	x += flexfx_ui_hslider( key, preset, 'N',  2, 96 );
+	x += flexfx_ui_hslider( key, preset, 'L',  3, 96 );
+	x += flexfx_ui_hslider( key, preset, 'F',  4, 96 );
+	x += flexfx_ui_hslider( key, preset, 'N',  5, 96 );
+	x += flexfx_ui_hslider( key, preset, 'L',  6, 96 );
+	x += flexfx_ui_hslider( key, preset, 'F',  7, 96 );
+	x += flexfx_ui_hslider( key, preset, 'N',  8, 96 );
+	x += flexfx_ui_hslider( key, preset, 'L',  9, 96 );
+	x += flexfx_ui_hslider( key, preset, 'F', 10, 96 );
+	x += flexfx_ui_hslider( key, preset, 'N', 11, 96 );
+	x += flexfx_ui_hslider( key, preset, 'L', 12, 96 );
+	x += flexfx_ui_hslider( key, preset, 'F', 13, 96 );
+	x += flexfx_ui_hslider( key, preset, 'N', 14, 96 );
+	x += flexfx_ui_hslider( key, preset, 'L', 15, 96 );
+	
+	var on_control = function(event)
+	{
+		var key = event.target.id.slice(0,4);
+		var preset = event.target.id.slice(4,5);
+		var index = event.target.id.slice(5);
+		console.log( key, preset, index );
+	};
+	var on_property = function(key,prop)
+	{
+		if( prop[0] == 0x1100 ) _handle_select_event( key, prop[1] );
+	};
+	return [t, x, on_control, on_property];
+}
+
 window.addEventListener('load', function()
 {
+	//_load_javascript( 0 ); return;
+
     if(navigator.requestMIDIAccess) {
         navigator.requestMIDIAccess({sysex:true}).then(_on_midi_success,_on_midi_failure);
     }
@@ -175,6 +215,53 @@ function _on_midi_message( event )
     }
 }
 
+function flexfx_ui_label( key, pos, index, text, ids )
+{
+	var id = key+"~"+(index.toString(16));
+	var x = "";
+	if( pos == 'F' || pos == 'S' ) x += "<td><div style='display:inline-block'>"
+	x += "<div id='"+id+"'>"+text+"</div>";
+	if( pos == 'L' || pos == 'S' ) x += "</div></td>";
+	return x;
+}
+function flexfx_ui_hslider( key, pos, index, width, ids )
+{
+	var id = key+"~"+(index.toString(16));
+	var x = "";
+	if( pos == 'F' || pos == 'S' ) x += "<td><div style='display:inline-block'>"
+	x += "<div style='height:20px'><input class='slider' style='width:96px' type='range' min='1' max='15' id='"+id+"'></div>";
+	if( pos == 'L' || pos == 'S' ) x += "</div></td>";
+	return x;
+}
+function flexfx_ui_vslider( key, pos, index, width, ids )
+{
+	var id = key+"~"+(index.toString(16));
+	var x = "";
+	if( pos == 'F' || pos == 'S' ) x += "<td><div style='display:inline-block'>"
+	x += "<div style='height:"+50+"px'>";
+	x += "<input class='vslider' style='width:"+width+"px' type='range' min='1' max='15' id='"+id+"'>";
+	x += "</div>";
+	if( pos == 'L' || pos == 'S' ) x += "</div></td>";
+	return x;
+}
+function flexfx_ui_file( key, pos, index, label, ids )
+{
+	var id = key+"~"+(index.toString(16));
+	var x = "";
+	if( pos == 'F' || pos == 'S' ) x += "<td><div style='display:inline-block'>"
+	x += "<td><input type='file' style='display:none' id='"+id+"_file'/><button id='"+id+"'>"+label+"</button></td>";
+	if( pos == 'L' || pos == 'S' ) x += "</div></td>";
+	return x;
+}
+
+function flexfx_ui_event( event )
+{
+	var key = event.target.id.substring(0,4);
+	var preset = event.target.id.slice(4,5);
+	for( var ii = 1; ii <= 9; ++ii ) $(key+ii).innerHTML = ii;
+	$(key+preset).innerHTML = "[" + event.target.innerHTML + "]";
+}
+
 function _load_javascript( unit )
 {
 	var key = unit_to_key( unit );
@@ -187,6 +274,7 @@ function _load_javascript( unit )
     script.appendChild( document.createTextNode(_javascript[unit]) );
     script.type = "text/javascript";
     document.getElementsByTagName("head")[0].appendChild(script);
+    //eval(script);
 
     var x = "";
     x += "<div class='row'><div class='column' style='margin-top:3%'>";
@@ -197,15 +285,32 @@ function _load_javascript( unit )
     x += "<td><input type='file' style='display:none' id='"+key+"_input1'/><button id='"+key+"_button1'>Update Firmware</button></td>";
     x += "</tr></tbody></table>";
 
-    x += flexfx_create( key );
-    x += "</div></div>";
-
+    stuff = flexfx_create( key, 0 );
+    var heading = stuff[0];
+	x += "<table class='flexfx'><thead><th>Preset</th>";
+	for( var hh in heading ) { x += "<th>" + heading[hh] + "</th>"; }
+	x += "</thead><tbody>";
+	for( var preset = 1; preset <= 9; ++preset ) {
+		x += "<tr class='preset'><td class='preset' id='"+key+preset+"'>"+preset+"</td>"
+		x += stuff[1].replace(new RegExp('~','g'),preset.toString(16));
+		x += "</tr>";
+	}
+	x += "</tbody></table>";
+	
     $(key).innerHTML = x;
 
     $(key+"_button"+1).onclick = _on_factory_button;
     $(key+"_input"+1).onchange = _on_factory_input;
 
-    flexfx_initialize( key );
+	for( var preset=1;preset<=9;++preset) $(key+preset).onclick = flexfx_ui_event;
+	for( var ii = 16; ii < 256; ++ii ) {
+		id = key + ii.toString(16);
+		if( !!document.getElementById(id) ) {
+			if( $(id).nodeName == "BUTTON" ) $(id).onclick = stuff[2];
+			if( $(id).nodeName == "INPUT" ) $(id).oninput = stuff[2];
+		}
+		if( !!document.getElementById(id+"_file") ) $(id+"_file").onchange = stuff[2];
+	}
 }
 
 function _unload_javascript( unit )
@@ -414,6 +519,9 @@ textarea { overflow: auto; }
 table { border-collapse: collapse; border-spacing: 0; }
 td, th { padding: 0; }
 
+tr.preset:hover { color:#ddd; background-color: #222; border-color: #333; }
+td.preset:hover { color:#eee; background-color: #357; border-color: #333; }
+
 .container {
   position: relative;
   width: 100%;
@@ -464,13 +572,8 @@ p { margin-top: 0; }
 a { color: #1EAEDB; }
 a:hover { color: #0FA0CE; }
 
-input[type="email"],
 input[type="number"],
-input[type="search"],
 input[type="text"],
-input[type="tel"],
-input[type="url"],
-input[type="password"],
 textarea,
 select {
   height: 28px;
@@ -481,12 +584,10 @@ select {
   box-shadow: none;
   box-sizing: border-box; }
 input[type="number"],
-input[type="search"],
 input[type="text"],
 textarea { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
 textarea { min-height: 65px; padding-top: 6px; padding-bottom: 6px; }
 input[type="number"]:focus,
-input[type="search"]:focus,
 input[type="text"]:focus,
 textarea:focus,
 select:focus { border: 1px solid #33C3F0; outline: 0; }
@@ -494,7 +595,6 @@ label, legend { display: block; margin-bottom: .5rem; font-weight: 600; }
 fieldset { padding: 0; border-width: 0; }
 input[type="checkbox"],
 input[type="radio"] { display: inline; }
-label > .label-body { display: inline-block; margin-left: .5rem; font-weight: normal; }
 
 ul { list-style: circle inside; }
 ol { list-style: decimal inside; }
@@ -505,11 +605,6 @@ li { margin-bottom: 1rem; }
 button, .button { margin-bottom: 1rem; }
 input, textarea, select, fieldset { margin-bottom: 1rem; }
 pre, blockquote, dl, figure, table, p, ul, ol, form { margin-bottom: 1.0rem; }
-
-.u-full-width { width: 100%; box-sizing: border-box; }
-.u-max-full-width { max-width: 100%; box-sizing: border-box; }
-.u-pull-right { float: right; }
-.u-pull-left { float: left; }
 
 hr { margin-top:3rem; margin-bottom:3.5rem; border-width:0; border-top:1px solid #E1E1E1; }
 
@@ -527,7 +622,7 @@ input[type="button"] {
   display: inline-block;
   height: 32px;
   padding: 0 10px;
-  color: #cccccc;
+  color: #CCC;
   text-align: center;
   font-size: 11px;
   font-weight: 600;
@@ -538,16 +633,14 @@ input[type="button"] {
   white-space: nowrap;
   background-color: transparent;
   border-radius: 5px;
-  border: 1px solid #bbb;
+  border: 1px solid #BBB;
   cursor: pointer;
   box-sizing: border-box;
 }
 
-input.preset:hover { background-color: #75a3e5; border-color: #222222; }
-
 input.button:hover,
 button:hover,
-input[type="button"]:hover { color: #FFF; background-color: #75a3e5; border-color: #222222; }
+input[type="button"]:hover { color: #EEE; background-color: #357; border-color: #CCC; }
 
 input.button:focus,
 button:focus,
@@ -555,32 +648,58 @@ input[type="button"]:focus { color: #333; border-color: #888; outline: 0; }
 
 input.button:disabled,
 button:disabled,
-input[type="button"]:disabled { color: #555; border-color: #AAA; outline: 0; }
+input[type="button"]:disabled { color: #777; border-color: #AAA; outline: 0; }
 
 input.slider {
     -webkit-appearance: none;
     width: 96px; height: 11px;
     border-radius: 3px;
-    background: #333333;
+    background: #333;
     outline: none;
     opacity: 0.7;
     -webkit-transition: .2s;
     transition: opacity .2s;
-  	border: 1px solid #cccccc;
+  	border: 1px solid #CCC;
 }
 input.slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 11px; height: 13px;
     border-radius: 3px;
-    background: #cccccc;
+    background: #CCC;
     cursor: pointer;
-  	border: 0px solid #cccccc;
+  	border: 0px solid #CCC;
 }
 input.slider:hover,
-slider:hover { color: #FFFFFF; background-color: #000000; border-color: #cccccc; }
+slider:hover { color: #FFF; background-color: #000; border-color: #CCC; }
 
-input.slider::-webkit-slider-thumb:hover { color: #FFFFFF; background-color: #75bbff; border-color: #75bbff; } {
+input.slider::-webkit-slider-thumb:hover { color: #FFF; background-color: #75bbff; border-color: #75bbff; } {
+}
+
+input.vslider {
+    -webkit-appearance: slider-vertical;
+    width: 20px; height: 60px;
+    border-radius: 3px;
+    background: #333;
+    outline: none;
+    opacity: 0.7;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+  	border: 1px solid #CCC;
+}
+input.vslider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 11px; height: 13px;
+    border-radius: 3px;
+    background: #CCC;
+    cursor: pointer;
+  	border: 0px solid #CCC;
+}
+input.vslider:hover,
+vslider:hover { color: #FFF; background-color: #000; border-color: #CCC; }
+
+input.vslider::-webkit-slider-thumb:hover { color: #FFF; background-color: #75bbff; border-color: #75bbff; } {
 }
 
 </style>
