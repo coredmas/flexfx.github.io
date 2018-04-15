@@ -61,7 +61,7 @@ xcc -report -O3 -lquadflash flexfx.xn flexfx.a application.c -o appliocation.xe
 ```
 xflash --no-compression --factory-version 14.3 —-upgrade 1 application.xe
  — or —
-xflash --no-compression --factory-version 14.3 —-upgrade 1  application.xe -o application.bin
+xflash --no-compression --factory-version 14.3 --upgrade 1 application.xe -o application.bin
 python flexfx.py 0 application.bin
 ```
 
