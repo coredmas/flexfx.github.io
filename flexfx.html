@@ -15,6 +15,16 @@
 
 <script>
 
+window.addEventListener('load', function()
+{
+	_load_javascript( 0 ); return;
+
+    if(navigator.requestMIDIAccess) {
+        navigator.requestMIDIAccess({sysex:true}).then(_on_midi_success,_on_midi_failure);
+    }
+    else document.write( "This browser does not support MIDI access." );
+});
+
 var _midi_input_ports = {}, _midi_output_ports = {}, _midi_in_to_out_map = {};
 var _javascript = {}, _device_name = {};
 var _midi_buffer = {}, _load_count = {}, _total_size = {};
@@ -24,29 +34,29 @@ function unit_to_key( unit ) { return "KEY" + unit.toString(16); }
 function key_to_unit( key  ) { return parseInt(key.slice(3,4),16); }
 function id_to_key  ( id   ) { return id.slice(0,4); }
 
-function flexfx_create( key, preset )
+function flexfx_create( key )
 {
 	var t = ["Stage","Low-Cut","Emphasis","Bias","Drive","High-Cut"];
 	
 	var x = "";
-	x += flexfx_ui_label  ( key, preset, 'F',  0, "1" );
-	x += flexfx_ui_label  ( key, preset, 'N',  0, "2" );
-	x += flexfx_ui_label  ( key, preset, 'L',  0, "3" );
-	x += flexfx_ui_hslider( key, preset, 'F',  1, 96 );
-	x += flexfx_ui_hslider( key, preset, 'N',  2, 96 );
-	x += flexfx_ui_hslider( key, preset, 'L',  3, 96 );
-	x += flexfx_ui_hslider( key, preset, 'F',  4, 96 );
-	x += flexfx_ui_hslider( key, preset, 'N',  5, 96 );
-	x += flexfx_ui_hslider( key, preset, 'L',  6, 96 );
-	x += flexfx_ui_hslider( key, preset, 'F',  7, 96 );
-	x += flexfx_ui_hslider( key, preset, 'N',  8, 96 );
-	x += flexfx_ui_hslider( key, preset, 'L',  9, 96 );
-	x += flexfx_ui_hslider( key, preset, 'F', 10, 96 );
-	x += flexfx_ui_hslider( key, preset, 'N', 11, 96 );
-	x += flexfx_ui_hslider( key, preset, 'L', 12, 96 );
-	x += flexfx_ui_hslider( key, preset, 'F', 13, 96 );
-	x += flexfx_ui_hslider( key, preset, 'N', 14, 96 );
-	x += flexfx_ui_hslider( key, preset, 'L', 15, 96 );
+	x += flexfx_ui_label  ( key, 'F',  0, "1" );
+	x += flexfx_ui_label  ( key, 'N',  0, "2" );
+	x += flexfx_ui_label  ( key, 'L',  0, "3" );
+	x += flexfx_ui_hslider( key, 'F',  1, 96 );
+	x += flexfx_ui_hslider( key, 'N',  2, 96 );
+	x += flexfx_ui_hslider( key, 'L',  3, 96 );
+	x += flexfx_ui_hslider( key, 'F',  4, 96 );
+	x += flexfx_ui_hslider( key, 'N',  5, 96 );
+	x += flexfx_ui_hslider( key, 'L',  6, 96 );
+	x += flexfx_ui_hslider( key, 'F',  7, 96 );
+	x += flexfx_ui_hslider( key, 'N',  8, 96 );
+	x += flexfx_ui_hslider( key, 'L',  9, 96 );
+	x += flexfx_ui_hslider( key, 'F', 10, 96 );
+	x += flexfx_ui_hslider( key, 'N', 11, 96 );
+	x += flexfx_ui_hslider( key, 'L', 12, 96 );
+	x += flexfx_ui_hslider( key, 'F', 13, 96 );
+	x += flexfx_ui_hslider( key, 'N', 14, 96 );
+	x += flexfx_ui_hslider( key, 'L', 15, 96 );
 	
 	var on_control = function(event)
 	{
@@ -61,16 +71,6 @@ function flexfx_create( key, preset )
 	};
 	return [t, x, on_control, on_property];
 }
-
-window.addEventListener('load', function()
-{
-	//_load_javascript( 0 ); return;
-
-    if(navigator.requestMIDIAccess) {
-        navigator.requestMIDIAccess({sysex:true}).then(_on_midi_success,_on_midi_failure);
-    }
-    else document.write( "This browser does not support MIDI access." );
-});
 
 function _on_midi_success( midiAccess )
 {

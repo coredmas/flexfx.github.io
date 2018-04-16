@@ -13,6 +13,8 @@ const int i2s_channel_count     = 2;     // ADC/DAC channels per SDIN/SDOUT wire
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
+const char controller_script[] = "function flexfx_create(key) {return [[],'',function(e){},function(k,p){}];}";
+
 void copy_prop( int dst[6], const int src[6] )
 {
     dst[0]=src[0]; dst[1]=src[1]; dst[2]=src[2]; dst[3]=src[3]; dst[4]=src[4]; dst[5]=src[5];
@@ -32,8 +34,11 @@ void app_mixer( const int usb_output[32], int usb_input[32],
     int guitar_in = i2s_output[0] - i2s_output[1];
     // Route instrument input to the left USB input and to the DSP input.
     dsp_input[0] = (usb_input[0] = guitar_in) / 8; // DSP samples need to be Q28 formatted.
-    // Route DSP result to the right USB input and the audio DAC.
-    usb_input[1] = i2s_input[0] = i2s_input[1] = dsp_output[0] * 8; // Q28 (DSP) to Q31 (USB/I2S)
+    // Route DSP result to the left/right USB inputs.
+    usb_input[1] = i2s_input[0] = dsp_output[0] * 8; // Q28 (DSP) to Q31 (USB/I2S)
+    // Route DSP result added to USB outputs to the audio DAC.
+    i2s_input[0] = (dsp_output[0]*8)/2 + usb_output[0]/2; // Q28 (DSP) to Q31 (USB/I2S)
+    i2s_input[1] = (dsp_output[0]*8)/2 + usb_output[1]/2; // Q28 (DSP) to Q31 (USB/I2S)
 }
 
 int ir_coeff[2400], ir_state[2400]; // DSP data *must* be non-static global!
@@ -43,7 +48,7 @@ void app_thread1( int samples[32], const int property[6] )
     static int first = 1;
     if( first ) { first = 0; ir_coeff[0] = ir_coeff[1200] = FQ(+1.0); }
     // Check for properties containing new cabsim IR data, save new data to RAM
-    if( (property[0] & 0xF000) == 0x9000 ) {
+    if( (property[0] & 0xF000) == 0x4000 ) {
     	int offset = 5 * (property[0] & 0x0FFF);
     	if( offset <= 2400-5 ) {
 			ir_coeff[offset+0] = property[1] / 32; ir_coeff[offset+1] = property[2] / 32;
@@ -83,8 +88,8 @@ void app_thread5( int samples[32], const int property[6] )
 {
     static bool muted = 0;
     // Check IR property -- Mute at start of new IR loading, un-mute when done.
-    if( property[0] == 0x9000 ) muted = 1;
-    if( property[0] == 0x9000 + 480 ) muted = 0;
+    if( property[0] == 0x4000 ) muted = 1;
+    if( property[0] == 0x4000 + 480 ) muted = 0;
     // Perform 240-sample convolution (5th and last 240 of 1220 total) of sample with IR data
     samples[0] = dsp_convolve( samples[0], ir_coeff+240*4, ir_state+240*4, samples+2,samples+3 );
     samples[1] = dsp_convolve( samples[1], ir_coeff+240*9, ir_state+240*9, samples+4,samples+5 );
@@ -94,25 +99,3 @@ void app_thread5( int samples[32], const int property[6] )
     samples[0] = muted ? 0 : samples[0];
     samples[1] = muted ? 0 : samples[1];
 }
-
-const char controller_script[] =
-""\
-"function flexfx_create( key )"\
-"{"\
-"	var x = \"\";"\
-"	x += \"<p>\";"\
-"	x += \"This FlexFX device does not have effects firmware loaded into it. Use the \";"\
-"	x += \"'LOAD FIRMWARE' button to select a firmware image to load into this device.\";"\
-"	x += \"</p>\";"\
-"	return x;"\
-"}"\
-""\
-"function flexfx_initialize( key )"\
-"{"\
-"	return _on_property_received;"\
-"}"\
-""\
-"function _on_property_received( property )"\
-"{"\
-"}"\
-"";

@@ -15,6 +15,8 @@ const int i2s_channel_count     = 2;      // 2,4,or 8 I2S channels per SDIN/SDOU
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
+const char controller_script[] = "function flexfx_create(key) {return [[],'',function(e){},function(k,p){}];}";
+
 // The control task is called at a rate of 1000 Hz and should be used to implement audio CODEC
 // initialization/control, pot and switch sensing via I2C ADC's, handling of properties from USB
 // MIDI, and generation of properties to be consumed by the USB MIDI host and by the DSP threads.
@@ -75,25 +77,3 @@ void app_thread4( int samples[32], const int property[6] )
 void app_thread5( int samples[32], const int property[6] )
 {
 }
-
-const char controller_script[] =
-""\
-"function flexfx_create( key )"\
-"{"\
-"	var x = \"\";"\
-"	x += \"<p>\";"\
-"	x += \"This FlexFX device does not have effects firmware loaded into it. Use the \";"\
-"	x += \"'LOAD FIRMWARE' button to select a firmware image to load into this device.\";"\
-"	x += \"</p>\";"\
-"	return x;"\
-"}"\
-""\
-"function flexfx_initialize( key )"\
-"{"\
-"	return _on_property_received;"\
-"}"\
-""\
-"function _on_property_received( property )"\
-"{"\
-"}"\
-"";

@@ -49,29 +49,25 @@ if len(sys.argv) < 2: # Usage 1 - Show help message
     print "Usage 1: python flexfx.py"
     print "         Show this message and list MIDI device names and port numbers."
     print ""
-    print "Usage 2: python flexfx.py <midi_port>"
-    print "         List MIDI device names and port numbers. Indefinately wait for FlexFX"
-    print "         MIDI properties to arrive and print them out. Use <ctrl-c> to terminate."
-    print ""
-    print "Usage 3: python flexfx.py <midi_port> <firmware_image>.bin"
+    print "Usage 2: python flexfx.py <midi_port> <firmware_image>.bin"
     print "         Burn a FlexFX firmware image into FLASH memory. The firmware image must"
     print "         have a filename extension of .bin"
     print ""
-    print "Usage 4: python flexfx.py <midi_port> <firmware_image>.dat"
+    print "Usage 3: python flexfx.py <midi_port> <firmware_image>.dat"
     print "         Write data to the RAM properties page. The firmware image must"
     print "         have a filename extension of .bin"
     print ""
-    print "Usage 5: python flexfx.py <midi_port> <firmware_image>.wav"
+    print "Usage 4: python flexfx.py <midi_port> <firmware_image>.wav"
     print "         Write the samples contained in the wave file to the RAM properties page."
     print "         The firmware image must have a filename extension of .bin"
     print ""
-    print "Usage 6: python flexfx.py <midi_port> <properties_file>.txt"
+    print "Usage 5: python flexfx.py <midi_port> <properties_file>.txt"
     print "         Load FlexFX properties contained in text file to device via USB MIDI."
     print "         Each property consists of a 16-bit ID and five 32-bit values. The text"
     print "         file contains one property per line with property data rendered as"
     print "         ASCII/HEX (e.g. 8001 11111111 22222222 33333333 44444444 55555555)"
     print ""
-    print "Usage 7: python flexfx.py <midi_port> <prop_id> <prop_values ...>"
+    print "Usage 6: python flexfx.py <midi_port> <prop_id> <prop_values ...>"
     print "         Write one FlexFX property to the FlexFX device. Each property consists of"
     print "         a 16-bit ID and five 32-bit values. The <prop_id> and <prop_values>"
     print "         represent one property per line with property data rendered as ASCII/HEX"
@@ -233,35 +229,9 @@ def _parse_wave( file ):
             total_size -= blocksz
     return samples
 
-if len(sys.argv) < 3: # Usage 2 - Wait for properties and print them to STDOUT
-
-    midi = midi_open( int(sys.argv[1]) )
-
-    data = property_to_midi_sysex( [4,0,0,0,0,0] )
-    midi_write( midi, data )
-    print midi_sysex_to_property( midi_wait( midi ));
-
-    while True:
-        data = property_to_midi_sysex( [5,0,0,0,0,0] )
-        midi_write( midi, data )
-        prop = midi_sysex_to_property( midi_wait( midi ));
-        p1 = float(prop[1]) / 2**28
-        p2 = float(prop[2]) / 2**28
-        p3 = float(prop[3]) / 2**28
-        p4 = float(prop[4]) / 2**28
-        p5 = float(prop[5]) / 2**28
-        if prop[1] & 0x80000000: p1 = -float((~prop[1] + 1) & 0xFFFFFFFF) / (2**28)
-        if prop[2] & 0x80000000: p2 = -float((~prop[2] + 1) & 0xFFFFFFFF) / (2**28)
-        if prop[3] & 0x80000000: p3 = -float((~prop[3] + 1) & 0xFFFFFFFF) / (2**28)
-        if prop[4] & 0x80000000: p4 = -float((~prop[4] + 1) & 0xFFFFFFFF) / (2**28)
-        if prop[5] & 0x80000000: p5 = -float((~prop[5] + 1) & 0xFFFFFFFF) / (2**28)
-        print "%08x  %08x %08x %08x %08x %08x  %+01.5f %+01.5f %+01.5f %+01.5f %+01.5f" % \
-              (prop[0],prop[1],prop[2],prop[3],prop[4],prop[5], p1,p2,p3,p4,p5 )
-        if prop[0] == 6: exit(0)
-
 name = sys.argv[2]
 
-if name[len(name)-4:] == ".bin": # Usage 3 - Burn firmware image to FLASH boot partition
+if name[len(name)-4:] == ".bin": # Usage 2 - Burn firmware image to FLASH boot partition
 
     midi = midi_open( int(sys.argv[1]) )
     file = open( sys.argv[2], "rb" )
@@ -302,14 +272,14 @@ if name[len(name)-4:] == ".bin": # Usage 3 - Burn firmware image to FLASH boot p
     midi_close( midi )
     print( "Done." )
 
-elif name[len(name)-4:] == ".dat": # Usage 4 - Burn raw data file info FLASH data partition
+elif name[len(name)-4:] == ".dat": # Usage 3 - Burn raw data file info FLASH data partition
 
     midi = midi_open( int(sys.argv[1]) )
     file = open( sys.argv[2], "rb" )
     file.close()
     midi_close( midi )
 	
-elif name[len(name)-4:] == ".wav": # Usage 5 - Load IR data (WAVE file) to DSP RAM
+elif name[len(name)-4:] == ".wav": # Usage 4 - Load IR data (WAVE file) to DSP RAM
 
     midi = midi_open( int(sys.argv[1]) )
     file = open( sys.argv[2], "rb" )
@@ -319,7 +289,8 @@ elif name[len(name)-4:] == ".wav": # Usage 5 - Load IR data (WAVE file) to DSP R
     sys.stdout.flush()
     
     index = 0
-    while len(samples) > 0:
+    count = 0
+    while len(samples) > 0 and index < 0xCCC:
 
         block = samples[0:5]
         if len(block) < 5: block.append(0)
@@ -331,18 +302,21 @@ elif name[len(name)-4:] == ".wav": # Usage 5 - Load IR data (WAVE file) to DSP R
 
         midi_write( midi, property_to_midi_sysex( data ))
         while True:
-            prop = midi_sysex_to_property( midi_wait( midi ))
+            data = midi_wait( midi )
+            prop = midi_sysex_to_property( data )
             if prop[0] == 0x4000+index: break
 
-        sys.stdout.write(".")
         sys.stdout.flush()
-        index += 1
+        index += 1; count += 1
+        if count == 256:
+	        sys.stdout.write(".")
+	        count = 0
 
     file.close()
     midi_close( midi )
     print( "Done." )
 
-elif name[len(name)-4:] == ".txt": # Usage 6
+elif name[len(name)-4:] == ".txt": # Usage 5
 
     midi = midi_open( int(sys.argv[1]) )
     file = open( sys.argv[2], "rt" )
@@ -362,7 +336,7 @@ elif name[len(name)-4:] == ".txt": # Usage 6
     file.close()
     midi_close( midi )
 	
-elif len(sys.argv) == 8: # Usage 7
+elif len(sys.argv) == 8: # Usage 6
 
     data = [int(sys.argv[2],16),int(sys.argv[3],16),int(sys.argv[4],16),int(sys.argv[5],16), \
             int(sys.argv[6],16),int(sys.argv[7],16)]

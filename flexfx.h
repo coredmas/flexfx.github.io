@@ -1,8 +1,8 @@
 #ifndef INCLUDED_FLEXFX_H
 #define INCLUDED_FLEXFX_H
 
-// FQ converts QQQ fixed-point to floating point
-// QF converts floating-point to QQQ fixed-point
+// FQ converts Q28 fixed-point to floating point
+// QF converts floating-point to Q28 fixed-point
 
 #define QQ 28
 #define FQ(hh) (((hh)<0.0)?((int)((double)(1u<<QQ)*(hh)-0.5)):((int)(((double)(1u<<QQ)-1)*(hh)+0.5)))

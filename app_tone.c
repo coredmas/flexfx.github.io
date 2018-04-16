@@ -15,6 +15,8 @@ const int i2s_channel_count     = 2;     // ADC/DAC channels per SDIN/SDOUT wire
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
+const char controller_script[] = "function flexfx_create(key) {return [[],'',function(e){},function(k,p){}];}";
+
 #define PROP_PRODUCT_ID      (0x0101)                // Your product ID, must not be 0x0000!
 #define PROP_EXAMPLE_PROPS   (PROP_PRODUCT_ID << 16) // Base property ID value
 #define PROP_EXAMPLE_BASS    (PROP_EXAMPLE_PROPS+1)  // Coeffs, prop[1:5]=[B0,B1,B2,A1,A2]
@@ -127,25 +129,3 @@ void app_thread4( int samples[32], const int property[6] )
 void dsp_thread5( int samples[32], const int property[6] )
 {
 }
-
-const char controller_script[] =
-""\
-"function flexfx_create( key )"\
-"{"\
-"	var x = \"\";"\
-"	x += \"<p>\";"\
-"	x += \"This FlexFX device does not have effects firmware loaded into it. Use the \";"\
-"	x += \"'LOAD FIRMWARE' button to select a firmware image to load into this device.\";"\
-"	x += \"</p>\";"\
-"	return x;"\
-"}"\
-""\
-"function flexfx_initialize( key )"\
-"{"\
-"	return _on_property_received;"\
-"}"\
-""\
-"function _on_property_received( property )"\
-"{"\
-"}"\
-"";
