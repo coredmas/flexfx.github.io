@@ -61,8 +61,13 @@ xcc -report -O3 -lquadflash flexfx.xn flexfx.a application.c -o appliocation.xe
 ```
 xflash --no-compression --factory-version 14.3 —-upgrade 1 application.xe
  — or —
-xflash --no-compression --factory-version 14.3 —-upgrade 1  application.xe -o application.bin
+xflash --no-compression --factory-version 14.3 --upgrade 1 application.xe -o application.bin
 python flexfx.py 0 application.bin
+```
+
+7) A FlexFX system can be firmware upgraded using USB/MIDI.  But if that fails due to misbehaving custom FLexFX programs or FLASH data corruption you can to revert your system back to its original/factory condition.  After resotring the system to its original/factory condition use steps 4/5/6 for custom FlexFX aoplication develoopment and firmware upgrading.  Use the JTAG device (XMOS XTAG2 or XTAG3) to load the factory FlexFX firmware into the factory and upgrade portions of the FLASH boot partitioin ...
+```
+xflash --boot-partition-size 1048576 --no-compression --factory flexfx.xe --upgrade 1 flexfx.xe
 ```
 
 You can create custom audio processing effects by downloading the FlexFX&trade; audio processing framework, adding custom audio processing DSP code and property handling code, and then compiling and linking using XMOS tools (xTIMEcomposer, free to download).
