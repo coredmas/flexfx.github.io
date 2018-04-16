@@ -106,9 +106,6 @@ function _on_midi_message( event )
 			_device_name[unit] = text.slice(0,index);
 			text = text.slice(index);
         	_javascript[unit] = text.slice(0,text.indexOf(String.fromCharCode(0)));
-			if( _javascript[unit].length < 100 ) {
-				_javascript[unit] = 'function flexfx_create( key ) {return "";} function flexfx_initialize(key){return _on_property_received;} function _on_property_received(property){}';
-			}
 			_load_javascript( unit );
 			// TODO: set page number to current preset
 			//var page = 1;
@@ -140,8 +137,6 @@ function _on_midi_message( event )
 			
 			if( _load_count[unit] == 0 || (_load_count[unit] % 16) == 0 )
 			{
-				console.log( _load_count[unit] );
-				console.log( _total_size[unit] );
 				progress = (1600.0 * _load_count[unit]) / _total_size[unit];
 				if( progress > 99 ) progress = 99;
 				$(key+"_button1").innerHTML = progress.toPrecision(2) + "\% Complete"
@@ -229,7 +224,7 @@ function _load_javascript( unit )
     var div = document.createElement('div');
     $('controller').appendChild( div );
     div.id = key;
-
+    
     var script = document.createElement( 'script' );
     script.appendChild( document.createTextNode(_javascript[unit]) );
     script.type = "text/javascript";
@@ -246,23 +241,27 @@ function _load_javascript( unit )
     x += "</tr></tbody></table>";
 
     stuff = flexfx_create( key, 0 );
+    
     var heading = stuff[0];
-	x += "<table class='flexfx'><thead><th>Preset</th>";
-	for( var hh in heading ) { x += "<th>" + heading[hh] + "</th>"; }
-	x += "</thead><tbody>";
-	for( var preset = 1; preset <= 9; ++preset ) {
-		x += "<tr class='preset'><td class='preset' id='"+key+preset+"'>"+preset+"</td>"
-		x += stuff[1].replace(new RegExp('~','g'),preset.toString(16));
-		x += "</tr>";
+	if( heading.length > 0 ) {
+		x += "<table class='flexfx'><thead><th>Preset</th>";
+		for( var hh in heading ) { x += "<th>" + heading[hh] + "</th>"; }
+		x += "</thead><tbody>";
+		for( var preset = 1; preset <= 9; ++preset ) {
+			x += "<tr class='preset'><td class='preset' id='"+key+preset+"'>"+preset+"</td>"
+			x += stuff[1].replace(new RegExp('~','g'),preset.toString(16));
+			x += "</tr>";
+		}
+		x += "</tbody></table>";
 	}
-	x += "</tbody></table>";
-	
     $(key).innerHTML = x;
 
     $(key+"_button"+1).onclick = _on_factory_button;
     $(key+"_input"+1).onchange = _on_factory_input;
 
-	for( var preset=1;preset<=9;++preset) $(key+preset).onclick = flexfx_ui_event;
+	if( heading.length > 0 ) {
+		for( var preset=1;preset<=9;++preset) $(key+preset).onclick = flexfx_ui_event;
+	}
 	for( var ii = 16; ii < 256; ++ii ) {
 		id = key + ii.toString(16);
 		if( !!document.getElementById(id) ) {
@@ -354,7 +353,7 @@ function flexfx_write_firmware( unit, file_object )
         _midi_buffer[unit] = new Uint8Array( reader.result );
 		_total_size[unit] = _midi_buffer[unit].length;
 		$(key+"_button1").disabled = true;
-		$(key+"_button2").disabled = true;
+		//$(key+"_button2").disabled = true;
 		//$(key+"_button3").disabled = true;
 		$(key+"_button1").innerHTML = "Starting ..."
 		port.send( flexfx_property_to_midi( [(unit<<16)+0x7100,0,0,0,0,0] ));
