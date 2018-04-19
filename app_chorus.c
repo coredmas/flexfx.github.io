@@ -15,9 +15,9 @@ const int i2s_channel_count     = 2;     // ADC/DAC channels per SDIN/SDOUT wire
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
-const char controller_script[] = "function flexfx_create(key) {return [[],'',function(e){},function(k,p){}];}";
+const char controller_script[] =  "ui_header(ID:0x00,'FlexFX',[]);";
 
-void app_control( const int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
+void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 {
 }
 

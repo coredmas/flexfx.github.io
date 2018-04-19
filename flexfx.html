@@ -10,27 +10,187 @@
 </head>
 
 <body><div class='container' id='controller'>
-  <script>var $ = function( id ) { return document.getElementById( id ); };</script>
+  <script>var $ = function(id) { return document.getElementById(id); };</script>
 </div></body>
 
 <script>
 
-window.addEventListener('load', function()
+function ui_header( key, name, heading )
 {
+	var hh = ""; var ss = ""; key = key.toString(16);
+	
+    //hh += "<div class='row'><div class='column' style='margin-top:3%'>";
+    hh += "<div class='row'>\n<div class='column'>\n";
+    hh += "<table class='flexfx'>\n<tbody>\n<tr>\n";
+    hh += "<td align='right'><h4>"+name+"</h4></td>\n";
+    hh += "<td><h4>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h4></td>\n";
+    hh += "<td>\n<input type='file' style='display:none' id='"+key+"'/>\n";
+    hh += "<button id='"+key+"_button'>Update Firmware</button>\n</td>\n";
+    hh += "</tr>\n</tbody>\n</table>\n";
+    
+    if( heading.length > 0 ) {
+		hh += "<table class='flexfx'>\n<thead>\n<th>Preset</th>\n";
+		for( ii in heading ) hh += "<th>"+heading[ii]+"</th>\n";
+		hh += "</thead>\n<tbody>\n";
+	}
+
+	ss += "$('"+key+"_button').onclick = function(ee) { $('"+key+"').click(); };\n";
+	ss += "$('"+key+"').oninput = function(ee) {\n";
+	ss += "var reader = new FileReader();\n";
+	ss += "reader.onload = function(e) {_flexf_send_firmware('"+key+"',reader.result);};\n";
+	ss += "reader.readAsArrayBuffer($('"+key+"').files[0]);\n";
+	ss += "};\n";
+	
+	return [hh,ss,heading.length];
+}
+function ui_row_beg( unit, preset )
+{
+	var key = ((unit<<16)+(preset<<8)).toString(16);
+
+	var hh = ""; var ss = ""; preset = (parseInt(key,16) >> 8) & 255;
+	hh += "<tr class='preset'><td class='preset' id='preset"+key+"'>"+preset+"</td>\n";
+    
+    ss += "$('preset"+key+"').onclick = function(e) {\n";
+    for( ii = 1; ii <= 9; ++ii ) ss += "$('preset"+((unit<<16)+(ii<<8)).toString(16)+"').innerHTML='"+ii+"';\n";
+    ss += "$('preset"+key+"').innerHTML='["+preset+"]';\n";
+    ss += "};\n";
+	return [hh,ss];
+}
+function ui_row_end()
+{
+	var hh = ""; var ss = "";
+    hh += "</tr>\n";
+	return [hh,ss];
+}
+function ui_label( key, pos, text )
+{
+	var hh = ""; var ss = ""; key = key.toString(16);
+	if( pos == 'F' || pos == 'S' ) hh += "<td>\n<div style='display:inline-block'>\n";
+	hh += "<div id='"+key+"'>"+text+"</div>\n";
+	if( pos == 'L' || pos == 'S' ) hh += "</div>\n</td>\n";
+	return [hh,ss];
+}
+function ui_hslider( key, pos, width )
+{
+	var hh = ""; var ss = ""; key = key.toString(16);
+	if( pos == 'F' || pos == 'S' ) hh += "<td>\n<div style='display:inline-block'>\n";
+	hh += "<div style='height:20px'><input class='slider' style='width:96px' type='range' min='1' max='15' id='"+key+"'></div>\n";
+	if( pos == 'L' || pos == 'S' ) hh += "</div>\n</td>\n";
+	ss += "$('"+key+"').onchange = function(ee) {_flexf_send_prop('"+key+"',[0x"+key+",$('"+key+"').value,0,0,0,0]);};\n";
+	return [hh,ss];
+}
+function ui_vslider( key, pos, width )
+{
+	var hh = ""; var ss = ""; key = key.toString(16);
+	if( pos == 'F' || pos == 'S' ) hh += "<td>\n<div style='display:inline-block'>\n";
+	hh += "<div style='height:%upx'>\n", width;
+	hh += "<input class='vslider' style='width:"+width+"px' type='range' min='1' max='15' id='"+key+"'>";
+	hh += "</div>\n";
+	if( pos == 'L' || pos == 'S' ) hh += "</div>\n</td>\n";
+	ss += "$('"+key+"').onchange = function(ee) {_flexf_send_prop('"+key+"',[0x"+key+",$('"+key+"').value,0,0,0,0]);};\n";
+	return [hh,ss];
+}
+
+function ui_file( key, pos, type, label, link )
+{
+	var hh = ""; var ss = ""; key = key.toString(16);
+	console.log(key);
+
+	if( pos == 'F' || pos == 'S' ) hh += "<td>\n<div style='display:inline-block'>";
+	hh += "<td>\n<input type='file' style='display:none' id='"+key+"'/>\n";
+	hh += "<button id='"+key+"_button'>"+label+"</button>\n</td>\n";
+	if( pos == 'L' || pos == 'S' ) hh += "</div>\n</td>\n";
+	
+	ss += "$('"+key+"_button').onclick = function(ee) { $('"+key+"').click(); };\n";
+	ss += "$('"+key+"').oninput = function(ee) {\n";
+	ss += "var reader = new FileReader();\n";
+	ss += "reader.onload = function(e) {_flexf_send_wave('"+key+"',reader.result);};\n";
+	ss += "reader.readAsArrayBuffer($('"+key+"').files[0]);\n";
+	ss += "};\n";
+	
+	return [hh,ss];
+}
+
+function ui_finish()
+{
+	var hh = ""; var ss = "";
+	hh += "</tbody>\n</table>\n</div>\n</div>\n";
+	return [hh,ss];
+}
+
+function ui_create( unit, text )
+{
+	var hh = ""; var ss = "";
+	var cc = 0;
+	var lines = text.split(";");	
+	for( pp = 0; pp <= 9; ++pp ) {
+		if( pp == 0 ) {
+			for( ll in lines ) {
+				if( lines[ll].substring(0,9) == "ui_header" ) {
+					var key = ((unit<<16)+(0<<8)).toString(16);
+					var line = lines[ll].replace( "ID:", "0x"+key+"+" );
+					var rr = eval(line); hh += rr[0]; ss += rr[1], cc = rr[2];
+				}
+			}
+		}
+		else if( cc > 0 ) {
+			var key = ((unit<<16)+(pp<<8)).toString(16);
+			var rr = ui_row_beg( unit, pp ); hh += rr[0]; ss += rr[1];
+			for( ll in lines ) {
+				line = lines[ll]
+				num = (unit << 16) + (pp << 8);
+				if( lines[ll].substring(0,9) == "ui_header" ) continue;
+				var line = line.replace( "ID:", "0x"+key+"+" );
+				line = line.replace( "ID:", "0x"+key+"+" );
+				if( line.length < 3 ) continue;
+				console.log(line);
+				var rr = eval(line); hh += rr[0]; ss += rr[1];
+			}
+			var rr = ui_row_end(); hh += rr[0]; ss += rr[1];
+		}
+	}
+	var rr = ui_finish(); hh += rr[0]; ss += rr[1];
+	//console.log(hh); console.log(ss);
+	return [hh,ss];
+}
+
+function _load_interface( unit, text )
+{
+    text = text.slice(0,text.indexOf(String.fromCharCode(0)));
+	var rr = ui_create( unit, text );
+
+	var div = document.createElement('div');
+	$('controller').appendChild( div );
+	div.id = unit.toString(16);
+	$(unit.toString(16)).innerHTML = rr[0];
+
+	var script = document.createElement( 'script' );
+	script.appendChild( document.createTextNode(rr[1]) );
+	script.type = "text/javascript";
+	document.getElementsByTagName("head")[0].appendChild(script);
+	////eval(script);
+}
+
+function _unload_interface( unit )
+{
+    if( $('controller').contains( $(unit.toString(16)) )) {
+        $('controller').removeChild( $(unit.toString(16)) );
+    }
+}
+
+window.addEventListener('load', function()
+{	
     if(navigator.requestMIDIAccess) {
         navigator.requestMIDIAccess({sysex:true}).then(_on_midi_success,_on_midi_failure);
     }
-    else document.write( "This browser does not support MIDI access." );
+    else document.write( "USB/MIDI is not available." );
 });
 
-var _midi_input_ports = {}, _midi_output_ports = {}, _midi_in_to_out_map = {};
-var _javascript = {}, _device_name = {};
-var _midi_buffer = {}, _load_count = {}, _total_size = {};
+var _midi_input_ports = {}, _midi_output_ports = {};
+var _javascript = {};
 var _unit_count = 0;
 
-function unit_to_key( unit ) { return "KEY" + unit.toString(16); }
-function key_to_unit( key  ) { return parseInt(key.slice(3,4),16); }
-function id_to_key  ( id   ) { return id.slice(0,4); }
+var _transfer_data = {}, _transfer_count = {}, _transfer_size = {}, _transfer_key = "";
 
 function _on_midi_success( midiAccess )
 {
@@ -40,10 +200,7 @@ function _on_midi_success( midiAccess )
     _on_midi_connect( event )
 }
 
-function _on_midi_failure( error )
-{
-    document.write( "MIDI access denied." );
-}
+function _on_midi_failure( error ) { document.write( "MIDI access denied." ); }
 
 function _on_midi_connect( event )
 {
@@ -51,29 +208,26 @@ function _on_midi_connect( event )
     var midi_inputs  = event.currentTarget.inputs.values ();
     var midi_outputs = event.currentTarget.outputs.values();
 
-	for( var unit = 0; unit < _unit_count; ++unit ) _unload_javascript( unit );
+	for( var unit = 0; unit < _unit_count; ++unit ) _unload_interface( unit );
     _midi_output_ports = {}; _midi_input_ports = {}; _unit_count = 0;
-    
+        
     for( var port = midi_inputs.next(); !port.done; port = midi_inputs.next() ) {
         if( port.value.manufacturer == "FlexFX" ) {
             port.value.onmidimessage = _on_midi_message;
     }}
-
     for( var port = midi_outputs.next(); !port.done; port = midi_outputs.next()) {
         if( port.value.manufacturer == "FlexFX" ) {
         	unit = ++_unit_count;
             _midi_output_ports[unit] = port.value;
-            data = flexfx_property_to_midi( [(unit<<16)+0x1000,0,0,0,0,0] );
+            data = _flexfx_prop_to_midi( [(unit<<16)+0x1000,0,0,0,0,0] );
             port.value.send( data )
     }}
 }
 
 function _on_midi_message( event )
 {
-    var property = flexfx_midi_to_prop( event.data );
-
+    var property = _flexfx_midi_to_prop( event.data );
 	var unit = (property[0] & 0xFFFF0000) >> 16;
-    var key  = unit_to_key( unit )
 
     //console.log( "Event:" + property[0].toString(16) )
 
@@ -81,224 +235,102 @@ function _on_midi_message( event )
 
     if( (property[0] & 0xFF00) == 0x1000 )
     {
-    	// TODO: verify signature and versions ...
-    	property = flexfx_property_to_midi( [(unit<<16)+0x2000,0,0,0,0,0] ); // Load page buffer
-        _midi_output_ports[unit].send( property );
-    }
-    else if( (property[0] & 0xFF00) == 0x2000 )
-    {
-		_javascript [unit] = "";
-		_device_name[unit] = "";
-		_midi_buffer[unit] = [];
-		_load_count [unit] = 0;
-		
-    	property = flexfx_property_to_midi( [(unit<<16)+0x3000,0,0,0,0,0] );
-        _midi_output_ports[unit].send( property );
+		_transfer_key = (property[0] & 0xFFFF0000).toString(16);
+		_javascript[unit] = "";
+		_transfer_data[unit] = [];
+		_transfer_count[unit] = 0;
+
+        _midi_output_ports[unit].send( _flexfx_prop_to_midi( [(unit<<16)+0x3000,0,0,0,0,0] ));
     }
     else if( (property[0] & 0xF000) == 0x3000 )
     {
-    	_javascript[unit] += _property_to_text2( property );
+    	_javascript[unit] += _property_to_text( property );
 
-        if( _load_count[unit] == 1024 )
-        {
-        	var text = _javascript[unit];
-        	var index = text.indexOf('\n');
-			_device_name[unit] = text.slice(0,index);
-			text = text.slice(index);
-        	_javascript[unit] = text.slice(0,text.indexOf(String.fromCharCode(0)));
-			_load_javascript( unit );
-			// TODO: set page number to current preset
-			//var page = 1;
-	    	//property = flexfx_property_to_midi( [unit+0x2000+page,0,0,0,0,0] );
-        }
+        if( _transfer_count[unit] == 1024 ) _load_interface( unit, _javascript[unit] );
         else
         {
-	    	var offset = ++_load_count[unit];
-			property = flexfx_property_to_midi( [(unit<<16)+0x3000+offset,0,0,0,0,0] );
-			_midi_output_ports[unit].send( property );
+	    	var offset = ++_transfer_count[unit];
+			_midi_output_ports[unit].send( _flexfx_prop_to_midi( [(unit<<16)+0x3000+offset,0,0,0,0,0] ));
         }
     }
     else if( (property[0] & 0xFF00) == 0x7100 || ((property[0] & 0xFF00) & 0xFF00) == 0x7200 )
     {
-		if( _midi_buffer[unit].length > 0 )
+		if( _transfer_data[unit].length > 0 )
 		{
 			var property = [(unit<<16)+0x7200,0,0,0,0,0];
 			
-			property[1] = array_to_ui4be( _midi_buffer[unit] );
-			_midi_buffer[unit] = _midi_buffer[unit].slice(4);
-			property[2] = array_to_ui4be( _midi_buffer[unit] );
-			_midi_buffer[unit] = _midi_buffer[unit].slice(4);
-			property[3] = array_to_ui4be( _midi_buffer[unit] );
-			_midi_buffer[unit] = _midi_buffer[unit].slice(4);
-			property[4] = array_to_ui4be( _midi_buffer[unit] );
-			_midi_buffer[unit] = _midi_buffer[unit].slice(4);
+			property[1] = array_to_ui4be( _transfer_data[unit] );
+			_transfer_data[unit] = _transfer_data[unit].slice(4);
+			property[2] = array_to_ui4be( _transfer_data[unit] );
+			_transfer_data[unit] = _transfer_data[unit].slice(4);
+			property[3] = array_to_ui4be( _transfer_data[unit] );
+			_transfer_data[unit] = _transfer_data[unit].slice(4);
+			property[4] = array_to_ui4be( _transfer_data[unit] );
+			_transfer_data[unit] = _transfer_data[unit].slice(4);
 			
-			_midi_output_ports[unit].send( flexfx_property_to_midi( property ));
+			_midi_output_ports[unit].send( _flexfx_prop_to_midi( property ));
 			
-			if( _load_count[unit] == 0 || (_load_count[unit] % 16) == 0 )
+			if( _transfer_count[unit] == 0 || (_transfer_count[unit] % 16) == 0 )
 			{
-				progress = (1600.0 * _load_count[unit]) / _total_size[unit];
+				progress = (1600.0 * _transfer_count[unit]) / _transfer_size[unit];
 				if( progress > 99 ) progress = 99;
-				$(key+"_button1").innerHTML = progress.toPrecision(2) + "\% Complete"
+				$(_transfer_key).innerHTML = progress.toPrecision(2) + "\% Complete"
 			}
-			_load_count[unit] += 1;
+			_transfer_count[unit] += 1;
 		}
 		else
 		{
-			port.send( flexfx_property_to_midi( [(unit<<16)+0x7300,0,0,0,0,0] ));
-			$(key+"_button1").innerHTML = "Finished"
+			_midi_output_ports[unit].send( _flexfx_prop_to_midi( [(unit<<16)+0x7300,0,0,0,0,0] ));
+			$(_transfer_key).innerHTML = "Finished"
 		}
     }
     else if( (property[0] & 0xF000) == 0x4000 )
     {
-		if( _midi_buffer[unit].length > 0 )
+		if( _transfer_data[unit].length > 0 )
 		{
-			var property = [(unit<<16)+0x4000+_load_count[unit]++,0,0,0,0,0];
-			if( _midi_buffer[unit].length >= 1 ) property[1] = _midi_buffer[unit][0];
-			if( _midi_buffer[unit].length >= 2 ) property[2] = _midi_buffer[unit][1];
-			if( _midi_buffer[unit].length >= 3 ) property[3] = _midi_buffer[unit][2];
-			if( _midi_buffer[unit].length >= 4 ) property[4] = _midi_buffer[unit][3];
-			if( _midi_buffer[unit].length >= 5 ) property[5] = _midi_buffer[unit][4];
-			_midi_buffer[unit] = _midi_buffer.slice(5);
-			_midi_output_ports[unit].send( flexfx_property_to_midi( property ));
+			var property = [(unit<<16)+0x4000+_transfer_count[unit]++,0,0,0,0,0];
+			if( _transfer_data[unit].length >= 1 ) property[1] = _transfer_data[unit][0];
+			if( _transfer_data[unit].length >= 2 ) property[2] = _transfer_data[unit][1];
+			if( _transfer_data[unit].length >= 3 ) property[3] = _transfer_data[unit][2];
+			if( _transfer_data[unit].length >= 4 ) property[4] = _transfer_data[unit][3];
+			if( _transfer_data[unit].length >= 5 ) property[5] = _transfer_data[unit][4];
+			_transfer_data[unit] = _transfer_data.slice(5);
+			_midi_output_ports[unit].send( _flexfx_prop_to_midi( property ));
 		}
 		else
 		{
-			$(key+"_button1").disabled = false;
-			$(key+"_button2").disabled = false;
+			//$(key+"_button1").disabled = false;
 		}
     }
 }
 
-function flexfx_ui_label( key, pos, index, text, ids )
+function _flexf_send_prop( key, prop )
 {
-	var id = key+"~"+(index.toString(16));
-	var x = "";
-	if( pos == 'F' || pos == 'S' ) x += "<td><div style='display:inline-block'>"
-	x += "<div id='"+id+"'>"+text+"</div>";
-	if( pos == 'L' || pos == 'S' ) x += "</div></td>";
-	return x;
+	console.log( "_flexf_send_prop", key.toString(16) );
+	//_midi_output_ports[id>>16].send(_flexfx_prop_to_midi(prop));
 }
-function flexfx_ui_hslider( key, pos, index, width, ids )
+function _flexf_send_wave( key, data )
 {
-	var id = key+"~"+(index.toString(16));
-	var x = "";
-	if( pos == 'F' || pos == 'S' ) x += "<td><div style='display:inline-block'>"
-	x += "<div style='height:20px'><input class='slider' style='width:96px' type='range' min='1' max='15' id='"+id+"'></div>";
-	if( pos == 'L' || pos == 'S' ) x += "</div></td>";
-	return x;
+	console.log( "_flexf_send_wave", key.toString(16) );
+	_transfer_key = key;
+	_transfer_count[unit] = 0;
+	_transfer_data[unit] = flexfx_wave_to_samples( data );
+	_transfer_size[unit] = _transfer_data[unit].length;
+    port.send( _flexfx_prop_to_midi( [(unit<<16)+0x4000,0,0,0,0,0] ));
 }
-function flexfx_ui_vslider( key, pos, index, width, ids )
+function _flexf_send_firmware( key, data )
 {
-	var id = key+"~"+(index.toString(16));
-	var x = "";
-	if( pos == 'F' || pos == 'S' ) x += "<td><div style='display:inline-block'>"
-	x += "<div style='height:"+50+"px'>";
-	x += "<input class='vslider' style='width:"+width+"px' type='range' min='1' max='15' id='"+id+"'>";
-	x += "</div>";
-	if( pos == 'L' || pos == 'S' ) x += "</div></td>";
-	return x;
-}
-function flexfx_ui_file( key, pos, index, label, ids )
-{
-	var id = key+"~"+(index.toString(16));
-	var x = "";
-	if( pos == 'F' || pos == 'S' ) x += "<td><div style='display:inline-block'>"
-	x += "<td><input type='file' style='display:none' id='"+id+"_file'/><button id='"+id+"'>"+label+"</button></td>";
-	if( pos == 'L' || pos == 'S' ) x += "</div></td>";
-	return x;
+	console.log( "_flexf_send_firmware", key.toString(16) );
+	$(_transfer_key).disabled = true;
+	$(_transfer_key).innerHTML = "Starting ..."
+	_transfer_key = key;
+	_transfer_count[unit] = 0;
+    _transfer_data[unit] = new Uint8Array( data );
+	_transfer_size[unit] = _transfer_data[unit].length;
+	port.send( _flexfx_prop_to_midi( [(unit<<16)+0x7100,0,0,0,0,0] ));
 }
 
-function flexfx_ui_event( event )
-{
-	var key = event.target.id.substring(0,4);
-	var preset = event.target.id.slice(4,5);
-	for( var ii = 1; ii <= 9; ++ii ) $(key+ii).innerHTML = ii;
-	$(key+preset).innerHTML = "[" + event.target.innerHTML + "]";
-}
-
-function _load_javascript( unit )
-{
-	var key = unit_to_key( unit );
-	
-    var div = document.createElement('div');
-    $('controller').appendChild( div );
-    div.id = key;
-    
-    var script = document.createElement( 'script' );
-    script.appendChild( document.createTextNode(_javascript[unit]) );
-    script.type = "text/javascript";
-    document.getElementsByTagName("head")[0].appendChild(script);
-    //eval(script);
-
-    var x = "";
-    x += "<div class='row'><div class='column' style='margin-top:3%'>";
-
-    x += "<table class='flexfx'><tbody><tr>";
-    x += "<td align='right'><h4 id='"+key+"_title'>" + _device_name[unit] + "</h4></td>";
-    x += "<td><h4>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h4></td>";
-    x += "<td><input type='file' style='display:none' id='"+key+"_input1'/><button id='"+key+"_button1'>Update Firmware</button></td>";
-    x += "</tr></tbody></table>";
-
-    stuff = flexfx_create( key, 0 );
-    
-    var heading = stuff[0];
-	if( heading.length > 0 ) {
-		x += "<table class='flexfx'><thead><th>Preset</th>";
-		for( var hh in heading ) { x += "<th>" + heading[hh] + "</th>"; }
-		x += "</thead><tbody>";
-		for( var preset = 1; preset <= 9; ++preset ) {
-			x += "<tr class='preset'><td class='preset' id='"+key+preset+"'>"+preset+"</td>"
-			x += stuff[1].replace(new RegExp('~','g'),preset.toString(16));
-			x += "</tr>";
-		}
-		x += "</tbody></table>";
-	}
-    $(key).innerHTML = x;
-
-    $(key+"_button"+1).onclick = _on_factory_button;
-    $(key+"_input"+1).onchange = _on_factory_input;
-
-	if( heading.length > 0 ) {
-		for( var preset=1;preset<=9;++preset) $(key+preset).onclick = flexfx_ui_event;
-	}
-	for( var ii = 16; ii < 256; ++ii ) {
-		id = key + ii.toString(16);
-		if( !!document.getElementById(id) ) {
-			if( $(id).nodeName == "BUTTON" ) $(id).onclick = stuff[2];
-			if( $(id).nodeName == "INPUT" ) $(id).oninput = stuff[2];
-		}
-		if( !!document.getElementById(id+"_file") ) $(id+"_file").onchange = stuff[2];
-	}
-}
-
-function _unload_javascript( unit )
-{
-	var key = unit_to_key( unit );
-    if( $('controller').contains( $(key) )) {
-        $('controller').removeChild( $(key) );
-    }
-}
-
-function _on_factory_input( event )
-{
-    var key  = id_to_key( event.target.id );
-    var unit = key_to_unit( key );
-    var num  = parseInt( event.target.id[10] );
-    file_object = $(key+"_input"+num).files[0];
-    if(      num == 1 ) flexfx_write_firmware( unit, file_object );
-    //else if( num == 2 ) flexfx_upload_data( unit, file_object );
-}
-
-function _on_factory_button( event )
-{
-    var key = id_to_key( event.target.id );
-    var num = parseInt( event.target.id[11] );
-    if( num == 3 ) {}
-    else $(key+"_input"+num).click();
-}
-
-function flexfx_property_to_midi( property )
+function _flexfx_prop_to_midi( property )
 {
     var midi_data = [0xF0];
     for( var ii = 0; ii < 6; ++ii )
@@ -312,7 +344,7 @@ function flexfx_property_to_midi( property )
     return midi_data;
 }
 
-function flexfx_midi_to_prop( midi_data )
+function _flexfx_midi_to_prop( midi_data )
 {
     var property = [0,0,0,0,0,0];
     for( var ii = 0; ii < 6; ++ii )
@@ -325,7 +357,7 @@ function flexfx_midi_to_prop( midi_data )
     return property;
 }
 
-function _property_to_text2( property )
+function _property_to_text( property )
 {
 	var text = "";
 	text += String.fromCharCode( property[1]&255, (property[1]>>8)&255, (property[1]>>16)&255, property[1]>>24 );
@@ -341,44 +373,6 @@ function array_to_ui2be(a) { return a[1]+256*a[0]; }
 function array_to_ui2le(a) { return a[0]+256*a[1]; }
 function array_to_ui4be(a) { return 16777216*a[0]+65536*a[1]+256*a[2]+a[3]; }
 function array_to_ui4le(a) { return a[0]+256*a[1]+65536*a[2]+16777216*a[3]; }
-
-function flexfx_write_firmware( unit, file_object )
-{
-	var key = unit_to_key( unit );
-    var reader = new FileReader();
-    port = _midi_output_ports[unit];
-    reader.onload = function(e)
-    {
-		_load_count[unit] = 0;
-        _midi_buffer[unit] = new Uint8Array( reader.result );
-		_total_size[unit] = _midi_buffer[unit].length;
-		$(key+"_button1").disabled = true;
-		//$(key+"_button2").disabled = true;
-		//$(key+"_button3").disabled = true;
-		$(key+"_button1").innerHTML = "Starting ..."
-		port.send( flexfx_property_to_midi( [(unit<<16)+0x7100,0,0,0,0,0] ));
-    }
-    reader.readAsArrayBuffer( file_object );
-}
-
-function flexfx_upload_data( unit, file_object )
-{
-	var key = unit_to_key( unit );
-    var reader = new FileReader();
-    midi_port = _midi_output_ports[unit];
-    reader.onload = function(e)
-    {
-		$(key+"_button1").disabled = true;
-		$(key+"_button2").disabled = true;
-		//$(key+"_button3").disabled = true;
-		_load_count [unit] = 0;
-        _midi_buffer[unit] = new Uint8Array( reader.result );
-        _midi_buffer[unit] = flexfx_wave_to_samples( _midi_buffer[unit] );
-        var property = [(unit<<16)+0x4000,0,0,0,0,0];
-        port.send( flexfx_property_to_midi( property ));
-    }
-    reader.readAsArrayBuffer( file_object );
-}
 
 function flexfx_wave_to_samples( data )
 {
@@ -435,6 +429,78 @@ function flexfx_wave_to_samples( data )
         }
     }
     return samples;
+}
+
+
+
+
+
+
+
+
+
+//function _on_factory_input( event )
+//{
+//    var key  = id_to_key( event.target.id );
+//    var unit = key_to_unit( key );
+//    var num  = parseInt( event.target.id[10] );
+//    file_object = $(key+"_input"+num).files[0];
+//    if(      num == 1 ) flexfx_write_firmware( unit, file_object );
+//    //else if( num == 2 ) flexfx_transfer_data( unit, file_object );
+//}
+
+//function _on_factory_button( event )
+//{
+//    var key = id_to_key( event.target.id );
+//    var num = parseInt( event.target.id[11] );
+//    if( num == 3 ) {}
+//    else $(key+"_input"+num).click();
+//}
+
+function _load_javascript( key, text )
+{
+
+	/*
+    var x = "";
+    x += "<div class='row'><div class='column' style='margin-top:3%'>";
+
+    x += "<table class='flexfx'><tbody><tr>";
+    x += "<td align='right'><h4 id='"+key+"_title'>" + _device_name[unit] + "</h4></td>";
+    x += "<td><h4>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h4></td>";
+    x += "<td><input type='file' style='display:none' id='"+key+"_input1'/><button id='"+key+"_button1'>Update Firmware</button></td>";
+    x += "</tr></tbody></table>";
+
+    x += flexfx_create( key, 0 );
+    
+    var heading = stuff[0];
+	if( heading.length > 0 ) {
+		x += "<table class='flexfx'><thead><th>Preset</th>";
+		for( var hh in heading ) { x += "<th>" + heading[hh] + "</th>"; }
+		x += "</thead><tbody>";
+		for( var preset = 1; preset <= 9; ++preset ) {
+			x += "<tr class='preset'><td class='preset' id='"+key+preset+"'>"+preset+"</td>"
+			//x += stuff[1].replace(new RegExp('~','g'),preset.toString(16));
+			x += "</tr>";
+		}
+		x += "</tbody></table>";
+	}
+    $(key).innerHTML = x;
+
+    $(key+"_button"+1).onclick = _on_factory_button;
+    $(key+"_input"+1).onchange = _on_factory_input;
+
+	if( heading.length > 0 ) {
+		for( var preset=1;preset<=9;++preset) $(key+preset).onclick = flexfx_ui_event;
+	}
+	for( var ii = 16; ii < 256; ++ii ) {
+		id = key + ii.toString(16);
+		if( !!document.getElementById(id) ) {
+			if( $(id).nodeName == "BUTTON" ) $(id).onclick = stuff[2];
+			if( $(id).nodeName == "INPUT" ) $(id).oninput = stuff[2];
+		}
+		if( !!document.getElementById(id+"_file") ) $(id+"_file").onchange = stuff[2];
+	}
+	*/
 }
 
 </script>

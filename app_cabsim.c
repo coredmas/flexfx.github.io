@@ -13,14 +13,14 @@ const int i2s_channel_count     = 2;     // ADC/DAC channels per SDIN/SDOUT wire
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
-const char controller_script[] = "function flexfx_create(key) {return [[],'',function(e){},function(k,p){}];}";
+const char controller_script[] =  "ui_header(ID:0x00,'FlexFX',[]);";
 
 void copy_prop( int dst[6], const int src[6] )
 {
     dst[0]=src[0]; dst[1]=src[1]; dst[2]=src[2]; dst[3]=src[3]; dst[4]=src[4]; dst[5]=src[5];
 }
 
-void app_control( const int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
+void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 {
     // Pass cabsim IR data to the DSP threads if usb and dsp send properties are available for use.
     copy_prop( dsp_prop, rcv_prop ); // Send to DSP threads.
@@ -48,7 +48,7 @@ void app_thread1( int samples[32], const int property[6] )
     static int first = 1;
     if( first ) { first = 0; ir_coeff[0] = ir_coeff[1200] = FQ(+1.0); }
     // Check for properties containing new cabsim IR data, save new data to RAM
-    if( (property[0] & 0xF000) == 0x4000 ) {
+    if( (property[0] & 0xF000) == 0x8000 ) {
     	int offset = 5 * (property[0] & 0x0FFF);
     	if( offset <= 2400-5 ) {
 			ir_coeff[offset+0] = property[1] / 32; ir_coeff[offset+1] = property[2] / 32;
@@ -88,8 +88,8 @@ void app_thread5( int samples[32], const int property[6] )
 {
     static bool muted = 0;
     // Check IR property -- Mute at start of new IR loading, un-mute when done.
-    if( property[0] == 0x4000 ) muted = 1;
-    if( property[0] == 0x4000 + 480 ) muted = 0;
+    if( property[0] == 0x8000 ) muted = 1;
+    if( property[0] == 0x8000 + 479 ) muted = 0;
     // Perform 240-sample convolution (5th and last 240 of 1220 total) of sample with IR data
     samples[0] = dsp_convolve( samples[0], ir_coeff+240*4, ir_state+240*4, samples+2,samples+3 );
     samples[1] = dsp_convolve( samples[1], ir_coeff+240*9, ir_state+240*9, samples+4,samples+5 );

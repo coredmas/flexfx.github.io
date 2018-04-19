@@ -15,7 +15,7 @@ const int i2s_channel_count     = 2;     // ADC/DAC channels per SDIN/SDOUT wire
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
-const char controller_script[] = "function flexfx_create(key) {return [[],'',function(e){},function(k,p){}];}";
+const char controller_script[] =  "ui_header(ID:0x00,'FlexFX',[]);";
 
 #define PROP_PRODUCT_ID      (0x0101)                // Your product ID, must not be 0x0000!
 #define PROP_EXAMPLE_PROPS   (PROP_PRODUCT_ID << 16) // Base property ID value
@@ -37,7 +37,7 @@ static void read_adc( double values[4] )
     i2c_stop();
 }
 
-void app_control( const int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
+void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 {
     static bool state = 0;
 
@@ -48,24 +48,23 @@ void app_control( const int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
     if( state == 0 ) { // State 2 is for generating and sending the tone coeffs property.
         state = 1;
         double gain = (bass - 0.5) * 12.0; // 0.0 < bass < 1.0 --> -12.0dB < gain < +12dB.
-        dsp_prop[0] = PROP_EXAMPLE_BASS; // Compute coefficients and populate property.
-        calc_lowshelf( dsp_prop+1, 100.0, 0.707, gain ); // Bass corner freq = 100 Hz.
+        snd_prop[0] = PROP_EXAMPLE_BASS; // Compute coefficients and populate property.
+        calc_lowshelf( snd_prop+1, 100.0, 0.707, gain ); // Bass corner freq = 100 Hz.
     }
     // Compute middle coefficients and send them to DSP threads.
     else if( state == 1 ) { // State 3 is for generating and sending the tone coeffs property.
         state = 2;
         double gain = (middle - 0.5) * 12.0; // 0.0 < middle < 1.0 --> -12.0dB < gain < +12dB.
-        dsp_prop[0] = PROP_EXAMPLE_MIDDLE; // Compute coefficients and populate property.
-        calc_peaking( dsp_prop+1, 1000.0, 1.200, gain ); // Middle peaking freq = 10000 Hz.
+        snd_prop[0] = PROP_EXAMPLE_MIDDLE; // Compute coefficients and populate property.
+        calc_peaking( snd_prop+1, 1000.0, 1.200, gain ); // Middle peaking freq = 10000 Hz.
     }
     // Compute treble coefficients and send them to DSP threads.
     else if( state == 2 ) { // State 3 is for generating and sending the tone coeffs property.
         state = 3;
         double gain = (treble - 0.5) * 12.0; // 0.0 < treble < 1.0 --> -12.0dB < gain < +12dB.
-        dsp_prop[0] = PROP_EXAMPLE_TREBLE; // Compute coefficients and populate property.
-        calc_highshelf( dsp_prop+1, 10000.0, 0.707, gain ); // Treble corner freq = 10000 Hz.
+        snd_prop[0] = PROP_EXAMPLE_TREBLE; // Compute coefficients and populate property.
+        calc_highshelf( snd_prop+1, 10000.0, 0.707, gain ); // Treble corner freq = 10000 Hz.
     }
-    rcv_prop[0] = 0; // Mark incoming properties as 'consumed'.
 }
 
 void app_mixer( const int usb_output[32], int usb_input[32],

@@ -15,7 +15,7 @@ const int i2s_channel_count     = 2;      // 2,4,or 8 I2S channels per SDIN/SDOU
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
-const char controller_script[] = "function flexfx_create(key) {return [[],'',function(e){},function(k,p){}];}";
+const char controller_script[] =  "ui_header(ID:0x00,'FlexFX',[]);";
 
 // The control task is called at a rate of 1000 Hz and should be used to implement audio CODEC
 // initialization/control, pot and switch sensing via I2C ADC's, handling of properties from USB
@@ -24,7 +24,7 @@ const char controller_script[] = "function flexfx_create(key) {return [[],'',fun
 // will be sent out if their ID is non-zero.  It's OK to use floating point calculations here since
 // this thread is not a real-time audio/DSP thread.
 
-void app_control( const int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
+void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 {
 }
 

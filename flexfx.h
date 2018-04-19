@@ -11,15 +11,32 @@
 typedef unsigned char byte;
 typedef unsigned int  bool;
 
+// Functions and variables to be implemented by the application ...
+
+extern const char* product_name_string;   // Your product name
+extern const char* usb_audio_output_name; // Your USB audio output name
+extern const char* usb_audio_input_name;  // Your USB audio input name
+extern const char* usb_midi_output_name;  // Your USB MIDI output name
+extern const char* usb_midi_input_name;   // Your USB MIDI input name
+
+extern const int audio_sample_rate;       // Audio sampling frequency (48K,96K,192K,or 384K)
+extern const int usb_output_chan_count;   // 2 USB audio output channels (32 max)
+extern const int usb_input_chan_count;    // 2 USB audio input channels (32 max)
+extern const int i2s_channel_count;       // 2,4,or8 I2S channels per SDIN/SDOUT wire
+
+extern const int i2s_sync_word[8];        // I2S WCLK words for each slot
+
+extern void render_interface( void );
+
 // The control task is called at a rate of 1000 Hz and should be used to implement audio CODEC
 // initialization/control, pot and switch sensing via I2C ADC's, handling of properties from USB
 // MIDI, and generation of properties to be consumed by the USB MIDI host and by the DSP threads.
-// The incoming USB property 'rcv_prop' is valid if its ID is non-zero. Outgoing USB and DSP props
-// will be sent out if their ID is non-zero - but they are only available for routing if their ID's
-// are zero (non-zero indicating that routing is still in progress). It's OK to use floating point
-// calculations here since this thread is not a real-time audio or DSP thread.
+// The incoming USB property 'rcv_prop' is valid if its ID is non-zero and an outgoing USB
+// property, as a response to the incoming property, will be sent out if's ID is non-zero. DSP
+// propertys can be sent to DSP threads (by setting the DSP property ID to zero) at any time.
+// It's OK to use floating point calculations here as this thread is not a real-time audio thread.
 
-void app_control( const int rcv_prop[6], int usb_prop[6], int dsp_prop[6] );
+extern void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] );
 
 // The mixer function is called once per audio sample and is used to route USB, I2S and DSP samples.
 // This function should only be used to route samples and for very basic DSP processing - not for
@@ -28,9 +45,9 @@ void app_control( const int rcv_prop[6], int usb_prop[6], int dsp_prop[6] );
 // should be performed using fixed-point math.
 // NOTE: IIR, FIR, and BiQuad coeff and state data *must* be declared non-static global!
 
-void app_mixer( const int usb_output[32], int usb_input[32],
-                const int i2s_output[32], int i2s_input[32],
-                const int dsp_output[32], int dsp_input[32], const int property[6] );
+extern void app_mixer( const int usb_output[32], int usb_input[32],
+                       const int i2s_output[32], int i2s_input[32],
+                       const int dsp_output[32], int dsp_input[32], const int property[6] );
 
 // Audio Processing Threads. These functions run on tile 1 and are called once for each audio sample
 // cycle. They cannot share data with the controller task or the mixer functions above that run on
@@ -40,15 +57,15 @@ void app_mixer( const int usb_output[32], int usb_input[32],
 // NOTE: IIR, FIR, and BiQuad coeff and state data *must* be declared non-static global!
 
 // Process samples and properties from the app_mixer function. Send results to stage 2.
-void app_thread1( int samples[32], const int property[6] );
+extern void app_thread1( int samples[32], const int property[6] );
 // Process samples and properties from stage 1. Send results to stage 3.
-void app_thread2( int samples[32], const int property[6] );
+extern void app_thread2( int samples[32], const int property[6] );
 // Process samples and properties from stage 2. Send results to stage 4.
-void app_thread3( int samples[32], const int property[6] );
+extern void app_thread3( int samples[32], const int property[6] );
 // Process samples and properties from stage 3. Send results to stage 5.
-void app_thread4( int samples[32], const int property[6] );
+extern void app_thread4( int samples[32], const int property[6] );
 // Process samples and properties from stage 4. Send results to the app_mixer function.
-void app_thread5( int samples[32], const int property[6] );
+extern void app_thread5( int samples[32], const int property[6] );
 
 // Flash memory functions for data persistance (do not use these in real-time DSP threads).
 // Each page consists of 3268 5-byte properties (total of 65530 bytes). There are 16
@@ -56,28 +73,28 @@ void app_thread5( int samples[32], const int property[6] );
 // be loaded and saved from/to FLASH. All USB MIDI property flow (except for properties with
 // ID >= 0x8000 used for FLASH/RAM control) results in updates the RAM scratch buffer.
 
-extern void page_load ( int page_num );      // Load 64Kbyte page from FLASH to RAM
-extern void page_save ( int page_num );      // Save 64Kbyte page from RAM to FLASH
-extern void page_read ( int property[6] );   // Read one from RAM (prop index = property[0])
-extern void page_write( const int prop[6] ); // Write one property to RAM at index=prop[0]
+void page_load ( int page_num );                 // Load 64Kbyte page from FLASH to RAM.
+void page_save ( int page_num );                 // Save 64Kbyte page from RAM to FLASH.
+int  page_read ( int index, int data[5] );       // Read prop data from RAM, return page num.
+void page_write( int index, const int data[5] ); // Write prop data to RAM at index.
 
 // Port and pin I/O functions. DAC/ADC port reads/writes will disable I2S/TDM!
 
-extern void io_write( int pin_num, bool value ); // Write binary value to IO pin
-extern bool io_read ( int pin_num );             // Read binary value from IO pin
+void io_write( int pin_num, bool value ); // Write binary value to IO pin
+bool io_read ( int pin_num );             // Read binary value from IO pin
 
 // I2C functions for peripheral control (do not use these in real-time DSP threads).
 
-extern void i2c_start( int speed );  // Set bit rate, assert an I2C start condition.
-extern byte i2c_write( byte value ); // Write 8-bit data value.
-extern byte i2c_read ( void );       // Read 8-bit data value.
-extern void i2c_ack  ( byte ack );   // Assert the ACK/NACK bit after a read.
-extern void i2c_stop ( void );       // Assert an I2C stop condition.
+void i2c_start( int speed );  // Set bit rate, assert an I2C start condition.
+byte i2c_write( byte value ); // Write 8-bit data value.
+byte i2c_read ( void );       // Read 8-bit data value.
+void i2c_ack  ( byte ack );   // Assert the ACK/NACK bit after a read.
+void i2c_stop ( void );       // Assert an I2C stop condition.
 
-extern void port_set1( int flag );
-extern int  port_get1( void );
-extern void port_set2( int flag );
-extern int  port_get2( void );
+void port_set1( int flag );
+int  port_get1( void );
+void port_set2( int flag );
+int  port_get2( void );
 
 // MAC performs 32x32 multiply and 64-bit accumulation, SAT saturates a 64-bit result, EXT converts
 // a 64-bit result to a 32-bit value (extract 32 from 64), LD2/ST2 loads/stores two 32-values
@@ -183,65 +200,5 @@ void calc_bandpass ( int cc[5], double ff1, double ff2 );
 void calc_peaking  ( int cc[5], double ff, double qq, double gg );
 void calc_lowshelf ( int cc[5], double ff, double qq, double gg );
 void calc_highshelf( int cc[5], double ff, double qq, double gg );
-
-// Functions and variables to be implemented by the application ...
-
-extern const char* product_name_string;   // Your product name
-extern const char* usb_audio_output_name; // Your USB audio output name
-extern const char* usb_audio_input_name;  // Your USB audio input name
-extern const char* usb_midi_output_name;  // Your USB MIDI output name
-extern const char* usb_midi_input_name;   // Your USB MIDI input name
-
-extern const int audio_sample_rate;       // Audio sampling frequency (48K,96K,192K,or 384K)
-extern const int usb_output_chan_count;   // 2 USB audio output channels (32 max)
-extern const int usb_input_chan_count;    // 2 USB audio input channels (32 max)
-extern const int i2s_channel_count;       // 2,4,or8 I2S channels per SDIN/SDOUT wire
-
-extern const int i2s_sync_word[8];        // I2S WCLK words for each slot
-
-// The control task is called at a rate of 1000 Hz and should be used to implement audio CODEC
-// initialization/control, pot and switch sensing via I2C ADC's, handling of properties from USB
-// MIDI, and generation of properties to be consumed by the USB MIDI host and by the DSP threads.
-// The incoming USB property 'rcv_prop' is valid if its ID is non-zero. Outgoing USB and DSP props
-// will be sent out if their ID is non-zero.  It's OK to use floating point calculations here since
-// this thread is not a real-time audio/DSP thread.
-
-extern void app_control( const int rcv_prop[6], int usb_prop[6], int dsp_prop[6] );
-
-// The mixer function is called once per audio sample and is used to route USB, I2S and DSP samples.
-// This function should only be used to route samples and for very basic DSP processing - not for
-// substantial sample processing since this may starve the I2S audio driver. Do not use floating
-// point operations since this is a real-time audio thread - all DSP operations and calculations
-// should be performed using fixed-point math.
-// NOTE: IIR, FIR, and BiQuad coeff and state data *must* be declared non-static global!
-
-extern void app_mixer( const int usb_output[32], int usb_input[32],
-                       const int i2s_output[32], int i2s_input[32],
-                       const int dsp_output[32], int dsp_input[32], const int property[6] );
-
-// Audio Processing Threads. These functions run on tile 1 and are called once for each audio sample
-// cycle. They cannot share data with the controller task or the mixer functions above that run on
-// tile 0. The number of incoming and outgoing samples in the 'samples' array is set by the constant
-// 'dsp_chan_count' defined above. Do not use floating point operations since these are real-time
-// audio threads - all DSP operations and calculations should be performed using fixed-point math.
-// NOTE: IIR, FIR, and BiQuad coeff and state data *must* be declared non-static global!
-
-// Initialize DSP thread data (filter data and other algorithm data) here.
-extern void app_initialize( void ); // Called once upon boot-up.
-
-// Process samples (from the mixer function) and properties. Send results to stage 2.
-extern void app_thread1( int samples[32], const int property[6] );
-
-// Process samples (from stage 1) and properties. Send results to stage 3.
-extern void app_thread2( int samples[32], const int property[6] );
-
-// Process samples (from stage 2) and properties. Send results to stage 4.
-extern void app_thread3( int samples[32], const int property[6] );
-
-// Process samples (from stage 3) and properties. Send results to stage 5.
-extern void app_thread4( int samples[32], const int property[6] );
-
-// Process samples (from stage 4) and properties. Send results to the mixer function.
-extern void app_thread5( int samples[32], const int property[6] );
 
 #endif
