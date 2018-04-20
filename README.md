@@ -310,35 +310,29 @@ ID        DIRECTION        SUMMARY
 1000      Bidirectional    Identify; return ID (3DEGFLEX) and versions
 1100      Bidirectional    Return volume,tone,preset,bypass settings
 120t      Bidirectional    Return tile T's DSP processing loads
-200n      Bidirectional    Load page buffer from FLASH block N
-210n      Bidirectional    Store page buffer to FLASH block N
+2xxx      Undefined        Reserved for future use
 3iii      Bidirectional    Read 5-word property I from the page buffer
 4iii      Bidirectional    Write 5-word property I to the page buffer
 5xxx      Undefined        Reserved for future use
-6xxx      Undefined        Reserved for future use
+6001      Device to Host   Send raw MIDI data from device to host
+6002      Host to Device   Send raw MIDI data from host to device
+6003      Internal         MIDI beat clock control (start/stop/setBPM)
+6004      Internal         MIDI MTC/MPC control (MPC commands,MTC settings)
 7100      Bidirectional    Begin firmware upgrade, echoed back to host
 7200      Bidirectional    Next 32 bytes of firmware image data, echoed
 7300      Host to Device   End firmware upgrade and reset
-8001      Device to Host   Send raw MIDI data from device to host
-8002      Host to Device   Send raw MIDI data from host to device
-8003      Internal         MIDI beat clock control (start/stop/setBPM)
-8004      Internal         MIDI MTC/MPC control (MPC commands,MTC settings)
-9xxx      Undefined        Reserved for future use
+8xxx      Bidirectional    User/app props compatible with 'flexfx.html'
 ```
 
 #### FlexFX ID = 0x1000
 #### FlexFX ID = 0x1100
 #### FlexFX ID = 0x120t
-#### FlexFX ID = 0x200n
-#### FlexFX ID = 0x210n
 #### FlexFX ID = 0x3iii
 #### FlexFX ID = 0x4iii
 #### FlexFX ID = 0x7100
 #### FlexFX ID = 0x7200
 #### FlexFX ID = 0x7300
-#### FlexFX ID = 0x8001/2
-#### FlexFX ID = 0x8003
-#### FlexFX ID = 0x8004
+#### FlexFX ID = 0x8xxx
 
 Property Pages
 ----------------------------
