@@ -26,7 +26,7 @@ extern const int i2s_channel_count;       // 2,4,or8 I2S channels per SDIN/SDOUT
 
 extern const int i2s_sync_word[8];        // I2S WCLK words for each slot
 
-extern void render_interface( void );
+extern const char controller_script[];
 
 // The control task is called at a rate of 1000 Hz and should be used to implement audio CODEC
 // initialization/control, pot and switch sensing via I2C ADC's, handling of properties from USB
