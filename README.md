@@ -606,9 +606,15 @@ The effects also supports the HTML5 interface for controlling the device (firmwa
 
 **Prebuilt Effect - Cabinet Simulation (EFX_CABSIM)**
 
+![alt tag](efx_cabsim.png)
+
 **Prebuilt Effect - Preamp/Overdrive (EFX_PREAMP)**
 
+![alt tag](efx_preamp.png)
+
 **Prebuilt Effect - Graphic Equalizer (EFX_GRAPHICEQ)**
+
+![alt tag](efx_graphiceq.png)
 
 
 HTML/Javascript Interfaces
