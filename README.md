@@ -604,17 +604,13 @@ The FlexFX kit contains some highly optimized effects. These effects are in bina
 
 The effects also supports the HTML5 interface for controlling the device (firmware upgrading, uploading IR data, etc) since the web interfaces uses FlexFX properties and USB/MIDI for control. Javascript code for an effect is returned via USB MIDI by issueing the FlexFX USB/MIDI property for returning a device's javascript controller interface.  The HTML5 application called 'flexfx.html' does this automatically and will displayt this device's GUI interface if the device is pluged into the host computer via a USB cable. Google Chrome must be used.
 
-**Prebuilt Effect - Cabinet Simulation (EFX_CABSIM)**
+![alt tag](efx_cabsim.png)![alt tag](efx_preamp.png)![alt tag](efx_preamp.png)
 
-![alt tag](efx_cabsim.png)
+**Prebuilt Effect - Cabinet Simulation (EFX_CABSIM)**
 
 **Prebuilt Effect - Preamp/Overdrive (EFX_PREAMP)**
 
-![alt tag](efx_preamp.png)
-
 **Prebuilt Effect - Graphic Equalizer (EFX_GRAPHICEQ)**
-
-![alt tag](efx_preamp.png)
 
 Reading Pots/Knobs
 --------------------------------------
