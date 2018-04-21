@@ -349,46 +349,73 @@ Note that it's the responsibility of FlexFX application to move RAM property pag
 Discovery and Control
 ----------------------------
 
-All FlexFX devices support a discovery process whereby the host computer can querry a FlexFX device for its Javascript control source-code via FlexFX property exchanges as soon as the FlexFX firwmare starts.
-After a FlexFX device boots up it loads its RAM properties page with javascript code (stored as part of the firwmare program in FLASH memory) that can be used to control the effect. The 'flexfx.html' file will read the javascript from the properties page upon a FLexFX USB plug-in event and then use that javasscript to display the control interface (Google Chrome must be used).
+After a FlexFX device boots up it can be communicated with by a host via USB/MIDI and FlexFX property exchanges. If the host issues the property 0x1000 then the FlexFX framework will automatically load the RAM property page with a textual decsription
+of user controls that can be used to control the FlexFX application via USB/MIDI and FlexFX property exchanges using properties 0x8nnn.  Google Chrome with USB/MIDI support used in conjunction with 'flexfx.html' allows any FlexFX application to have a custiom HTML5-based user interface for effects control.
 
-Adding your own javascript control code to your custom effect is easy. Given a custom effect called 'myeffect.c' create a correspinding javascript file 'myeffect.js' that is aware of the custom effects properies used for configuration and control.  The build script (build.sh or build.bat) will embed the jaascript source code in the custom effects firmware image.
-
-Here's minimal javascript controller example:
+If an appliction does not have a user interface it still must provide a minimal interface description in order for the firmware upgrade capability via 'flexfx.html' to function:
 
 ```
-// Called by 'flexfx.html' when a FlexFX device is plugged in to USB. This function is
-// used to create DOM elements that correspond to the effects FlexFX properties interface.
-
-function flexfx_create( key ) // 'Key' identifer this instance of a controller instance
-{
-    var x = "";
-    x += "<p>";
-    x += "This FlexFX device does not have effects firmware loaded into it. Use the ";
-    x += "'LOAD FIRMWARE' button to select a firmware image to load into this device.";
-    x += "</p>";
-    return x;
-}
-
-// Called by 'flexfx.html' after the web page has been rendered and is ready for user input.
-// This function is used to initialize any custom data and relaaed DOM elements and also tp return
-// a handler function for non build-in FlexFX (i.e. custom effects) properties that arrive from
-// the FlexFX device via USB/MIDI.
-
-function flexfx_initialize( key ) // 'Key' identifer this instance of a controller instance
-{
-    return _on_property_received;
-}
-
-// Handle a property arriving from the associated FlexFX device. Optionally send a property
-// to the associated FlexFX device.
-
-function _on_property_received( property ) // Property is [ID, value1, ...value5]
-{
-  // Send a property to the FlexFX device ...
-  // flexfx_send_property( property ) // Property is [ID, value1, ...value5]
-}
+const char controller_script[] =  "ui_header(ID:0x00,'FlexFX',[]);";
 ```
+
+Example #1 of a FlexFX user interface definition. See the 'EFX_CABSIM' screenshot in the 'Prebuild Effects' section for a screenshot of this HTML5 interface.
+```
+const char controller_script[] = \
+	"" \
+	"ui_header( ID:0x00, 'FlexFX Cabsim', [' Left/Mono ',' Right/Stereo ',' IR File Name(s) '] );" \
+	"ui_file  ( ID:0x01, 'N', 1, 'Select IR', ID:03 );" \
+	"ui_file  ( ID:0x02, 'N', 2, 'Select IR', ID:04 );" \
+	"ui_label ( ID:0x03, 'F', 'Celestion G12H Ann 152 Open Room.wav' );" \
+	"ui_label ( ID:0x04, 'L', 'Celestion G12H Ann 152 Open Room.wav' );" \
+	"";
+```
+
+Example #1 of a FlexFX user interface definition. See the 'EFX_PREAMP' screenshot in the 'Prebuild Effects' section for a screenshot of this HTML5 interface.
+```
+const char controller_script[] = \
+	"" \
+	"ui_header ( ID:0x00, 'FlexFX Preamp', ['Stage','Low-Cut','Emphasis','Bias','High-Cut'] );" \
+	"ui_label  ( ID:0x00, 'F', '1' );" /* First label  in column 1 ("Stage" column) */ \
+	"ui_label  ( ID:0x00, 'N', '2' );" /* Next  label  in column 1 ("Stage" column) */ \
+	"ui_label  ( ID:0x00, 'L', '3' );" /* Last  label  in column 1 ("Stage" column) */ \
+	"ui_hslider( ID:0x01, 'F', 96 );"  /* First slider in column 2 ("Low-Cut" column) */ \
+	"ui_hslider( ID:0x02, 'N', 96 );"  /* Next  slider in column 2 ("Low-Cut" column) */ \
+	"ui_hslider( ID:0x03, 'L', 96 );"  /* Last  slider in column 2 ("Low-Cut" column) */ \
+	"ui_hslider( ID:0x04, 'F', 96 );"  /* First slider in column 2 ("Emphasis" column) */ \
+	"ui_hslider( ID:0x05, 'N', 96 );"  /* Next  slider in column 2 ("Emphasis" column) */ \
+	"ui_hslider( ID:0x06, 'L', 96 );"  /* Last  slider in column 2 ("Emphasis" column) */ \
+	"ui_hslider( ID:0x07, 'F', 96 );"  /* First slider in column 2 ("Bias" column) */ \
+	"ui_hslider( ID:0x08, 'N', 96 );"  /* Next  slider in column 2 ("Bias" column) */ \
+	"ui_hslider( ID:0x09, 'L', 96 );"  /* Last  slider in column 2 ("Bias" column) */ \
+	"ui_hslider( ID:0x0A, 'F', 96 );"  /* First slider in column 2 ("High-Cut" column) */ \
+	"ui_hslider( ID:0x0B, 'N', 96 );"  /* Next  slider in column 2 ("High-Cut" column) */ \
+	"ui_hslider( ID:0x0C, 'L', 96 );"  /* Last  slider in column 2 ("High-Cut" column) */ \
+	"";
+```
+
+Example #1 of a FlexFX user interface definition. See the 'EFX_GRAPHICEQ' screenshot in the 'Prebuild Effects' section for a screenshot of this HTML5 interface.
+```
+const char controller_script[] = \
+	"" \
+	"ui_header ( ID:0x00, 'FlexFX GraphicEQ', " \
+	             "['Gain','56','84','126','190','284','426','640','960'," \
+	             "'1K4','2K1','3K2','4K8','7K3','11K','16K'] );" \
+	"ui_vslider( ID:0x10, 'S', 27 );" "ui_vslider( ID:0x11, 'S', 27 );" \
+	"ui_vslider( ID:0x12, 'S', 27 );" "ui_vslider( ID:0x13, 'S', 27 );" \
+	"ui_vslider( ID:0x14, 'S', 27 );" "ui_vslider( ID:0x15, 'S', 27 );" \
+	"ui_vslider( ID:0x16, 'S', 27 );" "ui_vslider( ID:0x17, 'S', 27 );" \
+	"ui_vslider( ID:0x18, 'S', 27 );" "ui_vslider( ID:0x19, 'S', 27 );" \
+	"ui_vslider( ID:0x1A, 'S', 27 );" "ui_vslider( ID:0x1B, 'S', 27 );" \
+	"ui_vslider( ID:0x1C, 'S', 27 );" "ui_vslider( ID:0x1D, 'S', 27 );" \
+	"ui_vslider( ID:0x1E, 'S', 27 );" "ui_vslider( ID:0x1F, 'S', 27 );" \
+	"";
+```
+
+**Control Object "ui_heade"r**
+**Control Object "ui_label"**
+**Control Object "ui_hslider"r**
+**Control Object "ui_vslider"**
+**Control Object "ui_file"**
 
 Programming Tools
 -------------------------------------
@@ -576,6 +603,13 @@ Prebuilt Effects
 The FlexFX kit contains some highly optimized effects. These effects are in binary (\*.bin) form and can be used for free on FlexFX boards. The FlexFX properties definitions for prebuilt effects are documented in the effect's respective text file (e.g. efx_cabsim.txt for the prebuild efx_cabsim.bin effect). These properties allow for full control over each effect via FlexFX properties sent and received over USB/MIDI.
 
 The effects also supports the HTML5 interface for controlling the device (firmware upgrading, uploading IR data, etc) since the web interfaces uses FlexFX properties and USB/MIDI for control. Javascript code for an effect is returned via USB MIDI by issueing the FlexFX USB/MIDI property for returning a device's javascript controller interface.  The HTML5 application called 'flexfx.html' does this automatically and will displayt this device's GUI interface if the device is pluged into the host computer via a USB cable. Google Chrome must be used.
+
+**Prebuilt Effect - Cabinet Simulation (EFX_CABSIM)**
+
+**Prebuilt Effect - Preamp/Overdrive (EFX_PREAMP)**
+
+**Prebuilt Effect - Graphic Equalizer (EFX_GRAPHICEQ)**
+
 
 HTML/Javascript Interfaces
 ----------------------------------
