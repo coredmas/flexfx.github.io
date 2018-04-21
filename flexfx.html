@@ -15,17 +15,38 @@
 
 <script>
 
+window.addEventListener('load', function()
+{	
+    if(navigator.requestMIDIAccess) {
+        navigator.requestMIDIAccess({sysex:true}).then(_on_midi_success,_on_midi_failure);
+    }
+    else document.write( "USB/MIDI is not available." );
+});
+
+function ui_update( key, name )
+{
+	var hh = ""; var ss = ""; key = key.toString(16);
+    hh += "<div class='row'><div class='column' style='margin-top:3%'>";
+    hh += "<table class='flexfx'>\n<tbody>\n<tr>\n";
+    hh += "<td align='right'><h4>FlexFX</h4></td>\n";
+    hh += "<td><h4>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h4></td>\n";
+    hh += "<td><button id='"+key+"'>Load "+name+"</button>\n</td>\n";
+    hh += "</tr>\n</tbody>\n</table>\n";
+	hh += "</tbody>\n</table>\n</div>\n</div>\n";
+	ss += "$('"+key+"').onclick = function(ee) {_flexfx_live_update('"+key+"');};\n";
+	return [hh,ss];
+}
+
 function ui_header( key, name, heading )
 {
 	var hh = ""; var ss = ""; key = key.toString(16);
 	
-    //hh += "<div class='row'><div class='column' style='margin-top:3%'>";
-    hh += "<div class='row'>\n<div class='column'>\n";
+    hh += "<div class='row'><div class='column' style='margin-top:3%'>";
     hh += "<table class='flexfx'>\n<tbody>\n<tr>\n";
     hh += "<td align='right'><h4>"+name+"</h4></td>\n";
     hh += "<td><h4>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h4></td>\n";
-    hh += "<td>\n<input type='file' style='display:none' id='"+key+"'/>\n";
-    hh += "<button id='"+key+"_button'>Update Firmware</button>\n</td>\n";
+    hh += "<td>\n<input type='file' style='display:none' id='"+key+"_input'/>\n";
+    hh += "<button id='"+key+"'>Update Firmware</button>\n</td>\n";
     hh += "</tr>\n</tbody>\n</table>\n";
     
     if( heading.length > 0 ) {
@@ -34,8 +55,8 @@ function ui_header( key, name, heading )
 		hh += "</thead>\n<tbody>\n";
 	}
 
-	ss += "$('"+key+"_button').onclick = function(ee) { $('"+key+"').click(); };\n";
-	ss += "$('"+key+"').oninput = function(ee) {\n";
+	ss += "$('"+key+"').onclick = function(ee) { $('"+key+"_input').click(); };\n";
+	ss += "$('"+key+"_input').oninput = function(ee) {\n";
 	ss += "var reader = new FileReader();\n";
 	ss += "reader.onload = function(e) {_flexf_send_firmware('"+key+"',reader.result);};\n";
 	ss += "reader.readAsArrayBuffer($('"+key+"').files[0]);\n";
@@ -94,7 +115,6 @@ function ui_vslider( key, pos, width )
 function ui_file( key, pos, type, label, link )
 {
 	var hh = ""; var ss = ""; key = key.toString(16);
-	console.log(key);
 
 	if( pos == 'F' || pos == 'S' ) hh += "<td>\n<div style='display:inline-block'>";
 	hh += "<td>\n<input type='file' style='display:none' id='"+key+"'/>\n";
@@ -102,11 +122,7 @@ function ui_file( key, pos, type, label, link )
 	if( pos == 'L' || pos == 'S' ) hh += "</div>\n</td>\n";
 	
 	ss += "$('"+key+"_button').onclick = function(ee) { $('"+key+"').click(); };\n";
-	ss += "$('"+key+"').oninput = function(ee) {\n";
-	ss += "var reader = new FileReader();\n";
-	ss += "reader.onload = function(e) {_flexf_send_wave('"+key+"',reader.result);};\n";
-	ss += "reader.readAsArrayBuffer($('"+key+"').files[0]);\n";
-	ss += "};\n";
+	ss += "$('"+key+"').oninput = function(ee) {_flexf_send_wave('"+key+"',$('"+key+"').files[0]);};\n";
 	
 	return [hh,ss];
 }
@@ -131,19 +147,23 @@ function ui_create( unit, text )
 					var line = lines[ll].replace( "ID:", "0x"+key+"+" );
 					var rr = eval(line); hh += rr[0]; ss += rr[1], cc = rr[2];
 				}
-			}
-		}
+				else if( lines[ll].substring(0,9) == "ui_update" ) {
+					var key = ((unit<<16)+(0<<8)).toString(16);
+					var line = lines[ll].replace( "ID:", "0x"+key+"+" );
+					var rr = eval(line); hh += rr[0]; ss += rr[1], cc = rr[2];
+				}
+		}}
 		else if( cc > 0 ) {
-			var key = ((unit<<16)+(pp<<8)).toString(16);
+			var key = ((unit<<16)+(pp<<8)+0x8000).toString(16);
 			var rr = ui_row_beg( unit, pp ); hh += rr[0]; ss += rr[1];
 			for( ll in lines ) {
 				line = lines[ll]
 				num = (unit << 16) + (pp << 8);
 				if( lines[ll].substring(0,9) == "ui_header" ) continue;
+				if( lines[ll].substring(0,9) == "ui_update" ) continue;
 				var line = line.replace( "ID:", "0x"+key+"+" );
 				line = line.replace( "ID:", "0x"+key+"+" );
 				if( line.length < 3 ) continue;
-				console.log(line);
 				var rr = eval(line); hh += rr[0]; ss += rr[1];
 			}
 			var rr = ui_row_end(); hh += rr[0]; ss += rr[1];
@@ -156,6 +176,8 @@ function ui_create( unit, text )
 
 function _load_interface( unit, text )
 {
+    if( _live_update_binary.length > 0 ) text = "ui_update(ID:0xFF,'Cabsim');;"
+
     text = text.slice(0,text.indexOf(String.fromCharCode(0)));
 	var rr = ui_create( unit, text );
 
@@ -178,19 +200,11 @@ function _unload_interface( unit )
     }
 }
 
-window.addEventListener('load', function()
-{	
-    if(navigator.requestMIDIAccess) {
-        navigator.requestMIDIAccess({sysex:true}).then(_on_midi_success,_on_midi_failure);
-    }
-    else document.write( "USB/MIDI is not available." );
-});
-
 var _midi_input_ports = {}, _midi_output_ports = {};
-var _javascript = {};
+var _javascript = {}, _transfer_key = "";
 var _unit_count = 0;
 
-var _transfer_data = {}, _transfer_count = {}, _transfer_size = {}, _transfer_key = "";
+var _transfer_data = {}, _transfer_count = {}, _transfer_size = {}, _transfer_prop = {};
 
 function _on_midi_success( midiAccess )
 {
@@ -229,7 +243,10 @@ function _on_midi_message( event )
     var property = _flexfx_midi_to_prop( event.data );
 	var unit = (property[0] & 0xFFFF0000) >> 16;
 
-    //console.log( "Event:" + property[0].toString(16) )
+    //console.log( "Event:" + property[0].toString(16) );
+	//if( (property[0] & 0xF000) == 0x8000 ) console.log( "Event:" + property[0].toString(16) )
+	//if( (property[0] & 0xF000) == 0x7000 ) console.log( "Event:" + property[0].toString(16) )
+	//if( (property[0] & 0xF000) == 0x4000 ) console.log( "Event:" + property[0].toString(16) )
 
     if( !(unit in _midi_input_ports) ) _midi_input_ports[unit] = event.srcElement;
 
@@ -252,6 +269,26 @@ function _on_midi_message( event )
 	    	var offset = ++_transfer_count[unit];
 			_midi_output_ports[unit].send( _flexfx_prop_to_midi( [(unit<<16)+0x3000+offset,0,0,0,0,0] ));
         }
+    }
+    else if( (property[0] & 0xF000) == 0x4000 )
+    {
+		if( _transfer_data[unit].length > 0 )
+		{
+			var property = [(unit<<16)+0x4000+_transfer_count[unit]++,0,0,0,0,0];
+			if( _transfer_data[unit].length >= 1 ) property[1] = _transfer_data[unit][0];
+			if( _transfer_data[unit].length >= 2 ) property[2] = _transfer_data[unit][1];
+			if( _transfer_data[unit].length >= 3 ) property[3] = _transfer_data[unit][2];
+			if( _transfer_data[unit].length >= 4 ) property[4] = _transfer_data[unit][3];
+			if( _transfer_data[unit].length >= 5 ) property[5] = _transfer_data[unit][4];
+			_transfer_data[unit] = _transfer_data[unit].slice(5);
+			_midi_output_ports[unit].send( _flexfx_prop_to_midi( property ));
+		}
+		else
+		{
+			property = [ parseInt(_transfer_prop[unit],16),0,0,0,0,0 ];
+			_midi_output_ports[unit].send( _flexfx_prop_to_midi( property ));
+			//$(key+"_button1").disabled = false;
+		}
     }
     else if( (property[0] & 0xFF00) == 0x7100 || ((property[0] & 0xFF00) & 0xFF00) == 0x7200 )
     {
@@ -284,50 +321,46 @@ function _on_midi_message( event )
 			$(_transfer_key).innerHTML = "Finished"
 		}
     }
-    else if( (property[0] & 0xF000) == 0x4000 )
-    {
-		if( _transfer_data[unit].length > 0 )
-		{
-			var property = [(unit<<16)+0x4000+_transfer_count[unit]++,0,0,0,0,0];
-			if( _transfer_data[unit].length >= 1 ) property[1] = _transfer_data[unit][0];
-			if( _transfer_data[unit].length >= 2 ) property[2] = _transfer_data[unit][1];
-			if( _transfer_data[unit].length >= 3 ) property[3] = _transfer_data[unit][2];
-			if( _transfer_data[unit].length >= 4 ) property[4] = _transfer_data[unit][3];
-			if( _transfer_data[unit].length >= 5 ) property[5] = _transfer_data[unit][4];
-			_transfer_data[unit] = _transfer_data.slice(5);
-			_midi_output_ports[unit].send( _flexfx_prop_to_midi( property ));
-		}
-		else
-		{
-			//$(key+"_button1").disabled = false;
-		}
-    }
 }
 
 function _flexf_send_prop( key, prop )
 {
-	console.log( "_flexf_send_prop", key.toString(16) );
-	//_midi_output_ports[id>>16].send(_flexfx_prop_to_midi(prop));
+	console.log( "_flexf_send_prop", key );
+	_midi_output_ports[("0x"+key).toString(16)>>16].send(_flexfx_prop_to_midi(prop));
 }
-function _flexf_send_wave( key, data )
+
+function _flexf_send_data( key, mode, prop, data )
 {
-	console.log( "_flexf_send_wave", key.toString(16) );
+	unit = ("0x"+key).toString(16) >> 16;
 	_transfer_key = key;
+	_transfer_prop[unit] = key;
 	_transfer_count[unit] = 0;
-	_transfer_data[unit] = flexfx_wave_to_samples( data );
-	_transfer_size[unit] = _transfer_data[unit].length;
-    port.send( _flexfx_prop_to_midi( [(unit<<16)+0x4000,0,0,0,0,0] ));
+	_transfer_data[unit] = data;
+	_transfer_size[unit] = data.length;
+	var port = _midi_output_ports[("0x"+key).toString(16)>>16];
+    port.send( _flexfx_prop_to_midi( [(unit<<16)+mode,0,0,0,0,0] ));
 }
-function _flexf_send_firmware( key, data )
+
+function _flexf_send_file( key, name, type )
 {
-	console.log( "_flexf_send_firmware", key.toString(16) );
-	$(_transfer_key).disabled = true;
-	$(_transfer_key).innerHTML = "Starting ..."
-	_transfer_key = key;
-	_transfer_count[unit] = 0;
-    _transfer_data[unit] = new Uint8Array( data );
-	_transfer_size[unit] = _transfer_data[unit].length;
-	port.send( _flexfx_prop_to_midi( [(unit<<16)+0x7100,0,0,0,0,0] ));
+	console.log( "_flexf_send_file", key.toString(16) );
+	unit = ("0x"+key).toString(16) >> 16;
+    var reader = new FileReader();
+    reader.onload = function(ee)
+    {
+		data = new Uint8Array( ee.target.result );
+		if( type == ".wav" ) data = flexfx_wave_to_samples( new Uint8Array(data) );
+		_flexf_send_data( key, 0x4000, 0x0000, data );
+    }
+    reader.readAsArrayBuffer( file );
+}
+
+function _flexfx_live_update( key )
+{
+    data = new Uint8Array( _live_update_binary.length );
+    for( var ii = 0; ii < _live_update_binary.length; ++ii )  data[ii] = _live_update_binary.charCodeAt(ii);
+    _live_update_binary = '';
+    _flexf_send_data( key, 0x7100, 0x0000, data );
 }
 
 function _flexfx_prop_to_midi( property )
@@ -398,7 +431,7 @@ function flexfx_wave_to_samples( data )
             thruput  = array_to_ui4le(data); data = data.slice(4);
             align    = array_to_ui2le(data); data = data.slice(2);
             width    = array_to_ui2le(data); data = data.slice(2);
-            //console.log( "WaveIn: ByteCount=%u Channels=%u Rate=%u WordSize=%u", blocksz,channels,rate,width );
+            console.log( "WaveIn: ByteCount=%u Channels=%u Rate=%u WordSize=%u", blocksz,channels,rate,width );
         }
         else if( blockid == 0x61746164 ) // Signature for 'data'
         {
@@ -427,81 +460,14 @@ function flexfx_wave_to_samples( data )
                 }
             }
         }
+        else {
+        	break;
+        }
     }
     return samples;
 }
 
-
-
-
-
-
-
-
-
-//function _on_factory_input( event )
-//{
-//    var key  = id_to_key( event.target.id );
-//    var unit = key_to_unit( key );
-//    var num  = parseInt( event.target.id[10] );
-//    file_object = $(key+"_input"+num).files[0];
-//    if(      num == 1 ) flexfx_write_firmware( unit, file_object );
-//    //else if( num == 2 ) flexfx_transfer_data( unit, file_object );
-//}
-
-//function _on_factory_button( event )
-//{
-//    var key = id_to_key( event.target.id );
-//    var num = parseInt( event.target.id[11] );
-//    if( num == 3 ) {}
-//    else $(key+"_input"+num).click();
-//}
-
-function _load_javascript( key, text )
-{
-
-	/*
-    var x = "";
-    x += "<div class='row'><div class='column' style='margin-top:3%'>";
-
-    x += "<table class='flexfx'><tbody><tr>";
-    x += "<td align='right'><h4 id='"+key+"_title'>" + _device_name[unit] + "</h4></td>";
-    x += "<td><h4>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h4></td>";
-    x += "<td><input type='file' style='display:none' id='"+key+"_input1'/><button id='"+key+"_button1'>Update Firmware</button></td>";
-    x += "</tr></tbody></table>";
-
-    x += flexfx_create( key, 0 );
-    
-    var heading = stuff[0];
-	if( heading.length > 0 ) {
-		x += "<table class='flexfx'><thead><th>Preset</th>";
-		for( var hh in heading ) { x += "<th>" + heading[hh] + "</th>"; }
-		x += "</thead><tbody>";
-		for( var preset = 1; preset <= 9; ++preset ) {
-			x += "<tr class='preset'><td class='preset' id='"+key+preset+"'>"+preset+"</td>"
-			//x += stuff[1].replace(new RegExp('~','g'),preset.toString(16));
-			x += "</tr>";
-		}
-		x += "</tbody></table>";
-	}
-    $(key).innerHTML = x;
-
-    $(key+"_button"+1).onclick = _on_factory_button;
-    $(key+"_input"+1).onchange = _on_factory_input;
-
-	if( heading.length > 0 ) {
-		for( var preset=1;preset<=9;++preset) $(key+preset).onclick = flexfx_ui_event;
-	}
-	for( var ii = 16; ii < 256; ++ii ) {
-		id = key + ii.toString(16);
-		if( !!document.getElementById(id) ) {
-			if( $(id).nodeName == "BUTTON" ) $(id).onclick = stuff[2];
-			if( $(id).nodeName == "INPUT" ) $(id).oninput = stuff[2];
-		}
-		if( !!document.getElementById(id+"_file") ) $(id+"_file").onchange = stuff[2];
-	}
-	*/
-}
+var _live_update_binary='';
 
 </script>
 
@@ -548,12 +514,8 @@ tr.preset:hover { color:#ddd; background-color: #222; border-color: #333; }
 td.preset:hover { color:#eee; background-color: #357; border-color: #333; }
 
 .container {
-  position: relative;
-  width: 100%;
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 0 20px;
-  box-sizing: border-box;
+  position: relative; width: 100%; max-width: 960px;
+  margin: 0 auto; padding: 0 20px; box-sizing: border-box;
 }
 .column,
 .columns { width: 100%; float: left; box-sizing: border-box; }
@@ -601,13 +563,10 @@ input[type="number"],
 input[type="text"],
 textarea,
 select {
-  height: 28px;
-  padding: 6px 10px;
+  height: 28px; padding: 6px 10px;
   background-color: #fff;
-  border: 1px solid #D1D1D1;
-  border-radius: 4px;
-  box-shadow: none;
-  box-sizing: border-box; }
+  border: 1px solid #D1D1D1; border-radius: 4px;
+  box-shadow: none; box-sizing: border-box; }
 input[type="number"],
 input[type="text"],
 textarea { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
@@ -644,23 +603,13 @@ table.flexfx tbody td { padding: 8px 4px; text-align: center; border-bottom: 1px
 .button,
 button,
 input[type="button"] {
-  display: inline-block;
-  height: 32px;
-  padding: 0 10px;
-  color: #CCC;
-  text-align: center;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 32px;
-  letter-spacing: .1rem;
-  text-transform: uppercase;
-  text-decoration: none;
-  white-space: nowrap;
-  background-color: transparent;
-  border-radius: 5px;
-  border: 1px solid #BBB;
+  display: inline-block; height: 32px; padding: 0 10px;
+  text-align: center; font-size: 11px; font-weight: 600;
+  line-height: 32px; letter-spacing: .1rem;
+  text-transform: uppercase; text-decoration: none; white-space: nowrap;
+  background-color: transparent; color: #CCC;
+  box-sizing: border-box; border-radius: 5px; border: 1px solid #BBB;
   cursor: pointer;
-  box-sizing: border-box;
 }
 
 input.button:hover,
@@ -676,24 +625,18 @@ button:disabled,
 input[type="button"]:disabled { color: #777; border-color: #AAA; outline: 0; }
 
 input.slider {
-    -webkit-appearance: none;
-    width: 96px; height: 11px;
-    border-radius: 3px;
-    background: #333;
-    outline: none;
-    opacity: 0.7;
-    -webkit-transition: .2s;
-    transition: opacity .2s;
-  	border: 1px solid #CCC;
+    -webkit-appearance: none; -webkit-transition: .2s;
+    width: 96px; height: 11px; outline: none;
+    border-radius: 3px; border: 1px solid #CCC;
+    background: #333; opacity: 0.7; transition: opacity .2s;
 }
 input.slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 11px; height: 13px;
-    border-radius: 3px;
+    border-radius: 3px; border: 0px solid #CCC;
     background: #CCC;
     cursor: pointer;
-  	border: 0px solid #CCC;
 }
 input.slider:hover,
 slider:hover { color: #FFF; background-color: #000; border-color: #CCC; }
@@ -704,22 +647,19 @@ input.slider::-webkit-slider-thumb:hover { color: #FFF; background-color: #75bbf
 input.vslider {
     -webkit-appearance: slider-vertical;
     width: 20px; height: 60px;
-    border-radius: 3px;
-    background: #333;
+    border-radius: 3px; border: 1px solid #CCC;
+    background: #333; opacity: 0.7;
     outline: none;
-    opacity: 0.7;
     -webkit-transition: .2s;
     transition: opacity .2s;
-  	border: 1px solid #CCC;
 }
 input.vslider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 11px; height: 13px;
-    border-radius: 3px;
+    border-radius: 3px; border: 0px solid #CCC;
     background: #CCC;
     cursor: pointer;
-  	border: 0px solid #CCC;
 }
 input.vslider:hover,
 vslider:hover { color: #FFF; background-color: #000; border-color: #CCC; }

@@ -125,6 +125,6 @@ void app_thread4( int samples[32], const int property[6] )
 {
 }
 
-void dsp_thread5( int samples[32], const int property[6] )
+void app_thread5( int samples[32], const int property[6] )
 {
 }
