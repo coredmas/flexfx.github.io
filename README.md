@@ -614,12 +614,7 @@ The effects also supports the HTML5 interface for controlling the device (firmwa
 
 **Prebuilt Effect - Graphic Equalizer (EFX_GRAPHICEQ)**
 
-![alt tag](efx_graphiceq.png)
-
-
-HTML/Javascript Interfaces
-----------------------------------
-
+![alt tag](efx_preamp.png)
 
 Reading Pots/Knobs
 --------------------------------------
