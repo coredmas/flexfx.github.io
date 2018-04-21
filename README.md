@@ -606,15 +606,15 @@ The effects also supports the HTML5 interface for controlling the device (firmwa
 
 **Prebuilt Effect - Cabinet Simulation (EFX_CABSIM)**
 
-![alt tag](efx_cabsim.png)
-
 Stereo Cabinet Simulation with Tone/Volume and USB Audio Mixing.  30 msec of impulse response (IR) convolution in stereo mode and 70 msec in mono mode using 32/64 bit fixed-point DSP at a 48 kHz sampling rate.  Supports up to nine presets each with its own set if IR's (left and right channels) which can be downloaded as WAVE files via USB/MIDI using the FlexFX development kit, the flexfx browser interface (Google Chrome only), or other applications conforming to the FlexFX USB/MIDI download process.
+
+![alt tag](efx_cabsim.png)
 
 **Prebuilt Effect - Preamp/Overdrive (EFX_PREAMP)**
 
-![alt tag](efx_preamp.png)
-
 Three preamp gain stages in series for with an internal signal processing sample rate of 960 kHz for articulate overdrive/distortion voicing.  Each preamp stage incorporates adjustable pre-filtering, a dynamic tube-based gain model with slew-rate limiting and adjustable/modulated bias, and post-filtering creating a tube-like multi-stage guitar preamp.
+
+![alt tag](efx_preamp.png)
 
 **Prebuilt Effect - Graphic Equalizer (EFX_GRAPHICEQ)**
 
@@ -622,15 +622,15 @@ Three preamp gain stages in series for with an internal signal processing sample
 
 **Prebuilt Effect - Stereo Multi-Voice Chorus (EFX_CHORUS)**
 
-![alt tag](efx_chorus.png)
-
 Up to three chorus voices per channel (left and right) each with their own settings for LFO rate, base delay, modulated delay/depth,  high and low-pass filters, regeneration/feedback level, and wet/dry mix. Up to nine presets and USB/MIDI control.
+
+![alt tag](efx_chorus.png)
 
 **Prebuilt Effect - Stereo 'FreeVerb' Reverb (EFX_REVERB)**
 
-![alt tag](efx_chorus.png)
-
 Implements the Schroeder-Moorer approach to reverberation and this particular implementation is a port of the 'FreeVerb' algorithm that's used in a number of software packages.  Adjustments for the reverb's wet/dry mix, stereo width, room size, and room reflection/damping. Up to nine presets and USB/MIDI control.
+
+![alt tag](efx_chorus.png)
 
 Reading Pots/Knobs
 --------------------------------------
