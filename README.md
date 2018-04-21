@@ -604,13 +604,33 @@ The FlexFX kit contains some highly optimized effects. These effects are in bina
 
 The effects also supports the HTML5 interface for controlling the device (firmware upgrading, uploading IR data, etc) since the web interfaces uses FlexFX properties and USB/MIDI for control. Javascript code for an effect is returned via USB MIDI by issueing the FlexFX USB/MIDI property for returning a device's javascript controller interface.  The HTML5 application called 'flexfx.html' does this automatically and will displayt this device's GUI interface if the device is pluged into the host computer via a USB cable. Google Chrome must be used.
 
-![alt tag](efx_cabsim.png)![alt tag](efx_preamp.png)![alt tag](efx_preamp.png)
-
 **Prebuilt Effect - Cabinet Simulation (EFX_CABSIM)**
+
+![alt tag](efx_cabsim.png)
+
+Stereo Cabinet Simulation with Tone/Volume and USB Audio Mixing.  30 msec of impulse response (IR) convolution in stereo mode and 70 msec in mono mode using 32/64 bit fixed-point DSP at a 48 kHz sampling rate.  Supports up to nine presets each with its own set if IR's (left and right channels) which can be downloaded as WAVE files via USB/MIDI using the FlexFX development kit, the flexfx browser interface (Google Chrome only), or other applications conforming to the FlexFX USB/MIDI download process.
 
 **Prebuilt Effect - Preamp/Overdrive (EFX_PREAMP)**
 
+![alt tag](efx_preamp.png)
+
+Three preamp gain stages in series for with an internal signal processing sample rate of 960 kHz for articulate overdrive/distortion voicing.  Each preamp stage incorporates adjustable pre-filtering, a dynamic tube-based gain model with slew-rate limiting and adjustable/modulated bias, and post-filtering creating a tube-like multi-stage guitar preamp.
+
 **Prebuilt Effect - Graphic Equalizer (EFX_GRAPHICEQ)**
+
+![alt tag](efx_graphiceq.png)
+
+**Prebuilt Effect - Stereo Multi-Voice Chorus (EFX_CHORUS)**
+
+![alt tag](efx_chorus.png)
+
+Up to three chorus voices per channel (left and right) each with their own settings for LFO rate, base delay, modulated delay/depth,  high and low-pass filters, regeneration/feedback level, and wet/dry mix. Up to nine presets and USB/MIDI control.
+
+**Prebuilt Effect - Stereo 'FreeVerb' Reverb (EFX_REVERB)**
+
+![alt tag](efx_chorus.png)
+
+Implements the Schroeder-Moorer approach to reverberation and this particular implementation is a port of the 'FreeVerb' algorithm that's used in a number of software packages.  Adjustments for the reverb's wet/dry mix, stereo width, room size, and room reflection/damping. Up to nine presets and USB/MIDI control.
 
 Reading Pots/Knobs
 --------------------------------------
