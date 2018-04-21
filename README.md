@@ -310,35 +310,29 @@ ID        DIRECTION        SUMMARY
 1000      Bidirectional    Identify; return ID (3DEGFLEX) and versions
 1100      Bidirectional    Return volume,tone,preset,bypass settings
 120t      Bidirectional    Return tile T's DSP processing loads
-200n      Bidirectional    Load page buffer from FLASH block N
-210n      Bidirectional    Store page buffer to FLASH block N
+2xxx      Undefined        Reserved for future use
 3iii      Bidirectional    Read 5-word property I from the page buffer
 4iii      Bidirectional    Write 5-word property I to the page buffer
 5xxx      Undefined        Reserved for future use
-6xxx      Undefined        Reserved for future use
+6001      Device to Host   Send raw MIDI data from device to host
+6002      Host to Device   Send raw MIDI data from host to device
+6003      Internal         MIDI beat clock control (start/stop/setBPM)
+6004      Internal         MIDI MTC/MPC control (MPC commands,MTC settings)
 7100      Bidirectional    Begin firmware upgrade, echoed back to host
 7200      Bidirectional    Next 32 bytes of firmware image data, echoed
 7300      Host to Device   End firmware upgrade and reset
-8001      Device to Host   Send raw MIDI data from device to host
-8002      Host to Device   Send raw MIDI data from host to device
-8003      Internal         MIDI beat clock control (start/stop/setBPM)
-8004      Internal         MIDI MTC/MPC control (MPC commands,MTC settings)
-9xxx      Undefined        Reserved for future use
+8xxx      Bidirectional    User/app props compatible with 'flexfx.html'
 ```
 
 #### FlexFX ID = 0x1000
 #### FlexFX ID = 0x1100
 #### FlexFX ID = 0x120t
-#### FlexFX ID = 0x200n
-#### FlexFX ID = 0x210n
 #### FlexFX ID = 0x3iii
 #### FlexFX ID = 0x4iii
 #### FlexFX ID = 0x7100
 #### FlexFX ID = 0x7200
 #### FlexFX ID = 0x7300
-#### FlexFX ID = 0x8001/2
-#### FlexFX ID = 0x8003
-#### FlexFX ID = 0x8004
+#### FlexFX ID = 0x8xxx
 
 Property Pages
 ----------------------------
@@ -348,57 +342,80 @@ property ID using the least significat 12 bits (ID = iii).  Each page being 64 K
 One property page is stored in RAM while up to 15 property pages can be stored in FLASH.
 A property exchange over USB/MIDI using properties 0x200n and 0x210n can be used to move property pages between RAM and FLASH memory where N specifies the property page in FLASH to load or store.
 
-Writing and reading prioperties to/from the RAM property page in occurs via properties 0x3iii (read) and 0x4iii (write) where
-iii is the property number.
-If the USB/MIDI host writes to the property page via property 0x3iii then that property's data (five 32-bit words) will be copied into the property page as well as sent to the 'app_control' function.
-If the 'app_control' function writes to the properties page via 0x3iii then that property's data (five 32-bit words) will be send to the USB/MIDI host.
-The RAM property page then always reflects the current state or property value transfers regardless of the transfer direction (e.g host to device or device to host).  The 'app_control' function and the USB/MIDI host can read the properties page at any time using property 0x4iii.
+Writing and reading prioperty values to/from the RAM property page in occurs via properties 0x3iii (read) and 0x4iii (write) where iii is the property number.
 
-Note that it's the responsibility of either the FlexFX firmware (via the 'app_control' function or the USB/MIDI host application) to move RAM property pages betwen FLASH.  Such would be the case for if an effects preset state, reflected by the properties page values, changed in some way and needed to be persisted to FLASH for later recall.
+Note that it's the responsibility of FlexFX application to move RAM property pages betwen FLASH via the 'app_control' function.  Such would be the case for if an effects preset state, reflected by the properties page values, changed in some way and needed to be persisted to FLASH for later recall.
 
 Discovery and Control
 ----------------------------
 
-All FlexFX devices support a discovery process whereby the host computer can querry a FlexFX device for its Javascript control source-code via FlexFX property exchanges as soon as the FlexFX firwmare starts.
-After a FlexFX device boots up it loads its RAM properties page with javascript code (stored as part of the firwmare program in FLASH memory) that can be used to control the effect. The 'flexfx.html' file will read the javascript from the properties page upon a FLexFX USB plug-in event and then use that javasscript to display the control interface (Google Chrome must be used).
+After a FlexFX device boots up it can be communicated with by a host via USB/MIDI and FlexFX property exchanges. If the host issues the property 0x1000 then the FlexFX framework will automatically load the RAM property page with a textual decsription
+of user controls that can be used to control the FlexFX application via USB/MIDI and FlexFX property exchanges using properties 0x8nnn.  Google Chrome with USB/MIDI support used in conjunction with 'flexfx.html' allows any FlexFX application to have a custiom HTML5-based user interface for effects control.
 
-Adding your own javascript control code to your custom effect is easy. Given a custom effect called 'myeffect.c' create a correspinding javascript file 'myeffect.js' that is aware of the custom effects properies used for configuration and control.  The build script (build.sh or build.bat) will embed the jaascript source code in the custom effects firmware image.
-
-Here's minimal javascript controller example:
+If an appliction does not have a user interface it still must provide a minimal interface description in order for the firmware upgrade capability via 'flexfx.html' to function:
 
 ```
-// Called by 'flexfx.html' when a FlexFX device is plugged in to USB. This function is
-// used to create DOM elements that correspond to the effects FlexFX properties interface.
-
-function flexfx_create( key ) // 'Key' identifer this instance of a controller instance
-{
-    var x = "";
-    x += "<p>";
-    x += "This FlexFX device does not have effects firmware loaded into it. Use the ";
-    x += "'LOAD FIRMWARE' button to select a firmware image to load into this device.";
-    x += "</p>";
-    return x;
-}
-
-// Called by 'flexfx.html' after the web page has been rendered and is ready for user input.
-// This function is used to initialize any custom data and relaaed DOM elements and also tp return
-// a handler function for non build-in FlexFX (i.e. custom effects) properties that arrive from
-// the FlexFX device via USB/MIDI.
-
-function flexfx_initialize( key ) // 'Key' identifer this instance of a controller instance
-{
-    return _on_property_received;
-}
-
-// Handle a property arriving from the associated FlexFX device. Optionally send a property
-// to the associated FlexFX device.
-
-function _on_property_received( property ) // Property is [ID, value1, ...value5]
-{
-  // Send a property to the FlexFX device ...
-  // flexfx_send_property( property ) // Property is [ID, value1, ...value5]
-}
+const char controller_script[] =  "ui_header(ID:0x00,'FlexFX',[]);";
 ```
+
+Example #1 of a FlexFX user interface definition. See the 'EFX_CABSIM' screenshot in the 'Prebuild Effects' section for a screenshot of this HTML5 interface.
+```
+const char controller_script[] = \
+	"" \
+	"ui_header( ID:0x00, 'FlexFX Cabsim', [' Left/Mono ',' Right/Stereo ',' IR File Name(s) '] );" \
+	"ui_file  ( ID:0x01, 'N', 1, 'Select IR', ID:03 );" \
+	"ui_file  ( ID:0x02, 'N', 2, 'Select IR', ID:04 );" \
+	"ui_label ( ID:0x03, 'F', 'Celestion G12H Ann 152 Open Room.wav' );" \
+	"ui_label ( ID:0x04, 'L', 'Celestion G12H Ann 152 Open Room.wav' );" \
+	"";
+```
+
+Example #1 of a FlexFX user interface definition. See the 'EFX_PREAMP' screenshot in the 'Prebuild Effects' section for a screenshot of this HTML5 interface.
+```
+const char controller_script[] = \
+	"" \
+	"ui_header ( ID:0x00, 'FlexFX Preamp', ['Stage','Low-Cut','Emphasis','Bias','High-Cut'] );" \
+	"ui_label  ( ID:0x00, 'F', '1' );" /* First label  in column 1 ("Stage" column) */ \
+	"ui_label  ( ID:0x00, 'N', '2' );" /* Next  label  in column 1 ("Stage" column) */ \
+	"ui_label  ( ID:0x00, 'L', '3' );" /* Last  label  in column 1 ("Stage" column) */ \
+	"ui_hslider( ID:0x01, 'F', 96 );"  /* First slider in column 2 ("Low-Cut" column) */ \
+	"ui_hslider( ID:0x02, 'N', 96 );"  /* Next  slider in column 2 ("Low-Cut" column) */ \
+	"ui_hslider( ID:0x03, 'L', 96 );"  /* Last  slider in column 2 ("Low-Cut" column) */ \
+	"ui_hslider( ID:0x04, 'F', 96 );"  /* First slider in column 2 ("Emphasis" column) */ \
+	"ui_hslider( ID:0x05, 'N', 96 );"  /* Next  slider in column 2 ("Emphasis" column) */ \
+	"ui_hslider( ID:0x06, 'L', 96 );"  /* Last  slider in column 2 ("Emphasis" column) */ \
+	"ui_hslider( ID:0x07, 'F', 96 );"  /* First slider in column 2 ("Bias" column) */ \
+	"ui_hslider( ID:0x08, 'N', 96 );"  /* Next  slider in column 2 ("Bias" column) */ \
+	"ui_hslider( ID:0x09, 'L', 96 );"  /* Last  slider in column 2 ("Bias" column) */ \
+	"ui_hslider( ID:0x0A, 'F', 96 );"  /* First slider in column 2 ("High-Cut" column) */ \
+	"ui_hslider( ID:0x0B, 'N', 96 );"  /* Next  slider in column 2 ("High-Cut" column) */ \
+	"ui_hslider( ID:0x0C, 'L', 96 );"  /* Last  slider in column 2 ("High-Cut" column) */ \
+	"";
+```
+
+Example #1 of a FlexFX user interface definition. See the 'EFX_GRAPHICEQ' screenshot in the 'Prebuild Effects' section for a screenshot of this HTML5 interface.
+```
+const char controller_script[] = \
+	"" \
+	"ui_header ( ID:0x00, 'FlexFX GraphicEQ', " \
+	             "['Gain','56','84','126','190','284','426','640','960'," \
+	             "'1K4','2K1','3K2','4K8','7K3','11K','16K'] );" \
+	"ui_vslider( ID:0x10, 'S', 27 );" "ui_vslider( ID:0x11, 'S', 27 );" \
+	"ui_vslider( ID:0x12, 'S', 27 );" "ui_vslider( ID:0x13, 'S', 27 );" \
+	"ui_vslider( ID:0x14, 'S', 27 );" "ui_vslider( ID:0x15, 'S', 27 );" \
+	"ui_vslider( ID:0x16, 'S', 27 );" "ui_vslider( ID:0x17, 'S', 27 );" \
+	"ui_vslider( ID:0x18, 'S', 27 );" "ui_vslider( ID:0x19, 'S', 27 );" \
+	"ui_vslider( ID:0x1A, 'S', 27 );" "ui_vslider( ID:0x1B, 'S', 27 );" \
+	"ui_vslider( ID:0x1C, 'S', 27 );" "ui_vslider( ID:0x1D, 'S', 27 );" \
+	"ui_vslider( ID:0x1E, 'S', 27 );" "ui_vslider( ID:0x1F, 'S', 27 );" \
+	"";
+```
+
+**Control Object "ui_heade"r**
+**Control Object "ui_label"**
+**Control Object "ui_hslider"r**
+**Control Object "ui_vslider"**
+**Control Object "ui_file"**
 
 Programming Tools
 -------------------------------------
@@ -587,6 +604,34 @@ The FlexFX kit contains some highly optimized effects. These effects are in bina
 
 The effects also supports the HTML5 interface for controlling the device (firmware upgrading, uploading IR data, etc) since the web interfaces uses FlexFX properties and USB/MIDI for control. Javascript code for an effect is returned via USB MIDI by issueing the FlexFX USB/MIDI property for returning a device's javascript controller interface.  The HTML5 application called 'flexfx.html' does this automatically and will displayt this device's GUI interface if the device is pluged into the host computer via a USB cable. Google Chrome must be used.
 
+**Prebuilt Effect - Cabinet Simulation (EFX_CABSIM)**
+
+Stereo Cabinet Simulation with Tone/Volume and USB Audio Mixing.  30 msec of impulse response (IR) convolution in stereo mode and 70 msec in mono mode using 32/64 bit fixed-point DSP at a 48 kHz sampling rate.  Supports up to nine presets each with its own set if IR's (left and right channels) which can be downloaded as WAVE files via USB/MIDI using the FlexFX development kit, the flexfx browser interface (Google Chrome only), or other applications conforming to the FlexFX USB/MIDI download process.
+
+![alt tag](efx_cabsim.png)
+
+**Prebuilt Effect - Preamp/Overdrive (EFX_PREAMP)**
+
+Three preamp gain stages in series for with an internal signal processing sample rate of 960 kHz for articulate overdrive/distortion voicing.  Each preamp stage incorporates adjustable pre-filtering, a dynamic tube-based gain model with slew-rate limiting and adjustable/modulated bias, and post-filtering creating a tube-like multi-stage guitar preamp.
+
+![alt tag](efx_preamp.png)
+
+**Prebuilt Effect - Graphic Equalizer (EFX_GRAPHICEQ)**
+
+![alt tag](efx_graphiceq.png)
+
+**Prebuilt Effect - Stereo Multi-Voice Chorus (EFX_CHORUS)**
+
+Up to three chorus voices per channel (left and right) each with their own settings for LFO rate, base delay, modulated delay/depth,  high and low-pass filters, regeneration/feedback level, and wet/dry mix. Up to nine presets and USB/MIDI control.
+
+![alt tag](efx_chorus.png)
+
+**Prebuilt Effect - Stereo 'FreeVerb' Reverb (EFX_REVERB)**
+
+Implements the Schroeder-Moorer approach to reverberation and this particular implementation is a port of the 'FreeVerb' algorithm that's used in a number of software packages.  Adjustments for the reverb's wet/dry mix, stereo width, room size, and room reflection/damping. Up to nine presets and USB/MIDI control.
+
+![alt tag](efx_chorus.png)
+
 Reading Pots/Knobs
 --------------------------------------
 
@@ -743,12 +788,14 @@ const int i2s_channel_count     = 2;     // ADC/DAC channels per SDIN/SDOUT wire
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
+const char controller_script[] =  "ui_header(ID:0x00,'FlexFX',[]);";
+
 void copy_prop( int dst[6], const int src[6] )
 {
     dst[0]=src[0]; dst[1]=src[1]; dst[2]=src[2]; dst[3]=src[3]; dst[4]=src[4]; dst[5]=src[5];
 }
 
-void app_control( const int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
+void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 {
     // Pass cabsim IR data to the DSP threads if usb and dsp send properties are available for use.
     copy_prop( dsp_prop, rcv_prop ); // Send to DSP threads.
@@ -762,8 +809,11 @@ void app_mixer( const int usb_output[32], int usb_input[32],
     int guitar_in = i2s_output[0] - i2s_output[1];
     // Route instrument input to the left USB input and to the DSP input.
     dsp_input[0] = (usb_input[0] = guitar_in) / 8; // DSP samples need to be Q28 formatted.
-    // Route DSP result to the right USB input and the audio DAC.
-    usb_input[1] = i2s_input[0] = i2s_input[1] = dsp_output[0] * 8; // Q28 (DSP) to Q31 (USB/I2S)
+    // Route DSP result to the left/right USB inputs.
+    usb_input[1] = i2s_input[0] = dsp_output[0] * 8; // Q28 (DSP) to Q31 (USB/I2S)
+    // Route DSP result added to USB outputs to the audio DAC.
+    i2s_input[0] = (dsp_output[0]*8)/2 + usb_output[0]/2; // Q28 (DSP) to Q31 (USB/I2S)
+    i2s_input[1] = (dsp_output[0]*8)/2 + usb_output[1]/2; // Q28 (DSP) to Q31 (USB/I2S)
 }
 
 int ir_coeff[2400], ir_state[2400]; // DSP data *must* be non-static global!
@@ -773,7 +823,7 @@ void app_thread1( int samples[32], const int property[6] )
     static int first = 1;
     if( first ) { first = 0; ir_coeff[0] = ir_coeff[1200] = FQ(+1.0); }
     // Check for properties containing new cabsim IR data, save new data to RAM
-    if( (property[0] & 0xF000) == 0x9000 ) {
+    if( (property[0] & 0xF000) == 0x8000 ) {
     	int offset = 5 * (property[0] & 0x0FFF);
     	if( offset <= 2400-5 ) {
 			ir_coeff[offset+0] = property[1] / 32; ir_coeff[offset+1] = property[2] / 32;
@@ -813,8 +863,8 @@ void app_thread5( int samples[32], const int property[6] )
 {
     static bool muted = 0;
     // Check IR property -- Mute at start of new IR loading, un-mute when done.
-    if( property[0] == 0x9000 ) muted = 1;
-    if( property[0] == 0x9000 + 480 ) muted = 0;
+    if( property[0] == 0x8000 ) muted = 1;
+    if( property[0] == 0x8000 + 479 ) muted = 0;
     // Perform 240-sample convolution (5th and last 240 of 1220 total) of sample with IR data
     samples[0] = dsp_convolve( samples[0], ir_coeff+240*4, ir_state+240*4, samples+2,samples+3 );
     samples[1] = dsp_convolve( samples[1], ir_coeff+240*9, ir_state+240*9, samples+4,samples+5 );
@@ -824,28 +874,6 @@ void app_thread5( int samples[32], const int property[6] )
     samples[0] = muted ? 0 : samples[0];
     samples[1] = muted ? 0 : samples[1];
 }
-
-const char controller_script[] =
-""\
-"function flexfx_create( key )"\
-"{"\
-"	var x = \"\";"\
-"	x += \"<p>\";"\
-"	x += \"This FlexFX device does not have effects firmware loaded into it. Use the \";"\
-"	x += \"'LOAD FIRMWARE' button to select a firmware image to load into this device.\";"\
-"	x += \"</p>\";"\
-"	return x;"\
-"}"\
-""\
-"function flexfx_initialize( key )"\
-"{"\
-"	return _on_property_received;"\
-"}"\
-""\
-"function _on_property_received( property )"\
-"{"\
-"}"\
-"";
 ```
 
 Chorus Example
@@ -872,7 +900,9 @@ const int i2s_channel_count     = 2;     // ADC/DAC channels per SDIN/SDOUT wire
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
-void app_control( const int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
+const char controller_script[] =  "ui_header(ID:0x00,'FlexFX',[]);";
+
+void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 {
 }
 
@@ -895,12 +925,12 @@ void app_initialize( void )
 void app_thread1( int samples[32], const int property[6] )
 {
     // Define LFO frequencies
-    static int delta1 = FQ(1.7/48000.0); // LFO frequency 1.7 Hz @ 48 kHz
-    static int delta2 = FQ(2.3/48000.0); // LFO frequency 2.3 Hz @ 48 kHz
+    static int delta1 = FQ(3.3/48000.0); // LFO frequency 1.7 Hz @ 48 kHz
+    static int delta2 = FQ(2.7/48000.0); // LFO frequency 2.3 Hz @ 48 kHz
     // Update LFO time: Increment each and limit to 1.0 -- wrap as needed.
     static int time1 = FQ(0.0); time1 += delta1; if(time1 > FQ(1.0)) time1 -= FQ(1.0);
     static int time2 = FQ(0.0); time2 += delta2; if(time2 > FQ(1.0)) time2 -= FQ(1.0);
-    // II is index into sine table (0.0 < II < 1.0), FF is the fractional remainder
+    // II is index into sine table (0.0 < II < 1.0), FF is the fractional remainder.
     // Use 2nd order interpolation to smooth out lookup values.
     // Index and fraction portion of Q28 sample value: snnniiii,iiiiiiff,ffffffff,ffffffff
     int ii, ff;
@@ -917,14 +947,14 @@ void app_thread2( int samples[32], const int property[6] )
 {
     // --- Generate wet signal #1 using LFO #1
     static int delay_fifo[1024], delay_index = 0; // Chorus delay line
-    static int depth = FQ(+0.20);
+    static int depth = FQ(+0.10);
     // Scale lfo by chorus depth and convert from [-1.0 < lfo < +1.0] to [+0.0 < lfo < +1.0].
     int lfo = (dsp_multiply( samples[2], depth ) / 2) + FQ(0.4999);
-    // Index and fraction portion of Q28 LFO value: snnniiii,iiiiiiff,ffffffff,ffffffff
+    // Get index and fraction portion of Q28 LFO value: snnniiii,iiiiiiff,ffffffff,ffffffff
     int ii = (lfo & 0x0FFFFFFF) >> 18, ff = (lfo & 0x0003FFFF) << 10;
     delay_fifo[delay_index-- & 1023] = samples[0]; // Update the sample delay line.
     // Get samples from delay -- handle wrapping of index values.
-    int i1 = (delay_index+ii+0)&1023, i2 = (delay_index+ii+1)&1023, i3 = (delay_index+ii+2)&1023;
+    int i1 = (delay_index+ii)&1023, i2 = (delay_index+ii+1)&1023, i3 = (delay_index+ii+2)&1023;
     // Interpolate and store wet signal #1 for use in another DSP thread below.
     samples[2] = dsp_lagrange( ff, delay_fifo[i1], delay_fifo[i2], delay_fifo[i3] );
 }
@@ -936,49 +966,27 @@ void app_thread3( int samples[32], const int property[6] )
     static int depth = FQ(+0.10);
     // Scale lfo by chorus depth and convert from [-1.0 < lfo < +1.0] to [+0.0 < lfo < +1.0].
     int lfo = (dsp_multiply( samples[3], depth ) / 2) + FQ(0.4999);
-    // Index and fraction portion of Q28 LFO value: snnniiii,iiiiiiff,ffffffff,ffffffff
+    // Get index and fraction portion of Q28 LFO value: snnniiii,iiiiiiff,ffffffff,ffffffff
     int ii = (lfo & 0x0FFFFFFF) >> 18, ff = (lfo & 0x0003FFFF) << 10;
     delay_fifo[delay_index-- & 1023] = samples[0]; // Update the sample delay line.
     // Get samples from delay -- handle wrapping of index values.
-    int i1 = (delay_index+ii+0)&1023, i2 = (delay_index+ii+1)&1023, i3 = (delay_index+ii+2)&1023;
+    int i1 = (delay_index+ii)&1023, i2 = (delay_index+ii+1)&1023, i3 = (delay_index+ii+2)&1023;
     // Interpolate and store wet signal #1 for use in another DSP thread below.
     samples[3] = dsp_lagrange( ff, delay_fifo[i1], delay_fifo[i2], delay_fifo[i3] );
 }
 
 void app_thread4( int samples[32], const int property[6] )
 {
-    int blend1 = FQ(+0.50), blend2 = FQ(+0.30);;
+    int blend1 = FQ(+0.5), blend2 = FQ(+0.3);
     // Mix dry signal with wet #1 and wet #2 and send to both left and right channels (0 and 1).
     samples[2] = dsp_blend( samples[0], samples[2], blend1 );
-    samples[3] = dsp_blend( samples[0], samples[3], blend2 );
-    samples[0] = samples[0]/2 + samples[2]/2 + samples[3]/2;
+    //samples[3] = dsp_blend( samples[0], samples[3], blend2 );
+    samples[0] = samples[0]/3 + samples[2]/3 + samples[3]/3;
 }
 
 void app_thread5( int samples[32], const int property[6] )
 {
 }
-
-const char controller_script[] =
-""\
-"function flexfx_create( key )"\
-"{"\
-"	var x = \"\";"\
-"	x += \"<p>\";"\
-"	x += \"This FlexFX device does not have effects firmware loaded into it. Use the \";"\
-"	x += \"'LOAD FIRMWARE' button to select a firmware image to load into this device.\";"\
-"	x += \"</p>\";"\
-"	return x;"\
-"}"\
-""\
-"function flexfx_initialize( key )"\
-"{"\
-"	return _on_property_received;"\
-"}"\
-""\
-"function _on_property_received( property )"\
-"{"\
-"}"\
-"";
 ```
 
 Overdrive Example
@@ -1006,7 +1014,9 @@ const int i2s_channel_count     = 2;      // 2,4,or 8 I2S channels per SDIN/SDOU
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
-void app_control( const int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
+const char controller_script[] =  "ui_header(ID:0x00,'FlexFX',[]);";
+
+void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 {
 }
 
@@ -1019,7 +1029,7 @@ void app_mixer( const int usb_output[32], int usb_input[32],
     // Route instrument input to the left USB input and to the DSP input.
     dsp_input[0] = (usb_input[0] = guitar_in) / 8; // DSP samples need to be Q28 formatted.
     // Route DSP result to the right USB input and the audio DAC.
-    usb_input[1] = i2s_input[0] = i2s_input[1] = dsp_output[0] * 8; // Q28 to Q31
+    usb_input[1] = i2s_input[0] = i2s_input[1] = dsp_output[0] * 1; // Q28 to Q31
 }
 
 // util_fir.py 0.001 0.125 1.0 -100
@@ -1064,15 +1074,15 @@ int lowpass1_state[4] = {0,0,0,0}, lowpass1_coeff[5] =
 {
     FQ(+0.056446120),FQ(+0.112892239),FQ(+0.056446120),FQ(+1.224600759),FQ(-0.450385238),
 };
-// util_iir.py lowpass 0.03 0.707 0
+// util_iir.py lowpass 0.08 0.707 0
 int lowpass2_state[4] = {0,0,0,0}, lowpass2_coeff[5] =
 {
-    FQ(+0.007820070),FQ(+0.015640140),FQ(+0.007820070),FQ(+1.734695116),FQ(-0.765975395),
+    FQ(+0.046130032),FQ(+0.092260064),FQ(+0.046130032),FQ(+1.307234861),FQ(-0.491754988),
 };
-// util_iir.py lowpass 0.01 0.707 0
+// util_iir.py lowpass 0.07 0.707 0
 int lowpass3_state[4] = {0,0,0,0}, lowpass3_coeff[5] =
 {
-    FQ(+0.000944686),FQ(+0.001889372),FQ(+0.000944686),FQ(+1.911184796),FQ(-0.914963539),
+    FQ(+0.036573558),FQ(+0.073147115),FQ(+0.036573558),FQ(+1.390846672),FQ(-0.537140902)
 };
 
 // Simple preamp model (-1.0 <= output < +1.0)
@@ -1086,7 +1096,7 @@ int preamp_model( int xx, int gain, int bias, int slewlim, int* state )
     // Add bias to input signal and apply additional gain (total preamp gain = 8 * gain)
     xx = dsp_multiply( xx + bias, gain );
     // Table lookup
-    if( xx >= 0 ) {
+    if( xx >= 0 ) { // sIIIiiii,iiiiiiii,iiffffff,ffffffff
         int ii = (xx & 0xFFFFC000) >> 14, ff = (xx & 0x00003FFF) << 14;
         if( ii > 16381 ) ii = 16381;
         xx = dsp_lagrange( ff, dsp_tanh_14[ii+0], dsp_tanh_14[ii+1], dsp_tanh_14[ii+2] );
@@ -1096,8 +1106,9 @@ int preamp_model( int xx, int gain, int bias, int slewlim, int* state )
         xx = -dsp_lagrange( ff, dsp_nexp_14[ii+0], dsp_nexp_14[ii+1], dsp_nexp_14[ii+2] );
     }
     // Slew rate limit and invert
-    if( xx > state[6] + slewlim ) { xx = state[6] + slewlim; state[6] = xx; }
-    if( xx < state[6] - slewlim ) { xx = state[6] - slewlim; state[6] = xx; }
+    if( xx > state[6] + slewlim ) xx = state[6] + slewlim;
+    if( xx < state[6] - slewlim ) xx = state[6] - slewlim;
+    state[6] = xx;
     return -xx;
 }
 
@@ -1110,18 +1121,18 @@ void app_initialize( void ) // Called once upon boot-up.
 void app_thread1( int samples[32], const int property[6] ) // Upsample
 {
     // Up-sample by 2x by inserting zeros then apply the anti-aliasing filter
-    samples[0] = 4 * dsp_fir( samples[0], antialias_coeff, antialias_state1, 64 );
-    samples[1] = 4 * dsp_fir( 0,              antialias_coeff, antialias_state1, 64 );
+    samples[0] = 1 * dsp_fir( samples[0], antialias_coeff, antialias_state1, 64 );
+    samples[1] = 1 * dsp_fir( 0,              antialias_coeff, antialias_state1, 64 );
 }
 
 void app_thread2( int samples[32], const int property[6] ) // Preamp stage 1
 {
     // Perform stage 1 overdrive on the two up-sampled samples for the left channel.
     samples[0] = dsp_iir     ( samples[0], emphasis1_coeff, emphasis1_state, 2 );
-    samples[0] = preamp_model( samples[0], FQ(1.3), FQ(+0.0), FQ(0.4), preamp1 );
+    samples[0] = preamp_model( samples[0], FQ(0.7), FQ(+0.0), FQ(0.4), preamp1 );
     samples[0] = dsp_iir     ( samples[0], lowpass1_coeff, lowpass1_state, 1 );
     samples[1] = dsp_iir     ( samples[1], emphasis1_coeff, emphasis1_state, 2 );
-    samples[1] = preamp_model( samples[1], FQ(1.3), FQ(+0.0), FQ(0.4), preamp1 );
+    samples[1] = preamp_model( samples[1], FQ(0.7), FQ(+0.0), FQ(0.4), preamp1 );
     samples[1] = dsp_iir     ( samples[1], lowpass1_coeff, lowpass1_state, 1 );
 }
 
@@ -1129,10 +1140,10 @@ void app_thread3( int samples[32], const int property[6] ) // Preamp stage 2
 {
     // Perform stage 2 overdrive on the two up-sampled samples for the left channel.
     samples[0] = dsp_iir     ( samples[0], emphasis2_coeff, emphasis2_state, 2 );
-    samples[0] = preamp_model( samples[0], FQ(1.0), FQ(+0.0), FQ(0.3), preamp2 );
+    samples[0] = preamp_model( samples[0], FQ(0.5), FQ(+0.0), FQ(0.3), preamp2 );
     samples[0] = dsp_iir     ( samples[0], lowpass2_coeff, lowpass2_state, 1 );
     samples[1] = dsp_iir     ( samples[1], emphasis2_coeff, emphasis2_state, 2 );
-    samples[1] = preamp_model( samples[1], FQ(1.0), FQ(+0.0), FQ(0.3), preamp2 );
+    samples[1] = preamp_model( samples[1], FQ(0.5), FQ(+0.0), FQ(0.3), preamp2 );
     samples[1] = dsp_iir     ( samples[1], lowpass2_coeff, lowpass2_state, 1 );
 }
 
@@ -1140,10 +1151,10 @@ void app_thread4( int samples[32], const int property[6] ) // Preamp stage 3
 {
     // Perform stage 3 overdrive on the two up-sampled samples for the left channel.
     samples[0] = dsp_iir     ( samples[0], emphasis3_coeff, emphasis3_state, 2 );
-    samples[0] = preamp_model( samples[0], FQ(0.7), FQ(+0.0), FQ(0.2), preamp3 );
+    samples[0] = preamp_model( samples[0], FQ(0.3), FQ(+0.0), FQ(0.2), preamp3 );
     samples[0] = dsp_iir     ( samples[0], lowpass3_coeff, lowpass3_state, 1 );
     samples[1] = dsp_iir     ( samples[1], emphasis3_coeff, emphasis3_state, 2 );
-    samples[1] = preamp_model( samples[1], FQ(0.7), FQ(+0.0), FQ(0.2), preamp3 );
+    samples[1] = preamp_model( samples[1], FQ(0.3), FQ(+0.0), FQ(0.2), preamp3 );
     samples[1] = dsp_iir     ( samples[1], lowpass3_coeff, lowpass3_state, 1 );
 }
 
@@ -1151,30 +1162,8 @@ void app_thread5( int samples[32], const int property[6] ) // Downsample
 {
     // Down-sample by 2x by band-limiting via anti-aliasing filter and then discarding 1 sample.
     samples[0] = dsp_fir( samples[0], antialias_coeff, antialias_state2, 64 );
-                     dsp_fir( samples[1], antialias_coeff, antialias_state2, 64 );
+                 dsp_fir( samples[1], antialias_coeff, antialias_state2, 64 );
 }
-
-const char controller_script[] =
-""\
-"function flexfx_create( key )"\
-"{"\
-"	var x = \"\";"\
-"	x += \"<p>\";"\
-"	x += \"This FlexFX device does not have effects firmware loaded into it. Use the \";"\
-"	x += \"'LOAD FIRMWARE' button to select a firmware image to load into this device.\";"\
-"	x += \"</p>\";"\
-"	return x;"\
-"}"\
-""\
-"function flexfx_initialize( key )"\
-"{"\
-"	return _on_property_received;"\
-"}"\
-""\
-"function _on_property_received( property )"\
-"{"\
-"}"\
-"";
 ```
 
 Reverb Example
@@ -1198,7 +1187,11 @@ const int usb_output_chan_count = 2;     // 2 USB audio class 2.0 output channel
 const int usb_input_chan_count  = 2;     // 2 USB audio class 2.0 input channels
 const int i2s_channel_count     = 2;     // ADC/DAC channels per SDIN/SDOUT wire
 
-void app_control( const int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
+const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
+
+const char controller_script[] =  "ui_header(ID:0x00,'FlexFX',[]);";
+
+void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 {
 }
 
@@ -1328,26 +1321,4 @@ void app_thread4( int samples[32], const int property[6] )
 void app_thread5( int samples[32], const int property[6] )
 {
 }
-
-const char controller_script[] =
-""\
-"function flexfx_create( key )"\
-"{"\
-"	var x = \"\";"\
-"	x += \"<p>\";"\
-"	x += \"This FlexFX device does not have effects firmware loaded into it. Use the \";"\
-"	x += \"'LOAD FIRMWARE' button to select a firmware image to load into this device.\";"\
-"	x += \"</p>\";"\
-"	return x;"\
-"}"\
-""\
-"function flexfx_initialize( key )"\
-"{"\
-"	return _on_property_received;"\
-"}"\
-""\
-"function _on_property_received( property )"\
-"{"\
-"}"\
-"";
 ```
