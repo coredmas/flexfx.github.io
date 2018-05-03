@@ -294,63 +294,78 @@ Param 4     = 0x01234567
 Param 5     = 0x89abcdef
 ```
 
-Since FlexFX properties are transfered via MIDI SYSEX message when
-The FlexFX framework handles parsing and rendering of MIDI SYSEX encapulated FlexFX data transfer therefore the user
+FlexFX properties are transfered via over USB/MIDI using MIDI SYSEX messages.
+The FlexFX framework handles parsing and rendering of MIDI SYSEX encapulated FlexFX data therefore the user
 application need not deal with MIDi SYSEX - the audio firmware only sees 16-bit ID and five 32-word propertie.
 
 For detailed information regarding the encapsulation of FlexFX properties within MIDI SYSEX see the 'flexfx.py' script
 that's used to send/receive properties to FlexFX applications via USB.
 
-FlexFX supports predeifned properties with the 16-bit ID being non-zero and less than 0x9FFF.
-User defined properties should therefore use 16-bit ID's greater then or equal to 0xA000.
-The predefied properties (0x0001 <= ID <= 0x8FFF) are all handled automatically by the FlexFX framework.
+FlexFX supports the predefined properties with the 16-bit ID being non-zero and less than 0x8000.
+User defined properties should therefore use 16-bit ID's greater then or equal to 0x8000.
+The predefied properties (0x1000 <= ID <= 0x1FFF) are all handled automatically by the FlexFX framework whereas
+properties 0x2pxx are forwarded to the application control task ('app_control').
 
 ```
 ID        DIRECTION        SUMMARY
 1000      Bidirectional    Identify; return ID (3DEGFLEX) and versions
 1100      Bidirectional    Return volume,tone,preset,bypass settings
 120t      Bidirectional    Return tile T's DSP processing loads
-2xxx      Undefined        Reserved for future use
-3iii      Bidirectional    Read 5-word property I from the page buffer
-4iii      Bidirectional    Write 5-word property I to the page buffer
-5xxx      Undefined        Reserved for future use
-6001      Device to Host   Send raw MIDI data from device to host
-6002      Host to Device   Send raw MIDI data from host to device
-6003      Internal         MIDI beat clock control (start/stop/setBPM)
-6004      Internal         MIDI MTC/MPC control (MPC commands,MTC settings)
-7100      Bidirectional    Begin firmware upgrade, echoed back to host
-7200      Bidirectional    Next 32 bytes of firmware image data, echoed
-7300      Host to Device   End firmware upgrade and reset
-8xxx      Bidirectional    User/app props compatible with 'flexfx.html'
+13nn      Bidirectional    Read line NN (20 bytes) of GUI interface text
+1401      Bidirectional    Begin firmware upgrade, echoed back to host
+1402      Bidirectional    Next 32 bytes of firmware image data, echoed
+1403      Host to Device   End firmware upgrade and reset
+1501      Bidirectional    Begin data upload, echoed back to host
+1502      Bidirectional    Next 32 bytes of bulk data, echoed
+1601      Bidirectional    Begin data download, echoed back to host
+1602      Bidirectional    Next 32 bytes of bulk data
+1603      Device to host   End data download
+1701      Device to Host   Send raw MIDI data from device to host
+1702      Host to Device   Send raw MIDI data from host to device
+1703      Internal         MIDI beat clock control (start/stop/setBPM)
+1704      Internal         MIDI MTC/MPC control (MPC commands,MTC settings)
+2pxx      Bidirectional    User/app props (preset=P,ID=xx) compatible with 'flexfx.html'
+3xxx      Undefined        Reserved
+4xxx      Undefined        Reserved
+5xxx      Undefined        Reserved
+6xxx      Undefined        Reserved
+7xxx      Undefined        Reserved
+8xxx      Undefined        User/application defined
+9xxx      Undefined        User/application defined
+Axxx      Undefined        User/application defined
+Bxxx      Undefined        User/application defined
+Cxxx      Undefined        User/application defined
+Dxxx      Undefined        User/application defined
+Exxx      Undefined        User/application defined
+Fxxx      Undefined        User/application defined
 ```
 
 #### FlexFX ID = 0x1000
 #### FlexFX ID = 0x1100
 #### FlexFX ID = 0x120t
-#### FlexFX ID = 0x3iii
-#### FlexFX ID = 0x4iii
-#### FlexFX ID = 0x7100
-#### FlexFX ID = 0x7200
-#### FlexFX ID = 0x7300
-#### FlexFX ID = 0x8xxx
 
-Property Pages
+#### FlexFX ID = 0x13nn
+
+#### FlexFX ID = 0x1401
+#### FlexFX ID = 0x1402
+#### FlexFX ID = 0x1403
+#### FlexFX ID = 0x1501
+#### FlexFX ID = 0x1502
+#### FlexFX ID = 0x1503
+#### FlexFX ID = 0x1601
+#### FlexFX ID = 0x1602
+#### FlexFX ID = 0x1603
+#### FlexFX ID = 0x1701
+#### FlexFX ID = 0x1702
+#### FlexFX ID = 0x1703
+#### FlexFX ID = 0x1704
+
+#### FlexFX ID = 0x2xxx
+
+HTML Interfaces
 ----------------------------
 
-A property page is a collection of property values stored in RAM or in FLASH where each page's property is identified by the
-property ID using the least significat 12 bits (ID = iii).  Each page being 64 Kbytes can store 3276 full property values (five 32-bit words).
-One property page is stored in RAM while up to 15 property pages can be stored in FLASH.
-A property exchange over USB/MIDI using properties 0x200n and 0x210n can be used to move property pages between RAM and FLASH memory where N specifies the property page in FLASH to load or store.
-
-Writing and reading prioperty values to/from the RAM property page in occurs via properties 0x3iii (read) and 0x4iii (write) where iii is the property number.
-
-Note that it's the responsibility of FlexFX application to move RAM property pages betwen FLASH via the 'app_control' function.  Such would be the case for if an effects preset state, reflected by the properties page values, changed in some way and needed to be persisted to FLASH for later recall.
-
-Discovery and Control
-----------------------------
-
-After a FlexFX device boots up it can be communicated with by a host via USB/MIDI and FlexFX property exchanges. If the host issues the property 0x1000 then the FlexFX framework will automatically load the RAM property page with a textual decsription
-of user controls that can be used to control the FlexFX application via USB/MIDI and FlexFX property exchanges using properties 0x8nnn.  Google Chrome with USB/MIDI support used in conjunction with 'flexfx.html' allows any FlexFX application to have a custiom HTML5-based user interface for effects control.
+Google Chrome with USB/MIDI support in conjunction with 'flexfx.html' allows any FlexFX application to have a custiom HTML5-based user interface for effects control.
 
 If an appliction does not have a user interface it still must provide a minimal interface description in order for the firmware upgrade capability via 'flexfx.html' to function:
 
@@ -411,7 +426,7 @@ const char controller_script[] = \
 	"";
 ```
 
-**Control Object "ui_heade"r**
+**Control Object "ui_header"**
 **Control Object "ui_label"**
 **Control Object "ui_hslider"r**
 **Control Object "ui_vslider"**
@@ -785,6 +800,7 @@ const int audio_sample_rate     = 48000; // Audio sampling frequency
 const int usb_output_chan_count = 2;     // 2 USB audio class 2.0 output channels
 const int usb_input_chan_count  = 2;     // 2 USB audio class 2.0 input channels
 const int i2s_channel_count     = 2;     // ADC/DAC channels per SDIN/SDOUT wire
+const int i2s_is_bus_master     = 1;     // Set to 1 if FlexFX creates I2S clocks
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
@@ -820,22 +836,23 @@ int ir_coeff[2400], ir_state[2400]; // DSP data *must* be non-static global!
 
 void app_thread1( int samples[32], const int property[6] )
 {
-    static int first = 1;
+    static int first = 1, offset = 0, muted = 0;
     if( first ) { first = 0; ir_coeff[0] = ir_coeff[1200] = FQ(+1.0); }
     // Check for properties containing new cabsim IR data, save new data to RAM
-    if( (property[0] & 0xF000) == 0x8000 ) {
-    	int offset = 5 * (property[0] & 0x0FFF);
-    	if( offset <= 2400-5 ) {
-			ir_coeff[offset+0] = property[1] / 32; ir_coeff[offset+1] = property[2] / 32;
-			ir_coeff[offset+2] = property[3] / 32; ir_coeff[offset+3] = property[4] / 32;
-			ir_coeff[offset+4] = property[5] / 32;
-		}
+    if( property[0] == 0x1501 ) { offset = 0; muted = 1; }
+    if( offset == 2400-5 ) muted = 0;
+    if( property[0] == 0x1502 && offset < 2400-5 ) {
+		ir_coeff[offset+0] = property[1] / 32; ir_coeff[offset+1] = property[2] / 32;
+		ir_coeff[offset+2] = property[3] / 32; ir_coeff[offset+3] = property[4] / 32;
+		ir_coeff[offset+4] = property[5] / 32; offset += 5;
     }
     samples[2] = 0; samples[3] = 1 << 31; // Initial 64-bit Q1.63 accumulator value
     samples[4] = 0; samples[5] = 1 << 31; // Initial 64-bit Q1.63 accumulator value
     // Perform 240-sample convolution (1st 240 of 1220 total) of sample with IR data
     samples[0] = dsp_convolve( samples[0], ir_coeff+240*0, ir_state+240*0, samples+2,samples+3 );
     samples[1] = dsp_convolve( samples[1], ir_coeff+240*5, ir_state+240*5, samples+4,samples+5 );
+    samples[0] = muted ? 0 : samples[0];
+    samples[1] = muted ? 0 : samples[1];
 }
 
 void app_thread2( int samples[32], const int property[6] )
@@ -861,18 +878,12 @@ void app_thread4( int samples[32], const int property[6] )
 
 void app_thread5( int samples[32], const int property[6] )
 {
-    static bool muted = 0;
-    // Check IR property -- Mute at start of new IR loading, un-mute when done.
-    if( property[0] == 0x8000 ) muted = 1;
-    if( property[0] == 0x8000 + 479 ) muted = 0;
     // Perform 240-sample convolution (5th and last 240 of 1220 total) of sample with IR data
     samples[0] = dsp_convolve( samples[0], ir_coeff+240*4, ir_state+240*4, samples+2,samples+3 );
     samples[1] = dsp_convolve( samples[1], ir_coeff+240*9, ir_state+240*9, samples+4,samples+5 );
     // Extract 32-bit Q28 from 64-bit Q63 and then apply mute/un-mute based on IR loading activity.
     DSP_EXT( samples[0], samples[2], samples[3] );
     DSP_EXT( samples[1], samples[4], samples[5] );
-    samples[0] = muted ? 0 : samples[0];
-    samples[1] = muted ? 0 : samples[1];
 }
 ```
 
@@ -897,6 +908,7 @@ const int audio_sample_rate     = 48000; // Audio sampling frequency
 const int usb_output_chan_count = 2;     // 2 USB audio class 2.0 output channels
 const int usb_input_chan_count  = 2;     // 2 USB audio class 2.0 input channels
 const int i2s_channel_count     = 2;     // ADC/DAC channels per SDIN/SDOUT wire
+const int i2s_is_bus_master     = 1;     // Set to 1 if FlexFX creates I2S clocks
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
@@ -925,8 +937,8 @@ void app_initialize( void )
 void app_thread1( int samples[32], const int property[6] )
 {
     // Define LFO frequencies
-    static int delta1 = FQ(3.3/48000.0); // LFO frequency 1.7 Hz @ 48 kHz
-    static int delta2 = FQ(2.7/48000.0); // LFO frequency 2.3 Hz @ 48 kHz
+    static int delta1 = FQ(3.3/48000.0); // LFO frequency 3.3 Hz @ 48 kHz
+    static int delta2 = FQ(2.7/48000.0); // LFO frequency 2.7 Hz @ 48 kHz
     // Update LFO time: Increment each and limit to 1.0 -- wrap as needed.
     static int time1 = FQ(0.0); time1 += delta1; if(time1 > FQ(1.0)) time1 -= FQ(1.0);
     static int time2 = FQ(0.0); time2 += delta2; if(time2 > FQ(1.0)) time2 -= FQ(1.0);
@@ -1011,6 +1023,7 @@ const int audio_sample_rate     = 192000; // Audio sampling frequency
 const int usb_output_chan_count = 2;      // 2 USB audio class 2.0 output channels
 const int usb_input_chan_count  = 2;      // 2 USB audio class 2.0 input channels
 const int i2s_channel_count     = 2;      // 2,4,or 8 I2S channels per SDIN/SDOUT wire
+const int i2s_is_bus_master     = 1;      // Set to 1 if FlexFX creates I2S clocks
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
@@ -1186,6 +1199,7 @@ const int audio_sample_rate     = 48000; // Audio sampling frequency
 const int usb_output_chan_count = 2;     // 2 USB audio class 2.0 output channels
 const int usb_input_chan_count  = 2;     // 2 USB audio class 2.0 input channels
 const int i2s_channel_count     = 2;     // ADC/DAC channels per SDIN/SDOUT wire
+const int i2s_is_bus_master     = 1;     // Set to 1 if FlexFX creates I2S clocks
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
