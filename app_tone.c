@@ -12,6 +12,7 @@ const int audio_sample_rate     = 48000; // Audio sampling frequency
 const int usb_output_chan_count = 2;     // 2 USB audio class 2.0 output channels
 const int usb_input_chan_count  = 2;     // 2 USB audio class 2.0 input channels
 const int i2s_channel_count     = 2;     // ADC/DAC channels per SDIN/SDOUT wire
+const int i2s_is_bus_master     = 1;     // Set to 1 if FlexFX creates I2S clocks
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
@@ -95,6 +96,7 @@ void app_thread1( int samples[32], const int property[6] )
     if( property[0] == PROP_EXAMPLE_BASS )   memcpy( coeff_target+5*0, property+1, 20 );
     if( property[0] == PROP_EXAMPLE_MIDDLE ) memcpy( coeff_target+5*1, property+1, 20 );
     if( property[0] == PROP_EXAMPLE_TREBLE ) memcpy( coeff_target+5*2, property+1, 20 );
+    
     // Slowly adapt current tone filter biquad coeffs to their targets.
     for( int ii = 0; ii < 5; ++ii )
     {

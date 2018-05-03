@@ -10,6 +10,7 @@ const int audio_sample_rate     = 48000; // Audio sampling frequency
 const int usb_output_chan_count = 2;     // 2 USB audio class 2.0 output channels
 const int usb_input_chan_count  = 2;     // 2 USB audio class 2.0 input channels
 const int i2s_channel_count     = 2;     // ADC/DAC channels per SDIN/SDOUT wire
+const int i2s_is_bus_master     = 1;     // Set to 1 if FlexFX creates I2S clocks
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
@@ -45,22 +46,23 @@ int ir_coeff[2400], ir_state[2400]; // DSP data *must* be non-static global!
 
 void app_thread1( int samples[32], const int property[6] )
 {
-    static int first = 1;
+    static int first = 1, offset = 0, muted = 0;
     if( first ) { first = 0; ir_coeff[0] = ir_coeff[1200] = FQ(+1.0); }
     // Check for properties containing new cabsim IR data, save new data to RAM
-    if( (property[0] & 0xF000) == 0x3000 ) {
-    	int offset = 5 * (property[0] & 0x0FFF);
-    	if( offset <= 2400-5 ) {
-			ir_coeff[offset+0] = property[1] / 32; ir_coeff[offset+1] = property[2] / 32;
-			ir_coeff[offset+2] = property[3] / 32; ir_coeff[offset+3] = property[4] / 32;
-			ir_coeff[offset+4] = property[5] / 32;
-		}
+    if( property[0] == 0x1501 ) { offset = 0; muted = 1; }
+    if( offset == 2400-5 ) muted = 0;
+    if( property[0] == 0x1502 && offset < 2400-5 ) {
+		ir_coeff[offset+0] = property[1] / 32; ir_coeff[offset+1] = property[2] / 32;
+		ir_coeff[offset+2] = property[3] / 32; ir_coeff[offset+3] = property[4] / 32;
+		ir_coeff[offset+4] = property[5] / 32; offset += 5;
     }
     samples[2] = 0; samples[3] = 1 << 31; // Initial 64-bit Q1.63 accumulator value
     samples[4] = 0; samples[5] = 1 << 31; // Initial 64-bit Q1.63 accumulator value
     // Perform 240-sample convolution (1st 240 of 1220 total) of sample with IR data
     samples[0] = dsp_convolve( samples[0], ir_coeff+240*0, ir_state+240*0, samples+2,samples+3 );
     samples[1] = dsp_convolve( samples[1], ir_coeff+240*5, ir_state+240*5, samples+4,samples+5 );
+    samples[0] = muted ? 0 : samples[0];
+    samples[1] = muted ? 0 : samples[1];
 }
 
 void app_thread2( int samples[32], const int property[6] )
@@ -86,16 +88,10 @@ void app_thread4( int samples[32], const int property[6] )
 
 void app_thread5( int samples[32], const int property[6] )
 {
-    static bool muted = 0;
-    // Check IR property -- Mute at start of new IR loading, un-mute when done.
-    if( property[0] == 0x3000 ) muted = 1;
-    if( property[0] == 0x3000 + 479 ) muted = 0;
     // Perform 240-sample convolution (5th and last 240 of 1220 total) of sample with IR data
     samples[0] = dsp_convolve( samples[0], ir_coeff+240*4, ir_state+240*4, samples+2,samples+3 );
     samples[1] = dsp_convolve( samples[1], ir_coeff+240*9, ir_state+240*9, samples+4,samples+5 );
     // Extract 32-bit Q28 from 64-bit Q63 and then apply mute/un-mute based on IR loading activity.
     DSP_EXT( samples[0], samples[2], samples[3] );
     DSP_EXT( samples[1], samples[4], samples[5] );
-    samples[0] = muted ? 0 : samples[0];
-    samples[1] = muted ? 0 : samples[1];
 }

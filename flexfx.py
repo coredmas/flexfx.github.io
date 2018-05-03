@@ -142,6 +142,9 @@ def midi_sysex_to_property( midi_data ):
 
     property = [0,0,0,0,0,0]
 
+    if len(midi_data) < 50: return property;
+    if midi_data[0] != 0xF0 or midi_data[49] != 0xF7: return property
+
     property[0] = (midi_data[ 1] << 28) + (midi_data[ 2] << 24) \
                 + (midi_data[ 3] << 20) + (midi_data[ 4] << 16) \
                 + (midi_data[ 5] << 12) + (midi_data[ 6] <<  8) \
@@ -238,10 +241,10 @@ if name[len(name)-4:] == ".bin": # Usage 2 - Burn firmware image to FLASH boot p
 
     sys.stdout.write("Erasing...")
     sys.stdout.flush()
-    midi_write( midi, property_to_midi_sysex( [0x7100,0,0,0,0,0] ))
+    midi_write( midi, property_to_midi_sysex( [0x1401,0,0,0,0,0] ))
     while True:
         prop = midi_sysex_to_property( midi_wait( midi ))
-        if prop[0] == 0x7100: break
+        if prop[0] == 0x1401: break
 
     sys.stdout.write("Writing")
     sys.stdout.flush()
@@ -251,7 +254,7 @@ if name[len(name)-4:] == ".bin": # Usage 2 - Burn firmware image to FLASH boot p
         line = file.read( 16 )
         if len(line) == 0: break
         while len(line) < 16: line += chr(0)
-        data = [ 0x7200, (ord(line[ 0])<<24)+(ord(line[ 1])<<16)+(ord(line[ 2])<<8)+ord(line[ 3]), \
+        data = [ 0x1402, (ord(line[ 0])<<24)+(ord(line[ 1])<<16)+(ord(line[ 2])<<8)+ord(line[ 3]), \
                          (ord(line[ 4])<<24)+(ord(line[ 5])<<16)+(ord(line[ 6])<<8)+ord(line[ 7]), \
                          (ord(line[ 8])<<24)+(ord(line[ 9])<<16)+(ord(line[10])<<8)+ord(line[11]), \
                          (ord(line[12])<<24)+(ord(line[13])<<16)+(ord(line[14])<<8)+ord(line[15]), \
@@ -260,13 +263,13 @@ if name[len(name)-4:] == ".bin": # Usage 2 - Burn firmware image to FLASH boot p
         midi_write( midi, property_to_midi_sysex( data ))
         while True:
             prop = midi_sysex_to_property( midi_wait( midi ))
-            if prop[0] == 0x7200: break
+            if prop[0] == 0x1402: break
         count += 1
         if count == 256:
 	        sys.stdout.write(".")
 	        count = 0
         
-    midi_write( midi, property_to_midi_sysex( [0x7300,0,0,0,0,0] ))
+    midi_write( midi, property_to_midi_sysex( [0x1403,0,0,0,0,0] ))
         
     file.close()
     midi_close( midi )

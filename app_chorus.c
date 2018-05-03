@@ -12,6 +12,7 @@ const int audio_sample_rate     = 48000; // Audio sampling frequency
 const int usb_output_chan_count = 2;     // 2 USB audio class 2.0 output channels
 const int usb_input_chan_count  = 2;     // 2 USB audio class 2.0 input channels
 const int i2s_channel_count     = 2;     // ADC/DAC channels per SDIN/SDOUT wire
+const int i2s_is_bus_master     = 1;     // Set to 1 if FlexFX creates I2S clocks
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
@@ -40,8 +41,8 @@ void app_initialize( void )
 void app_thread1( int samples[32], const int property[6] )
 {
     // Define LFO frequencies
-    static int delta1 = FQ(3.3/48000.0); // LFO frequency 1.7 Hz @ 48 kHz
-    static int delta2 = FQ(2.7/48000.0); // LFO frequency 2.3 Hz @ 48 kHz
+    static int delta1 = FQ(3.3/48000.0); // LFO frequency 3.3 Hz @ 48 kHz
+    static int delta2 = FQ(2.7/48000.0); // LFO frequency 2.7 Hz @ 48 kHz
     // Update LFO time: Increment each and limit to 1.0 -- wrap as needed.
     static int time1 = FQ(0.0); time1 += delta1; if(time1 > FQ(1.0)) time1 -= FQ(1.0);
     static int time2 = FQ(0.0); time2 += delta2; if(time2 > FQ(1.0)) time2 -= FQ(1.0);
