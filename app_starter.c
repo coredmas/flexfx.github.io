@@ -16,7 +16,7 @@ const int i2s_is_bus_master     = 1;      // Set to 1 if FlexFX creates I2S cloc
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
-const char controller_script[] =  "ui_header(ID:0x00,'FlexFX',[]);";
+const char controller_script[] =  "ui_header(0x2000,'FlexFX',[]);";
 
 // The control task is called at a rate of 1000 Hz and should be used to implement audio CODEC
 // initialization/control, pot and switch sensing via I2C ADC's, handling of properties from USB

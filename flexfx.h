@@ -23,7 +23,6 @@ extern const int audio_sample_rate;       // Audio sampling frequency (48K,96K,1
 extern const int usb_output_chan_count;   // 2 USB audio output channels (32 max)
 extern const int usb_input_chan_count;    // 2 USB audio input channels (32 max)
 extern const int i2s_channel_count;       // 2,4,or8 I2S channels per SDIN/SDOUT wire
-extern const int i2s_is_bus_master;       // Set to 1 if FlexFX creates I2S clocks
 
 extern const int i2s_sync_word[8];        // I2S WCLK words for each slot
 
@@ -69,11 +68,15 @@ extern void app_thread4( int samples[32], const int property[6] );
 extern void app_thread5( int samples[32], const int property[6] );
 
 // Flash memory functions for data persistance (do not use these in real-time DSP threads).
+// Each page consists of 3268 5-byte properties (total of 65530 bytes). There are 16
+// property pages in FLASH and one property page in RAM used as a scratch buffer. Pages can
+// be loaded and saved from/to FLASH. All USB MIDI property flow (except for properties with
+// ID >= 0x8000 used for FLASH/RAM control) results in updates the RAM scratch buffer.
 
-void flash_open ( void );                                    // Open the FLASH for I/O.
-int  flash_read ( int offset, int data[], int count );       // Read 32-bit words from FLASH.
-int  flash_write( int offset, const int data[], int count ); // Write 32-bit words to FLASH.
-void flash_close( void );                                    // Close the FLASH device.
+void page_load ( int page_num );                 // Load 64Kbyte page from FLASH to RAM.
+void page_save ( int page_num );                 // Save 64Kbyte page from RAM to FLASH.
+int  page_read ( int index, int data[5] );       // Read prop data from RAM, return page num.
+void page_write( int index, const int data[5] ); // Write prop data to RAM at index.
 
 // Port and pin I/O functions. DAC/ADC port reads/writes will disable I2S/TDM!
 
@@ -92,12 +95,6 @@ void port_set1( int flag );
 int  port_get1( void );
 void port_set2( int flag );
 int  port_get2( void );
-
-// MIDI Beat-Clock functions ...
-
-void midi_start( void );      // Send MIDI start command to USB/MIDI host.
-void midi_stop ( void );      // Send MIDI stop command to USB/MIDI host.
-void midi_beat ( float bpm ); // Configure the MIDI beat rate (beats per minute).
 
 // MAC performs 32x32 multiply and 64-bit accumulation, SAT saturates a 64-bit result, EXT converts
 // a 64-bit result to a 32-bit value (extract 32 from 64), LD2/ST2 loads/stores two 32-values
