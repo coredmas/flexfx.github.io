@@ -18,27 +18,27 @@ const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK 
 
 const char controller_script[] = \
 	"" \
-	"ui_header   ( 0x2001, 'GUI Example', ['','Volume(L/R)','','Voices','Amplitude','Frequency','','File','Name','Action'] );" \
+	"ui_header   ( ID:0x00, 'GUI Example', ['','Volume(L/R)','','Voices','Amplitude','Frequency','','File','Name','Action'] );" \
 	"ui_separator();" \
 	/* The output volume slider controls range from 0.00 to 0.95 in steps of 0.05 */
-	"ui_vslider  ( 0x2002, 'f', 30, 0.0,0.95,0.05 );" /* Vertical slider in "Volume" column */ \
-	"ui_vslider  ( 0x2003, 'l', 30, 0.0,0.95,0.05 );" /* Vertical slider in "Volume" column */ \
+	"ui_vslider  ( ID:0x01, 'f', 30, 0.0,0.95,0.05 );" /* Vertical slider in "Volume" column */ \
+	"ui_vslider  ( ID:0x02, 'l', 30, 0.0,0.95,0.05 );" /* Vertical slider in "Volume" column */ \
 	"ui_separator();" \
-	"ui_label    ( 0x2004, 'F', 'LFO 1' );"           /* First label in "Voices" column */ \
-	"ui_label    ( 0x2005, 'N', 'LFO 2' );"           /* Next  label in "Voices" column */ \
-	"ui_label    ( 0x2006, 'L', 'LFO 3' );"           /* Last  label in "Voices" column */ \
+	"ui_label    ( ID:0x03, 'F', 'LFO 1' );"           /* First label in "Voices" column */ \
+	"ui_label    ( ID:0x04, 'N', 'LFO 2' );"           /* Next  label in "Voices" column */ \
+	"ui_label    ( ID:0x05, 'L', 'LFO 3' );"           /* Last  label in "Voices" column */ \
 	/* The LFO amplitude slider controls range from 0.00 to 0.95 in steps of 0.05 */
-	"ui_hslider  ( 0x2007, 'F', 96, 0.0,0.95,0.05 );" /* First slider in "Amplitude" column */ \
-	"ui_hslider  ( 0x2008, 'N', 96, 0.0,0.95,0.05 );" /* Next  slider in "Amplitude" column */ \
-	"ui_hslider  ( 0x2009, 'L', 96, 0.0,0.95,0.05 );" /* Last  slider in "Amplitude" column */ \
+	"ui_hslider  ( ID:0x06, 'F', 96, 0.0,0.95,0.05 );" /* First slider in "Amplitude" column */ \
+	"ui_hslider  ( ID:0x07, 'N', 96, 0.0,0.95,0.05 );" /* Next  slider in "Amplitude" column */ \
+	"ui_hslider  ( ID:0x08, 'L', 96, 0.0,0.95,0.05 );" /* Last  slider in "Amplitude" column */ \
     /* The LFO frequency slider controls range from 1.00 Hz to 10.0 Hz in steps of 0.1 Hz. */
-	"ui_hslider  ( 0x200A, 'F', 96, 1.0,10.0,0.10 );" /* First slider in "Frequency" column */ \
-	"ui_hslider  ( 0x200B, 'N', 96, 1.0,10.0,0.10 );" /* Next  slider in "Frequency" column */ \
-	"ui_hslider  ( 0x200C, 'L', 96, 1.0,10.0,0.10 );" /* Last  slider in "Frequency" column */ \
+	"ui_hslider  ( ID:0x09, 'F', 96, 1.0,10.0,0.10 );" /* First slider in "Frequency" column */ \
+	"ui_hslider  ( ID:0x0A, 'N', 96, 1.0,10.0,0.10 );" /* Next  slider in "Frequency" column */ \
+	"ui_hslider  ( ID:0x0B, 'L', 96, 1.0,10.0,0.10 );" /* Last  slider in "Frequency" column */ \
 	"ui_separator();" \
-	"ui_file     ( 0x200D, 'S', 2, 'Select', 0x200E );" \
-	"ui_label    ( 0x200E, 'S', 'clip.wav' );" \
-	"ui_button   ( 0x200F, 'S', 2, 'Play' );" \
+	"ui_file     ( ID:0x0C, 'S', 2, 'Select', ID:0x0D );" \
+	"ui_label    ( ID:0x0D, 'S', 'clip.wav' );" \
+	"ui_button   ( ID:0x0E, 'S', 2, 'Play' );" \
 	"";
 
 static int current_preset = -1;
@@ -57,6 +57,8 @@ static int wave_data[5*4096] = {0};
 void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 {
     static int state = 0, offset = 0;
+    
+    return;
     
     if( state == 0 ) {
         state = 1; memset( wave_data, 0, sizeof(wave_data) );

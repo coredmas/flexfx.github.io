@@ -16,7 +16,7 @@ const int i2s_is_bus_master     = 1;     // Set to 1 if FlexFX creates I2S clock
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
-const char controller_script[] =  "ui_header(0x2000,'FlexFX',[]);";
+const char controller_script[] =  "ui_header(ID:0x00,'FlexFX',[]);";
 
 void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 {
