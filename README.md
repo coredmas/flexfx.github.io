@@ -332,9 +332,10 @@ ID        DIRECTION        SUMMARY
 1403      Host to Device   End firmware upgrade and reset
 1501      Bidirectional    Begin data upload, echoed back to host
 1502      Bidirectional    Next 32 bytes of bulk data, echoed
+1503      Device to Host   End bulk data upload
 1601      Bidirectional    Begin data download, echoed back to host
 1602      Bidirectional    Next 32 bytes of bulk data
-1603      Device to host   End data download
+1603      Device to host   End bulk data download
 1701      Device to Host   Send raw MIDI data from device to host
 1702      Host to Device   Send raw MIDI data from host to device
 1703      Internal         MIDI beat clock control (start/stop/setBPM)
