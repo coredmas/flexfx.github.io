@@ -356,7 +356,7 @@ Exxx      Undefined        User/application defined
 Fxxx      Undefined        User/application defined
 ```
 
-#### FlexFX ID = 0x1000
+#### FlexFX ID = 0x1000: Identify; return ID (3DEGFLEX) and versions
 
 ```
 USB host ---- [ 0x1000,    0,    0,    0,       0, 0 ] ---> Device
@@ -364,34 +364,55 @@ USB host <--- [ 0x1000, 3DEG, FLEX, serial_num, 0, 0 ] ---- Device
 ```
 The USB host can use this property to solicit information about that attached device and determine whether or not it is a FlexFX device.  The device will return the flexfx signature words, its serial number, and will echo property words #4 and #5.  Currently the HTML interfrace ('flexfx.html') uses words #4 and #5 to echo back unique ID's used to bind HTML web application instances to a particular USB-attached FlexFX device.
 
-#### FlexFX ID = 0x1100
+#### FlexFX ID = 0x1100: Return volume,tone,preset,bypass settings
 
 ```
-USB host ---- [ 0x1000,      0,    0,      0,      0, 0 ] ---> Device
-USB host <--- [ 0x1000, volume, tone, preset, bypass, 0 ] ---- Device
+USB host ---- [ 0x1100,      0,    0,      0,      0, 0 ] ---> Device
+USB host <--- [ 0x1100, volume, tone, preset, bypass, 0 ] ---- Device
 ```
 Returns the current volume, tone, and preset potentiometer positions as well as the effect bypass switch state.
 The potentiometer position values are formatted as Q31 fixed point and range from 0.0 (rotated fully counter clockwise) to 0.999... (roated fully clockwise).  The bypass switch state is an integer 0 for bypassed (effect not active) or and integer 1 (effect active).
 
-#### FlexFX ID = 0x120t
+#### FlexFX ID = 0x120t: Return tile T's DSP processing loads
 
 ```
-USB host ---- [ 0x1000,     0,     0,     0,     0,     0 ] ---> Device
-USB host <--- [ 0x1000, load1, load2, load3, load4, load5 ] ---- Device
+USB host ---- [ 0x120t,     0,     0,     0,     0,     0 ] ---> Device  (t = 0)
+USB host <--- [ 0x1200, load1, load2, load3, load4, load5 ] ---- Device
 ```
 Returns the current processing load for each of the five DSP threads.  Values returned are the number of clock ticks (100ns per tick) elapsed per single DSP thread execution pass.  Note that one execution pass occurs for each audio sample.  Therefore if the sampling frequency is 48 kHz then the maximum number of clock ticks allowable, to prevent audio sample underflow, would be 2083 ticks (100000000/48000).
 
-#### FlexFX ID = 0x13nn
+#### FlexFX ID = 0x13nn: Read line NN (20 bytes) of GUI interface text
 
 ```
-USB host ---- [ 0x1000,     0,     0,     0,     0,     0 ] ---> Device
-USB host <--- [ 0x1000, text1, text2, text3, text4, text5 ] ---- Device
+USB host ---- [ 0x13nn,     0,     0,     0,     0,     0 ] ---> Device
+USB host <--- [ 0x13nn, text1, text2, text3, text4, text5 ] ---- Device
 ```
-Returns the textual description of the HTML inteface for the attached device/effect where NN is the text line number (each line contains 20 bytes of text).  Each 32-bit property word (text1 ... text5) contain four 8-bit ASCII characters.  The host must read each line starting with NN=0 and continue reading until a NULL character is found in one of the five property words indicating the end of the complete text.
+Returns the HTML GUI interface text for the attached device/effect where NN is the text line number (each line contains 20 bytes of text).  Each 32-bit property word (text1 ... text5) contain four 8-bit ASCII characters.  The host must read each line starting with NN=0 and continue reading until a NULL character is found in one of the five property words indicating the end of the complete text.
 
-#### FlexFX ID = 0x1401
-#### FlexFX ID = 0x1402
-#### FlexFX ID = 0x1403
+#### FlexFX ID = 0x1401: Begin firmware upgrade
+
+```
+USB host ---- [ 0x1401, 0, 0, 0, 0, 0 ] ---> Device
+USB host <--- [ 0x1401, 0, 0, 0, 0, 0 ] ---- Device
+```
+Open the FLASH device and erase it to begin the firmware upgrade process.
+
+#### FlexFX ID = 0x1402: Continue firmware upgrade
+
+```
+USB host ---- [ 0x1402, data1, data2, data3, data4, data5 ] ---> Device
+USB host <--- [ 0x1402, data1, data2, data3, data4, data5 ] ---- Device
+```
+Write the next 40 bytes of firmware data to FLASH.
+
+#### FlexFX ID = 0x1403: End firmware upgrade
+
+```
+USB host ---- [ 0x1403, 0, 0, 0, 0, 0 ] ---> Device
+USB host <--- [ 0x1403, 0, 0, 0, 0, 0 ] ---- Device
+```
+Close thge FLASH device and reboot to end the firmware upgrade process.
+
 #### FlexFX ID = 0x1501
 #### FlexFX ID = 0x1502
 #### FlexFX ID = 0x1503
