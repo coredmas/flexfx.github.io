@@ -68,15 +68,11 @@ extern void app_thread4( int samples[32], const int property[6] );
 extern void app_thread5( int samples[32], const int property[6] );
 
 // Flash memory functions for data persistance (do not use these in real-time DSP threads).
-// Each page consists of 3268 5-byte properties (total of 65530 bytes). There are 16
-// property pages in FLASH and one property page in RAM used as a scratch buffer. Pages can
-// be loaded and saved from/to FLASH. All USB MIDI property flow (except for properties with
-// ID >= 0x8000 used for FLASH/RAM control) results in updates the RAM scratch buffer.
 
-void page_load ( int page_num );                 // Load 64Kbyte page from FLASH to RAM.
-void page_save ( int page_num );                 // Save 64Kbyte page from RAM to FLASH.
-int  page_read ( int index, int data[5] );       // Read prop data from RAM, return page num.
-void page_write( int index, const int data[5] ); // Write prop data to RAM at index.
+void flash_open ( void );
+void flash_close( void );
+int  flash_read ( int offset, byte buffer[], int size );
+int  flash_write( int offset, const byte buffer[], int size );
 
 // Port and pin I/O functions. DAC/ADC port reads/writes will disable I2S/TDM!
 

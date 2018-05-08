@@ -43,6 +43,8 @@ void app_mixer( const int usb_output[32], int usb_input[32],
 
 int ir_coeff[2400], ir_state[2400]; // DSP data *must* be non-static global!
 
+void app_initialize( void ) {}
+
 void app_thread1( int samples[32], const int property[6] )
 {
     static int first = 1, offset = 0, muted = 0;
