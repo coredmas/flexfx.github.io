@@ -71,8 +71,8 @@ extern void app_thread5( int samples[32], const int property[6] );
 
 void flash_open ( void );
 void flash_close( void );
-int  flash_read ( int offset, byte buffer[], int size );
-int  flash_write( int offset, const byte buffer[], int size );
+void flash_read ( int offset, byte buffer[], int size );
+void flash_write( int offset, const byte buffer[], int size );
 
 // Port and pin I/O functions. DAC/ADC port reads/writes will disable I2S/TDM!
 

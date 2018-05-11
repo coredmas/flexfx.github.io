@@ -1204,84 +1204,84 @@ static inline void _math_mac_XYZ( int* xx, const int* yy, const int* zz, int nn 
     asm volatile("lextract %0,%1,%2,%3,32":"=r"(xx):"r"(ah),"r"(al),"r"(QQ)); \
 }
 
-#define _CONVOLVE_00(cc,ss) \
+#define __CONVOLVE_00(cc,ss) \
     asm("ldd   %0,%1,%2[0]":"=r"(b1),"=r"(b0):"r"(cc)); \
     asm("ldd   %0,%1,%2[0]":"=r"(s2),"=r"(s1):"r"(ss)); \
     asm("std   %0,%1,%2[0]"::"r"(s1), "r"(s0),"r"(ss)); \
     asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s0), "0"(ah),"1"(al)); \
     asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s1), "0"(ah),"1"(al));
 
-#define _CONVOLVE_01(cc,ss) \
+#define __CONVOLVE_01(cc,ss) \
     asm("ldd   %0,%1,%2[1]":"=r"(b1),"=r"(b0):"r"(cc)); \
     asm("ldd   %0,%1,%2[1]":"=r"(s0),"=r"(s3):"r"(ss)); \
     asm("std   %0,%1,%2[1]"::"r"(s3), "r"(s2),"r"(ss)); \
     asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s2), "0"(ah),"1"(al)); \
     asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s3), "0"(ah),"1"(al));
 
-#define _CONVOLVE_02(cc,ss) \
+#define __CONVOLVE_02(cc,ss) \
     asm("ldd   %0,%1,%2[2]":"=r"(b1),"=r"(b0):"r"(cc)); \
     asm("ldd   %0,%1,%2[2]":"=r"(s2),"=r"(s1):"r"(ss)); \
     asm("std   %0,%1,%2[2]"::"r"(s1), "r"(s0),"r"(ss)); \
     asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s0), "0"(ah),"1"(al)); \
     asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s1), "0"(ah),"1"(al));
 
-#define _CONVOLVE_03(cc,ss) \
+#define __CONVOLVE_03(cc,ss) \
     asm("ldd   %0,%1,%2[3]":"=r"(b1),"=r"(b0):"r"(cc)); \
     asm("ldd   %0,%1,%2[3]":"=r"(s0),"=r"(s3):"r"(ss)); \
     asm("std   %0,%1,%2[3]"::"r"(s3), "r"(s2),"r"(ss)); \
     asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s2), "0"(ah),"1"(al)); \
     asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s3), "0"(ah),"1"(al));
 
-#define _CONVOLVE_04(cc,ss) \
+#define __CONVOLVE_04(cc,ss) \
     asm("ldd   %0,%1,%2[4]":"=r"(b1),"=r"(b0):"r"(cc)); \
     asm("ldd   %0,%1,%2[4]":"=r"(s2),"=r"(s1):"r"(ss)); \
     asm("std   %0,%1,%2[4]"::"r"(s1), "r"(s0),"r"(ss)); \
     asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s0), "0"(ah),"1"(al)); \
     asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s1), "0"(ah),"1"(al));
 
-#define _CONVOLVE_05(cc,ss) \
+#define __CONVOLVE_05(cc,ss) \
     asm("ldd   %0,%1,%2[5]":"=r"(b1),"=r"(b0):"r"(cc)); \
     asm("ldd   %0,%1,%2[5]":"=r"(s0),"=r"(s3):"r"(ss)); \
     asm("std   %0,%1,%2[5]"::"r"(s3), "r"(s2),"r"(ss)); \
     asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s2), "0"(ah),"1"(al)); \
     asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s3), "0"(ah),"1"(al));
 
-#define _CONVOLVE_06(cc,ss) \
+#define __CONVOLVE_06(cc,ss) \
     asm("ldd   %0,%1,%2[6]":"=r"(b1),"=r"(b0):"r"(cc)); \
     asm("ldd   %0,%1,%2[6]":"=r"(s2),"=r"(s1):"r"(ss)); \
     asm("std   %0,%1,%2[6]"::"r"(s1), "r"(s0),"r"(ss)); \
     asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s0), "0"(ah),"1"(al)); \
     asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s1), "0"(ah),"1"(al));
 
-#define _CONVOLVE_07(cc,ss) \
+#define __CONVOLVE_07(cc,ss) \
     asm("ldd   %0,%1,%2[7]":"=r"(b1),"=r"(b0):"r"(cc)); \
     asm("ldd   %0,%1,%2[7]":"=r"(s0),"=r"(s3):"r"(ss)); \
     asm("std   %0,%1,%2[7]"::"r"(s3), "r"(s2),"r"(ss)); \
     asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s2), "0"(ah),"1"(al)); \
     asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s3), "0"(ah),"1"(al));
 
-#define _CONVOLVE_08(cc,ss) \
+#define __CONVOLVE_08(cc,ss) \
     asm("ldd   %0,%1,%2[8]":"=r"(b1),"=r"(b0):"r"(cc)); \
     asm("ldd   %0,%1,%2[8]":"=r"(s2),"=r"(s1):"r"(ss)); \
     asm("std   %0,%1,%2[8]"::"r"(s1), "r"(s0),"r"(ss)); \
     asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s0), "0"(ah),"1"(al)); \
     asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s1), "0"(ah),"1"(al));
 
-#define _CONVOLVE_09(cc,ss) \
+#define __CONVOLVE_09(cc,ss) \
     asm("ldd   %0,%1,%2[9]":"=r"(b1),"=r"(b0):"r"(cc)); \
     asm("ldd   %0,%1,%2[9]":"=r"(s0),"=r"(s3):"r"(ss)); \
     asm("std   %0,%1,%2[9]"::"r"(s3), "r"(s2),"r"(ss)); \
     asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s2), "0"(ah),"1"(al)); \
     asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s3), "0"(ah),"1"(al));
 
-#define _CONVOLVE_10(cc,ss) \
+#define __CONVOLVE_10(cc,ss) \
     asm("ldd   %0,%1,%2[10]":"=r"(b1),"=r"(b0):"r"(cc)); \
     asm("ldd   %0,%1,%2[10]":"=r"(s2),"=r"(s1):"r"(ss)); \
     asm("std   %0,%1,%2[10]"::"r"(s1), "r"(s0),"r"(ss)); \
     asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s0), "0"(ah),"1"(al)); \
     asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s1), "0"(ah),"1"(al));
 
-#define _CONVOLVE_11(cc,ss) \
+#define __CONVOLVE_11(cc,ss) \
     asm("ldd   %0,%1,%2[11]":"=r"(b1),"=r"(b0):"r"(cc)); \
     asm("ldd   %0,%1,%2[11]":"=r"(s0),"=r"(s3):"r"(ss)); \
     asm("std   %0,%1,%2[11]"::"r"(s3), "r"(s2),"r"(ss)); \
@@ -1291,8 +1291,8 @@ static inline void _math_mac_XYZ( int* xx, const int* yy, const int* zz, int nn 
 #define _dsp_convolve( xx, ah, al, cc, ss ) \
 { \
     int ah; unsigned al = 0, s0 = xx, b0, b1, s1, s2, s3; \
-    _CONVOLVE_00(cc,ss); _CONVOLVE_01(cc,ss); _CONVOLVE_02(cc,ss); _CONVOLVE_03(cc,ss); \
-    _CONVOLVE_04(cc,ss); _CONVOLVE_05(cc,ss); _CONVOLVE_06(cc,ss); _CONVOLVE_07(cc,ss); \
-    _CONVOLVE_08(cc,ss); _CONVOLVE_09(cc,ss); _CONVOLVE_10(cc,ss); _CONVOLVE_11(cc,ss); \
+    __CONVOLVE_00(cc,ss); __CONVOLVE_01(cc,ss); __CONVOLVE_02(cc,ss); __CONVOLVE_03(cc,ss); \
+    __CONVOLVE_04(cc,ss); __CONVOLVE_05(cc,ss); __CONVOLVE_06(cc,ss); __CONVOLVE_07(cc,ss); \
+    __CONVOLVE_08(cc,ss); __CONVOLVE_09(cc,ss); __CONVOLVE_10(cc,ss); __CONVOLVE_11(cc,ss); \
     xx = s0; \
 }

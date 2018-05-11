@@ -8,10 +8,10 @@ const char* usb_audio_input_name  = "FlexFX Audio In";  // USB audio input name
 const char* usb_midi_output_name  = "FlexFX MIDI Out";  // USB MIDI output name
 const char* usb_midi_input_name   = "FlexFX MIDI In";   // USB MIDI input name
 
-const int audio_sample_rate     = 192000; // Audio sampling frequency
-const int usb_output_chan_count = 2;      // 2 USB audio class 2.0 output channels
-const int usb_input_chan_count  = 2;      // 2 USB audio class 2.0 input channels
-const int i2s_channel_count     = 2;      // 2,4,or 8 I2S channels per SDIN/SDOUT wire
+const int audio_sample_rate     = 48000; // Audio sampling frequency
+const int usb_output_chan_count = 2;     // 2 USB audio class 2.0 output channels
+const int usb_input_chan_count  = 2;     // 2 USB audio class 2.0 input channels
+const int i2s_channel_count     = 2;     // 2,4,or 8 I2S channels per SDIN/SDOUT wire
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
