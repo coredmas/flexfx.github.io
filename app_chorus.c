@@ -21,16 +21,16 @@ void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 {
 }
 
-void app_mixer( const int usb_output[32], int usb_input[32],
-                const int i2s_output[32], int i2s_input[32],
-                const int dsp_output[32], int dsp_input[32], const int property[6] )
+void app_mixer( const int usb_output_q31[32], int usb_input_q31[32],
+                const int i2s_output_q31[32], int i2s_input_q31[32],
+                const int dsp_output_q28[32], int dsp_input_q28[32], const int property[6] )
 {
     // Convert the two ADC inputs into a single pseudo-differential mono input (mono = L - R).
-    int guitar_in = i2s_output[0] - i2s_output[1];
+    int guitar_in = i2s_output_q31[0] - i2s_output_q31[1];
     // Route instrument input to the left USB input and to the DSP input.
-    dsp_input[0] = (usb_input[0] = guitar_in) / 8; // DSP samples need to be Q28 formatted.
+    dsp_input_q28[0] = (usb_input_q28[0] = guitar_in) / 8; // DSP samples need to be Q28 formatted.
     // Route DSP result to the right USB input and the audio DAC.
-    usb_input[1] = i2s_input[0] = i2s_input[1] = dsp_output[0] * 8; // Q28 to Q31
+    usb_input_q31[1] = i2s_input_q31[0] = i2s_input_q31[1] = dsp_output_q28[0] * 8; // Q28 to Q31
 }
 
 void app_initialize( void )

@@ -105,31 +105,31 @@ void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
     }
 }
 
-void app_mixer( const int usb_output[32], int usb_input[32],
-                const int i2s_output[32], int i2s_input[32],
-                const int dsp_output[32], int dsp_input[32], const int property[6] )
+void app_mixer( const int usb_output_q31[32], int usb_input_q31[32],
+                const int i2s_output_q31[32], int i2s_input_q31[32],
+                const int dsp_output_q28[32], int dsp_input_q28[32], const int property[6] )
 {
     int pp = current_preset;
     static int wave_index = 4096; if( property[0] == 3 ) wave_index = 0; // Start playback.
     
     // Route DSP result to the USB inputs ...
-    usb_input[0] = usb_input[1] = dsp_output[0] * 8; // FQ (DSP) to Q31 (USB/I2S)
+    usb_input_q31[0] = usb_input_q31[1] = dsp_output_q28[0] * 8; // FQ (DSP) to Q31 (USB/I2S)
     
     // Convert oscillator signals from FQ to Q31, divide by 3 (total number of signals to sum)
     // to prevent overflow, then sum.
-    usb_input[0] = ((dsp_output[2] * 8) / 3) + ((dsp_output[3] * 8) / 3); // Add #1 and #2.
-    usb_input[1] = ((dsp_output[2] * 8) / 3) + ((dsp_output[4] * 8) / 3); // Add #1 and #3.
+    usb_input_q31[0] = ((dsp_output_q28[2] * 8) / 3) + ((dsp_output_q28[3] * 8) / 3); // Add #1 and #2.
+    usb_input_q31[1] = ((dsp_output_q28[2] * 8) / 3) + ((dsp_output_q28[4] * 8) / 3); // Add #1 and #3.
     
     // Add wave file playback signal to both left and right, convert from Q28 to Q31 first.
     if( wave_index < 4096 ) {
         int sample = wave_data[wave_index++] * 8;
-        usb_input[0] += sample / 3; // Add 4th signal (wave data) to left.
-        usb_input[1] += sample / 3; // Add 4th signal (wave data) to right.
+        usb_input_q31[0] += sample / 3; // Add 4th signal (wave data) to left.
+        usb_input_q31[1] += sample / 3; // Add 4th signal (wave data) to right.
     }
     
     // Apply volume levels ...
-    usb_input[0] = dsp_multiply( usb_input[0], volumeL[pp] ); // Scale output level (left)
-    usb_input[1] = dsp_multiply( usb_input[1], volumeR[pp] ); // Scale output level (right)
+    usb_input_q31[0] = dsp_multiply( usb_input_q31[0], volumeL[pp] ); // Scale output level (left)
+    usb_input_q31[1] = dsp_multiply( usb_input_q31[1], volumeR[pp] ); // Scale output level (right)
 }
 
 void app_initialize( void )

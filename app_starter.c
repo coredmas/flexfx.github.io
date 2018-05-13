@@ -35,9 +35,9 @@ void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 // should be performed using fixed-point math.
 // NOTE: IIR, FIR, and BiQuad coeff and state data *must* be declared non-static global!
 
-void app_mixer( const int usb_output[32], int usb_input[32],
-                const int i2s_output[32], int i2s_input[32],
-                const int dsp_output[32], int dsp_input[32], const int property[6] )
+void app_mixer( const int usb_output_q31[32], int usb_input_q31[32],
+                const int i2s_output_q31[32], int i2s_input_q31[32],
+                const int dsp_output_q28[32], int dsp_input_q28[32], const int property[6] )
 {
 }
 
