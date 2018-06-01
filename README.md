@@ -322,25 +322,28 @@ The predefied properties (0x1000 <= ID <= 0x1FFF) are all handled automatically 
 properties 0x2pxx and properties 0x8000 to 0xFFFF are forwarded to the application control task ('app_control').
 
 ```
-ID        DIRECTION        SUMMARY
-1000      Bidirectional    Identify; return ID (3DEGFLEX) and versions
-1100      Bidirectional    Return volume,tone,preset,bypass settings
+ID        DIRECTION        DESCRIPTION
+1000      Bidirectional    Identify the device, return ID (3DEGFLEX) and version numbers
+1100      Bidirectional    Return the current volume,tone,preset,bypass settings
 120t      Bidirectional    Return tile T's DSP processing loads
 13nn      Bidirectional    Read line NN (20 bytes) of GUI interface text
 1401      Bidirectional    Begin firmware upgrade, echoed back to host
 1402      Bidirectional    Next 32 bytes of firmware image data, echoed
-1403      Host to Device   End firmware upgrade and reset
-1501      Bidirectional    Begin data upload, echoed back to host
-1502      Bidirectional    Next 32 bytes of bulk data, echoed
-1503      Device to Host   End bulk data upload
-1601      Bidirectional    Begin data download, echoed back to host
-1602      Bidirectional    Next 32 bytes of bulk data
-1603      Device to host   End bulk data download
-1701      Device to Host   Send raw MIDI data from device to host
-1702      Host to Device   Send raw MIDI data from host to device
-1703      Internal         MIDI beat clock control (start/stop/setBPM)
-1704      Internal         MIDI MTC/MPC control (MPC commands,MTC settings)
-2pxx      Bidirectional    User/app props (preset=P,ID=xx) compatible with 'flexfx.html'
+1403      Host to Device   End firmware upgrade and reset (no USB property echo!)
+15px      Bidirectional    Write name and begin data upload for set X preset P (P=0 for active config ...)
+150E      Bidirectional    Next 32 bytes of bulk data for preset (... or 1 <= P <= 9 ...)
+150F      Bidirectional    End bulk data upload (... for loading/storing for preset P)
+160x      Bidirectional    Read name and begin data download for set X preset P
+160E      Bidirectional    Next 32 bytes of bulk data, data echoed back to host
+160F      Bidirectional    End bulk data download
+17p0      Bidirectional    Set the active preset to preset P
+17p1      Bidirectional    Write parameter set data for preset P
+17p2      Bidirectional    Read parameter set data for preset P
+1801      Device to Host   Send raw MIDI data from device to host
+1802      Host to Device   Send raw MIDI data from host to device
+1803      Internal         MIDI beat clock control (start/stop/setBPM)
+1804      Internal         MIDI MTC/MPC control (MPC commands,MTC settings)
+2pxx      Undefined        Reserved
 3xxx      Undefined        Reserved
 4xxx      Undefined        Reserved
 5xxx      Undefined        Reserved
