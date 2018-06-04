@@ -325,6 +325,8 @@ properties 0x2pxx and properties 0x8000 to 0xFFFF are forwarded to the applicati
 ID        DIRECTION        DESCRIPTION
 1000      Bidirectional    Identify the device, return ID (3DEGFLEX) and version numbers
 1100      Bidirectional    Return the current volume,tone,preset,bypass settings
+1101      Bidirectional    Set the current volume,tone,preset,bypass settings
+1102      Bidirectional    Nofity the current volume,tone,preset,bypass settings
 120t      Bidirectional    Return tile T's DSP processing loads
 13nn      Bidirectional    Read line NN (20 bytes) of GUI interface text
 1401      Bidirectional    Begin firmware upgrade, echoed back to host
@@ -336,9 +338,12 @@ ID        DIRECTION        DESCRIPTION
 160x      Bidirectional    Read name and begin data download for set X preset P
 160E      Bidirectional    Next 32 bytes of bulk data, data echoed back to host
 160F      Bidirectional    End bulk data download
-17p0      Bidirectional    Set the active preset to preset P
-17p1      Bidirectional    Write parameter set data for preset P
-17p2      Bidirectional    Read parameter set data for preset P
+1700      Bidirectional    Read preset data for the active preset, return 17p0 as property ID
+17p0      Bidirectional    Read preset data for preset P (1 <= P <= 9)
+17p1      Bidirectional    Notification of preset settings update for preset P
+17p2      Bidirectional    Notification of preset settings and active preset update for preset P
+17p3      Bidirectional    Update data for preset P (1 <= P <= 9)
+17p4      Bidirectional    Update preset data and set the active preset to preset P (1 <= P <= 9)
 1801      Device to Host   Send raw MIDI data from device to host
 1802      Host to Device   Send raw MIDI data from host to device
 1803      Internal         MIDI beat clock control (start/stop/setBPM)
