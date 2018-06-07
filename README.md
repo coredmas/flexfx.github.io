@@ -26,7 +26,7 @@ run-time algorithm control.
 * Simple framework for writing custom audio processing applications
 * Up to 500 MIPs available for signal processing algorithms (FlexFX module with XUF216)
 * 32/64 bit fixed point DSP support, single-cycle instructions
-* Up to 32x32 (48 kHz) channels of USB and I2S audio, up to 192 kHz audio sample rate at 8x8
+* Up to 32x32 in/out channels at 48kHz, 16x16 at 96kHz, 8x8 at 192kHz for USB and I2S audio
 * Single audio cycle DSP processing for all 32 channels (e.g. audio block size = 1)
 * System latency (ADC I2S to DSP to DAC I2S) of 16 audio cycles (16/Fs). 
 * USB interface for USB audio streaming ad USB MIDI for effects control and firmware updating
