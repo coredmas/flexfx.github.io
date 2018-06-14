@@ -26,7 +26,7 @@ run-time algorithm control.
 * Simple framework for writing custom audio processing applications
 * Up to 500 MIPs available for signal processing algorithms (FlexFX module with XUF216)
 * 32/64 bit fixed point DSP support, single-cycle instructions
-* Up to 32x32 in/out channels at 48kHz, 16x16 at 96kHz, 8x8 at 192kHz for USB and I2S audio
+* Up to 32x32 (48 kHz) channels of USB and I2S audio, up to 192 kHz audio sample rate at 8x8
 * Single audio cycle DSP processing for all 32 channels (e.g. audio block size = 1)
 * System latency (ADC I2S to DSP to DAC I2S) of 16 audio cycles (16/Fs). 
 * USB interface for USB audio streaming ad USB MIDI for effects control and firmware updating
@@ -332,18 +332,18 @@ ID        DIRECTION        DESCRIPTION
 1401      Bidirectional    Begin firmware upgrade, echoed back to host
 1402      Bidirectional    Next 32 bytes of firmware image data, echoed
 1403      Host to Device   End firmware upgrade and reset (no USB property echo!)
-15px      Bidirectional    Write name and begin data upload for set X preset P (P=0 for active config ...)
-150E      Bidirectional    Next 32 bytes of bulk data for preset (... or 1 <= P <= 9 ...)
-150F      Bidirectional    End bulk data upload (... for loading/storing for preset P)
-160x      Bidirectional    Read name and begin data download for set X preset P
-160E      Bidirectional    Next 32 bytes of bulk data, data echoed back to host
-160F      Bidirectional    End bulk data download
-1700      Bidirectional    Read preset data for the active preset, return 17p0 as property ID
-17p0      Bidirectional    Read preset data for preset P (1 <= P <= 9)
-17p1      Bidirectional    Notification of preset settings update for preset P
-17p2      Bidirectional    Notification of preset settings and active preset update for preset P
-17p3      Bidirectional    Update data for preset P (1 <= P <= 9)
-17p4      Bidirectional    Update preset data and set the active preset to preset P (1 <= P <= 9)
+15n0      Bidirectional    Read name of bulk data for preset P (P=0 for active config ...)
+15n1      Bidirectional    Write name of bulk data and begin data upload for preset P
+15n2      Bidirectional    Next 32 bytes of bulk data for preset (... or 1 <= P <= 9 ...)
+15n3      Bidirectional    End bulk data upload (... for loading/storing for preset P)
+1700      Bidirectional    Dump preset data starting with preset 1, return 17p0 as property ID
+17p0      Bidirectional    Dump preset data starting with preset P (1 <= P <= 9)
+1701      Bidirectional    Read preset data for the active preset, return 17p0 as property ID
+17p1      Bidirectional    Read preset data for preset P (1 <= P <= 9)
+17p2      Bidirectional    Notification of preset settings update for preset P
+17p3      Bidirectional    Notification of preset settings and active preset update for preset P
+17p4      Bidirectional    Update data for preset P (1 <= P <= 9)
+17p5      Bidirectional    Update preset data and set the active preset to preset P (1 <= P <= 9)
 1801      Device to Host   Send raw MIDI data from device to host
 1802      Host to Device   Send raw MIDI data from host to device
 1803      Internal         MIDI beat clock control (start/stop/setBPM)
