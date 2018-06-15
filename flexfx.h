@@ -74,11 +74,6 @@ void flash_close( void );
 void flash_read ( int offset, byte buffer[], int size );
 void flash_write( int offset, const byte buffer[], int size );
 
-// Port and pin I/O functions. DAC/ADC port reads/writes will disable I2S/TDM!
-
-void io_write( int pin_num, bool value ); // Write binary value to IO pin
-bool io_read ( int pin_num );             // Read binary value from IO pin
-
 // I2C functions for peripheral control (do not use these in real-time DSP threads).
 
 void i2c_start( int speed );  // Set bit rate, assert an I2C start condition.
@@ -92,6 +87,16 @@ int  port_get1( void );
 void port_set2( int flag );
 int  port_get2( void );
 
+void adc_read( double values[8] ); // 0.0 <= value[n] < 1.0
+
+void log_chr( char val );
+void log_str( const char* val );
+void log_bin( const byte* data, int len );
+void log_hex( unsigned char val );
+void log_hex2( unsigned val );
+void log_hex4( unsigned val );
+void log_dec( int value, int width, char pad );
+
 // MAC performs 32x32 multiply and 64-bit accumulation, SAT saturates a 64-bit result, EXT converts
 // a 64-bit result to a 32-bit value (extract 32 from 64), LD2/ST2 loads/stores two 32-values
 // from/to 64-bit aligned 32-bit data arrays at address PP. All 32-bit fixed-point values are QQQ
@@ -101,18 +106,26 @@ int  port_get2( void );
 // XX, YY, and AA are 32-bit QQQ fixed point values
 // PP is a 64-bit aligned pointer to two 32-bit QQQ values
 
-#define DSP_MUL( ah, al, xx, yy ) asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(xx),"r"(yy),"0"(0),"1"(1<<(QQ-1)) );
-#define DSP_MAC( ah, al, xx, yy ) asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(xx),"r"(yy),"0"(ah),"1"(al) );
-#define DSP_DIV( qq,rr,ah,al,xx ) asm volatile("ldivu %0,%1,%2,%3,%4":"=r"(qq):"r"(rr),"r"(ah),"r"(al),"r"(xx));
-#define DSP_SAT( ah, al )         asm volatile("lsats %0,%1,%2":"=r"(ah),"=r"(al):"r"(QQ),"0"(ah),"1"(al));
-#define DSP_EXT( xx, ah, al )     asm volatile("lextract %0,%1,%2,%3,32":"=r"(xx):"r"(ah),"r"(al),"r"(QQ));
 #define DSP_LD2( pp, xx, yy )     asm volatile("ldd %0,%1,%2[0]":"=r"(xx),"=r"(yy):"r"(pp));
 #define DSP_ST2( pp, xx, yy )     asm volatile("std %0,%1,%2[0]"::"r"(xx), "r"(yy),"r"(pp));
+#define DSP_MUL( ah, al, xx, yy ) asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(xx),"r"(yy),"0"(0),"1"(1<<(QQ-1)) );
+#define DSP_MAC( ah, al, xx, yy ) asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(xx),"r"(yy),"0"(ah),"1"(al) );
+#define DSP_SAT( ah, al )         asm volatile("lsats %0,%1,%2":"=r"(ah),"=r"(al):"r"(QQ),"0"(ah),"1"(al));
+#define DSP_EXT( ah, al, xx )     asm volatile("lextract %0,%1,%2,%3,32":"=r"(xx):"r"(ah),"r"(al),"r"(QQ));
+#define DSP_DIV( qq,rr,ah,al,xx ) asm volatile("ldivu %0,%1,%2,%3,%4":"=r"(qq):"r"(rr),"r"(ah),"r"(al),"r"(xx));
 
-inline int dsp_multiply( int xx, int yy ) // RR = XX * YY
+inline int dsp_mul( int xx, int yy ) // RR = XX * YY
 {
     int ah = 0; unsigned al = 1<<(QQ-1);
     asm("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(xx),"r"(yy),"0"(ah),"1"(al) );
+    asm("lextract %0,%1,%2,%3,32":"=r"(ah):"r"(ah),"r"(al),"r"(QQ));
+    return ah;
+}
+
+inline int dsp_mac( int xx, int yy, int zz ) // RR = XX * YY + ZZ
+{
+    int ah = 0; unsigned al = 0;
+    asm("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(xx),"r"(yy),"0"(0),"1"(zz) );
     asm("lextract %0,%1,%2,%3,32":"=r"(ah):"r"(ah),"r"(al),"r"(QQ));
     return ah;
 }
@@ -165,7 +178,9 @@ void math_mac_XYZ( int* xx, const int* yy, const int* zz, int nn ); // X[] = X[]
 // NN is IIR filter order or or IIR filter count for cascaded IIR's
 // NN is number of samples in XX for scalar and vector math functions
 // CC is array of 32-bit filter coefficients - length is 'nn' for FIR, nn * 5 for IIR
-// SS is array of 32-bit filter state - length is 'nn' for FIR, nn * 4 for IIR, 3 for DCBLOCK
+// SS is array of 32-bit filter state - length is 'nn' for FIR, nn * 4 for IIR
+// SS is array of 32-bit filter state - length is 3 for DCBLOCK, 2 for state-variable filter
+// CC length is 3/5/7 and SS length is 2/4/6 fir IIR1/IIR2/IIR3 respectively
 // RR is the up-sampling/interpolation or down-sampling/decimation ratio
 // AH (high) and AL (low) form the 64-bit signed accumulator
 
@@ -175,26 +190,34 @@ int  dsp_blend   ( int  xx, int yy, int mm );         // 0.0 (100% xx) <= mm <= 
 int  dsp_dcblock ( int  xx, int kk, int* ss ); // DC blocker
 int  dsp_envelope( int  xx, int kk, int* ss ); // Envelope detector,vo=vi*(1–e^(–t/RC)),kk=2*RC/Fs
 int  dsp_convolve( int  xx, const int* cc, int* ss, int* ah, int* al ); // 240 tap FIR convolution
-int  dsp_iir     ( int  xx, const int* cc, int* ss, int nn ); // nn Cascaded bi-quad IIR filters
+void dsp_statevar( int* xx, const int* cc, int* ss ); // x[0]=in,xx[0:2]=lp/bp/hp out, c[0]=Fc,cc[1]=Q
+int  dsp_iir1    ( int  xx, const int* cc, int* ss ); // 1st order IIR filter - cc[3]=b0,b1,a1
+int  dsp_iir2    ( int  xx, const int* cc, int* ss ); // 2nd order IIR filter - cc[5]=b0,b1,b2,a1,a2
+int  dsp_iir3    ( int  xx, const int* cc, int* ss ); // 3rd order IIR filter - cc[7]=b0..b3,a1..a3
+int  dsp_biquad  ( int  xx, const int* cc, int* ss, int nn ); // nn Cascaded bi-quad IIR filters
 int  dsp_fir     ( int  xx, const int* cc, int* ss, int nn ); // FIR filter of nn taps
 void dsp_fir_up  ( int* xx, const int* cc, int* ss, int nn, int rr ); // FIR up-sampling/interpolation
 void dsp_fir_dn  ( int* xx, const int* cc, int* ss, int nn, int rr ); // FIR dn-sampling/decimation
 void dsp_cic_up  ( int* xx, const int* cc, int* ss, int nn, int rr ); // CIC up-sampling/interpolation
 void dsp_cic_dn  ( int* xx, const int* cc, int* ss, int nn, int rr ); // CIC dn-sampling/decimation
 
-// Biquad filter coefficient calculation functions (do not use these in real-time DSP threads).
+// Filter coefficient calculation functions (do not use these in real-time DSP threads).
 //
 // CC is an array of floating point filter coefficients
 // FF, QQ, GG are the filter frequency, filter Q-factor, and filter gain
 // For low/high pass filters set QQ to zero to create a single-pole 6db/octave filter
+// GB/GM/GT are bass/mid/treble gains (0.0=min, 1.0=max).
+// VB/VM/Vt are bass/mid/treble freq variation from standard (new_freq = standard_freq * variation).
 
 void calc_notch    ( int cc[5], double ff, double qq );
 void calc_lowpass  ( int cc[5], double ff, double qq );
 void calc_highpass ( int cc[5], double ff, double qq );
 void calc_allpass  ( int cc[5], double ff, double qq );
-void calc_bandpass ( int cc[5], double ff1, double ff2 );
+void calc_bandpassQ( int cc[5], double ff, double qq );
+void calc_bandpassF( int cc[5], double ff1, double ff2 );
 void calc_peaking  ( int cc[5], double ff, double qq, double gg );
 void calc_lowshelf ( int cc[5], double ff, double qq, double gg );
 void calc_highshelf( int cc[5], double ff, double qq, double gg );
+void calc_tonestack( int cc[7], double gb, double gm, double gt, double vb, double vm, double vt );
 
 #endif

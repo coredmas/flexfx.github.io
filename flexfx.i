@@ -302,6 +302,24 @@ static inline void _dsp_upsample( int* xx, const int* cc_, int* ss_, int nn, int
         asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(xx[0]),"r"(FQ(3.0)),"0"(0),"1"(1<<(QQ-1))); \
         asm volatile("lextract %0,%1,%2,%3,32":"=r"(xx[0]):"r"(ah),"r"(al),"r"(QQ));
         break;
+        case 4:
+        ah = 0; al = 1<<(QQ-1); _fir_step_tt(nn/4,0,4);
+        asm volatile("lextract %0,%1,%2,%3,32":"=r"(xx[3]):"r"(ah),"r"(al),"r"(QQ));
+        asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(xx[2]),"r"(FQ(4.0)),"0"(0),"1"(1<<(QQ-1))); \
+        asm volatile("lextract %0,%1,%2,%3,32":"=r"(xx[3]):"r"(ah),"r"(al),"r"(QQ));
+        ah = 0; al = 1<<(QQ-1); _fir_step_tt(nn/4,0,4);
+        asm volatile("lextract %0,%1,%2,%3,32":"=r"(xx[2]):"r"(ah),"r"(al),"r"(QQ));
+        asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(xx[2]),"r"(FQ(4.0)),"0"(0),"1"(1<<(QQ-1))); \
+        asm volatile("lextract %0,%1,%2,%3,32":"=r"(xx[2]):"r"(ah),"r"(al),"r"(QQ));
+        ah = 0; al = 1<<(QQ-1); _fir_step_tt(nn/4,1,4);
+        asm volatile("lextract %0,%1,%2,%3,32":"=r"(xx[1]):"r"(ah),"r"(al),"r"(QQ));
+        asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(xx[1]),"r"(FQ(4.0)),"0"(0),"1"(1<<(QQ-1))); \
+        asm volatile("lextract %0,%1,%2,%3,32":"=r"(xx[1]):"r"(ah),"r"(al),"r"(QQ));
+        ah = 0; al = 1<<(QQ-1); _fir_step_tt(nn/4,2,4);
+        asm volatile("lextract %0,%1,%2,%3,32":"=r"(xx[0]):"r"(ah),"r"(al),"r"(QQ));
+        asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(xx[0]),"r"(FQ(4.0)),"0"(0),"1"(1<<(QQ-1))); \
+        asm volatile("lextract %0,%1,%2,%3,32":"=r"(xx[0]):"r"(ah),"r"(al),"r"(QQ));
+        break;
         case 5:
         ah = 0; al = 1<<(QQ-1); _fir_step_tt(nn/5,0,5);
         asm volatile("lextract %0,%1,%2,%3,32":"=r"(xx[4]):"r"(ah),"r"(al),"r"(QQ));
@@ -389,7 +407,77 @@ static inline void _dsp_dnsample( int* xx, const int* cc, int* ss, int nn, int r
     asm volatile("lextract %0,%1,%2,%3,32":"=r"(xx[0]):"r"(ah),"r"(al),"r"(QQ));
 }
 
-#define _dsp_iir_1( xx, cc, ss ) \
+#define _dsp_statevar( xx, cc, ss ) \
+{ \
+    unsigned al; int ah, ff,qq,yl,yb,yh; \
+	/* State variable filter: Yl=Yl+(F)*Yb,Yh=X-Yl+(-Q)*Yb,Yb=F*Yh+Yb,Yn=Yh+Yl */ \
+    asm volatile( "ldd %0,%1,%2[0]":"=r"(qq),"=r"(ff):"r"(cc) ); \
+    asm volatile( "ldd %0,%1,%2[0]":"=r"(yb),"=r"(yl):"r"(ss) ); \
+    asm volatile( "maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(ff),"r"(yb),"0"(0),"1"(yl) ); \
+    asm volatile( "lextract %0,%1,%2,%3,32":"=r"(yl):"r"(ah),"r"(al),"r"(QQ) ); \
+    asm volatile( "maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(qq),"r"(yb),"0"(0),"1"(xx-yl) ); \
+    asm volatile( "lextract %0,%1,%2,%3,32":"=r"(yh):"r"(ah),"r"(al),"r"(QQ) ); \
+    asm volatile( "maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(ff),"r"(yh),"0"(0),"1"(yb) ); \
+    asm volatile( "std %0,%1,%2[0]"::"r"(yb),"r"(yl),"r"(ss) ); \
+}
+
+#define _dsp_iir1( xx, cc, ss ) \
+{ \
+    unsigned al; int ah, b0,b1,a1, x1,y1, tmp; \
+    asm volatile("ldd %0,%1,%2[0]":"=r"(b1),"=r"(b0):"r"(cc)); \
+    asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(xx),"r"(b0),"0"(0),"1"(0)); \
+    asm volatile("ldd %0,%1,%2[0]":"=r"(y1),"=r"(x1):"r"(ss)); \
+    asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(x1),"r"(b1),"0"(ah),"1"(al)); \
+    asm volatile("ldd %0,%1,%2[1]":"=r"(tmp),"=r"(a1):"r"(cc)); \
+    asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(y1),"r"(a1),"0"(ah),"1"(al)); \
+    asm volatile("lextract %0,%1,%2,%3,32":"=r"(ah):"r"(ah),"r"(al),"r"(QQ)); \
+    asm volatile("std %0,%1,%2[0]"::"r"(ah),"r"(xx),"r"(ss)); \
+    xx = ah; \
+}
+
+#define _dsp_iir2( xx, cc, ss ) \
+{ \
+    unsigned al; int ah, b0,b1,b2,a1,a2, x1,x2,y1,y2, tmp; \
+    asm volatile("ldd %0,%1,%2[0]":"=r"(b1),"=r"(b0):"r"(cc)); \
+    asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(xx),"r"(b0),"0"(0),"1"(0)); \
+    asm volatile("ldd %0,%1,%2[0]":"=r"(x2),"=r"(x1):"r"(ss)); \
+    asm volatile("std %0,%1,%2[0]"::"r"(x1),"r"(xx),"r"(ss)); \
+    asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(x1),"r"(b1),"0"(ah),"1"(al)); \
+    asm volatile("ldd %0,%1,%2[1]":"=r"(a1),"=r"(b2):"r"(cc)); \
+    asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(x2),"r"(b2),"0"(ah),"1"(al)); \
+    asm volatile("ldd %0,%1,%2[1]":"=r"(y2),"=r"(y1):"r"(ss)); \
+    asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(y1),"r"(a1),"0"(ah),"1"(al)); \
+    asm volatile("ldd %0,%1,%2[2]":"=r"(tmp),"=r"(a2):"r"(cc)); \
+    asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(y2),"r"(a2),"0"(ah),"1"(al)); \
+    asm volatile("lextract %0,%1,%2,%3,32":"=r"(ah):"r"(ah),"r"(al),"r"(QQ)); \
+    asm volatile("std %0,%1,%2[1]"::"r"(y1),"r"(ah),"r"(ss)); \
+    xx = ah; \
+}
+
+#define _dsp_iir3( xx, cc, ss ) \
+{ \
+    unsigned al; int ah, b0,b1,b2,b3,a1,a2,a3, x1,x2,x3,y1,y2,y3, tmp; \
+    asm volatile("ldd %0,%1,%2[0]":"=r"(b1),"=r"(b0):"r"(cc)); \
+    asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(xx),"r"(b0),"0"(0),"1"(0)); \
+    asm volatile("ldd %0,%1,%2[0]":"=r"(x2),"=r"(x1):"r"(ss)); \
+    asm volatile("std %0,%1,%2[0]"::"r"(x1),"r"(xx),"r"(ss)); \
+    asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(x1),"r"(b1),"0"(ah),"1"(al)); \
+    asm volatile("ldd %0,%1,%2[1]":"=r"(b3),"=r"(b2):"r"(cc)); \
+    asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(x2),"r"(b2),"0"(ah),"1"(al)); \
+    asm volatile("ldd %0,%1,%2[2]":"=r"(a2),"=r"(a1):"r"(cc)); \
+    asm volatile("ldd %0,%1,%2[3]":"=r"(tmp),"=r"(a3):"r"(cc)); \
+    asm volatile("ldd %0,%1,%2[1]":"=r"(y1),"=r"(x3):"r"(ss)); ss[2] = x2; \
+    asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(x3),"r"(b3),"0"(ah),"1"(al)); \
+    asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(y1),"r"(a1),"0"(ah),"1"(al)); \
+    asm volatile("ldd %0,%1,%2[2]":"=r"(y3),"=r"(y2):"r"(ss)); \
+    asm volatile("std %0,%1,%2[2]"::"r"(y2),"r"(y1),"r"(ss)); \
+    asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(y2),"r"(a2),"0"(ah),"1"(al)); \
+    asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(y3),"r"(a3),"0"(ah),"1"(al)); \
+    asm volatile("lextract %0,%1,%2,%3,32":"=r"(ah):"r"(ah),"r"(al),"r"(QQ)); ss[3] = ah; \
+    xx = ah; \
+}
+
+#define _dsp_biquad_1( xx, cc, ss ) \
 { \
     unsigned al; int ah, c1,c2, s1,s2; \
     asm volatile("ldd %0,%1,%2[0]":"=r"(c2),"=r"(c1):"r"(cc)); \
@@ -408,7 +496,7 @@ static inline void _dsp_dnsample( int* xx, const int* cc, int* ss, int nn, int r
     xx = ah; \
 }
 
-#define _dsp_iir_2( xx, cc, ss ) \
+#define _dsp_biquad_2( xx, cc, ss ) \
 { \
     unsigned al; int ah, b0,b1, s1,s2; \
     asm volatile("ldd %0,%1,%2[0]":"=r"(b1),"=r"(b0):"r"(cc)); \
@@ -440,7 +528,7 @@ static inline void _dsp_dnsample( int* xx, const int* cc, int* ss, int nn, int r
     xx = ah; \
 }
 
-#define _dsp_iir_3( xx, cc, ss ) \
+#define _dsp_biquad_3( xx, cc, ss ) \
 { \
     unsigned al; int ah, b0,b1, s1,s2; \
     asm volatile("ldd %0,%1,%2[0]":"=r"(b1),"=r"(b0):"r"(cc)); \
@@ -485,7 +573,7 @@ static inline void _dsp_dnsample( int* xx, const int* cc, int* ss, int nn, int r
     xx = ah; \
 }
 
-#define _dsp_iir_4( xx, cc, ss ) \
+#define _dsp_biquad_4( xx, cc, ss ) \
 { \
     unsigned al; int ah, b0,b1, s1,s2; \
     asm volatile("ldd %0,%1,%2[0]":"=r"(b1),"=r"(b0):"r"(cc)); \
@@ -544,7 +632,7 @@ static inline void _dsp_dnsample( int* xx, const int* cc, int* ss, int nn, int r
     xx = ah; \
 }
 
-static inline void math_sum_X1z( const int* xx, int zz, int nn ) // r = X[0:N-1] * 1.0 + z
+static inline void math_sum_X1z( int* xx, int zz, int nn ) // r = X[0:N-1] * 1.0 + z
 {
     unsigned al = 0; int ah = 0, c1,c2;
     while( nn >= 4 ) {
@@ -1183,8 +1271,6 @@ static inline void _math_mac_XYZ( int* xx, const int* yy, const int* zz, int nn 
     int ah; unsigned al; \
     asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(y1),"r"(FQ(1.0)-ff),"0"(0),"1"(1<<(QQ-1))); \
     asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(y2),"r"(ff),"0"(ah),"1"(al)); \
-    asm volatile("lextract %0,%1,%2,%3,32":"=r"(xx):"r"(ah),"r"(al),"r"(QQ)); \
-    asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(xx),"r"(FQ(0.9)),"0"(0),"1"(1<<(QQ-1))); \
     asm volatile("lextract %0,%1,%2,%3,32":"=r"(xx):"r"(ah),"r"(al),"r"(QQ)); \
 }
 
