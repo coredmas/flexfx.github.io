@@ -130,6 +130,12 @@ inline int dsp_mac( int xx, int yy, int zz ) // RR = XX * YY + ZZ
     return ah;
 }
 
+inline int dsp_ext( int ah, int al ) // RR = AH:AL >> (64-QQ)
+{
+    asm volatile("lextract %0,%1,%2,%3,32":"=r"(ah):"r"(ah),"r"(al),"r"(QQ));
+    return ah;
+}
+
 extern int dsp_sine_10[ 1024], dsp_atan_10[ 1024], dsp_tanh_10[ 1024], dsp_nexp_10[ 1024];
 extern int dsp_sine_12[ 4096], dsp_atan_12[ 4096], dsp_tanh_12[ 4096], dsp_nexp_12[ 4096];
 extern int dsp_sine_14[16384], dsp_atan_14[16384], dsp_tanh_14[16384], dsp_nexp_14[16384];
@@ -189,7 +195,7 @@ int  dsp_lagrange( int  dd, int y1, int y2, int y3 ); // 2nd order (Lagrange) in
 int  dsp_blend   ( int  xx, int yy, int mm );         // 0.0 (100% xx) <= mm <= 1.0 (100% yy)
 int  dsp_dcblock ( int  xx, int kk, int* ss ); // DC blocker
 int  dsp_envelope( int  xx, int kk, int* ss ); // Envelope detector,vo=vi*(1–e^(–t/RC)),kk=2*RC/Fs
-int  dsp_convolve( int  xx, const int* cc, int* ss, int* ah, int* al ); // 240 tap FIR convolution
+int  dsp_convolve( int  xx, const int* cc, int* ss, int* ah, int* al ); // 312 tap FIR convolution
 void dsp_statevar( int* xx, const int* cc, int* ss ); // x[0]=in,xx[0:2]=lp/bp/hp out, c[0]=Fc,cc[1]=Q
 int  dsp_iir1    ( int  xx, const int* cc, int* ss ); // 1st order IIR filter - cc[3]=b0,b1,a1
 int  dsp_iir2    ( int  xx, const int* cc, int* ss ); // 2nd order IIR filter - cc[5]=b0,b1,b2,a1,a2

@@ -149,34 +149,6 @@ int _tone_coeff[16][6] = // util_iir.py lowpass (3000 * n^1.333) Hz) 0.707 0.0
 };
 */
 
-static void _tonestack( int* cc, double l, double m, double t, double v1, double v2, double v3 )
-{
-    double C1 = 0.25e-9, C2 = 20.0e-9, C3 = 20.0e-9; C1 *= v1; C2 *= v2; C3 *= v3;
-    double R1 = 250e3, R2 = 1e6, R3 = 25e3, R4 = 56e3;
-    double Fs = 48000.0, k = 2 * Fs;
-    double m2 = m * m;
-    
-    double b1=t*C1*R1+m*C3*R3+l*(C1*R2+C2*R2)+(C1*R3+C2*R3);
-    double b2=t*(C1*C2*R1*R4+C1*C3*R1*R4)-m2*(C1*C3*R3*R3+C2*C3*R3*R3)+m*(C1*C3*R1*R3+C1*C3*R3*R3+C2*C3*R3*R3)+l*(C1*C2*R1*R2+C1*C2*R2*R4+C1*C3*R2*R4)+l*m*(C1*C3*R2*R3+C2*C3*R2*R3)+(C1*C2*R1*R3+C1*C2*R3*R4+C1*C3*R3*R4);
-    double b3=l*m*(C1*C2*C3*R1*R2*R3+C1*C2*C3*R2*R3*R4)-m2*(C1*C2*C3*R1*R3*R3+C1*C2*C3*R3*R3*R4)+m*(C1*C2*C3*R1*R3*R3+C1*C2*C3*R3*R3*R4)+t*C1*C2*C3*R1*R3*R4-t*m*C1*C2*C3*R3*R3*R4+t*l*C1*C2*C3*R1*R2*R4;
-    double a0=1;
-    double a1=(C1*R1+C1*R3+C2*R3+C2*R4+C3*R4)+m*C3*R3+l*(C1*R2+C2*R2);
-    double a2=m*(C1*C3*R1*R3-C2*C3*R3*R4+C1*C3*R3*R3+C2*C3*R3*R3)+l*m*(C1*C3*R2*R3+C2*C3*R2*R3)-m2*(C1*C3*R3*R3+C2*C3*R3*R3)+l*(C1*C2*R2*R4+C1*C2*R1*R2+C1*C3*R2*R4+C2*C3*R2*R4)+(C1*C2*R1*R4+C1*C3*R1*R4+C1*C2*R3*R4+C1*C2*R1*R3+C1*C3*R3*R4+C2*C3*R3*R4);
-    double a3=l*m*(C1*C2*C3*R1*R2*R3+C1*C2*C3*R2*R3*R4)-m2*(C1*C2*C3*R1*R3*R3+C1*C2*C3*R3*R3*R4)+m*(C1*C2*C3*R3*R3*R4+C1*C2*C3*R1*R3*R3-C1*C2*C3*R1*R3*R4)+l*C1*C2*C3*R1*R2*R4+C1*C2*C3*R1*R3*R4;
-
-    double B0 =       -b1*k -b2*k*k   -b3*k*k*k;
-    double B1 =       -b1*k +b2*k*k +3*b3*k*k*k;
-    double B2 =       +b1*k +b2*k*k -3*b3*k*k*k;
-    double B3 =       +b1*k -b2*k*k   +b3*k*k*k;
-    double A0 = -a0   -a1*k -a2*k*k   -a3*k*k*k;
-    double A1 = -3*a0 -a1*k +a2*k*k +3*a3*k*k*k;
-    double A2 = -3*a0 +a1*k +a2*k*k -3*a3*k*k*k;
-    double A3 = -a0   +a1*k -a2*k*k   +a3*k*k*k;
-    
-    cc[0] = B0; cc[1] = B1; cc[2] = B2; cc[3] = B3;
-    cc[4] = -A1/A0; cc[5] = -A2/A0; cc[6] = -A3/A0;
-}
-
 static int _volume_level = 0;
 static int _tone_coeff[5] = {0,0,0,0,0}, _tone_state[2][4] = {{0,0,0,0},{0,0,0,0}};
 static byte _wave_data[29*256];
@@ -398,170 +370,36 @@ void app_thread1( int samples[32], const int property[6] )
     _dsp_dnsample( samples+4, _antialias_coeff, _dnsample_state2, 72, 4 );
     
     //samples[0] = dsp_iir3( samples[0], _amp1_coeff, _amp1_state+4 );
-    //samples[4] = dsp_iir3( samples[4], _amp2_coeff, _amp2_state+4 );
-    samples[3] = samples[4];
+    //samples[3] = dsp_iir3( samples[4], _amp2_coeff, _amp2_state+4 );
+    samples[3] = samples[0];
 }
 
 void app_thread2( int samples[32], const int property[6] )
 {
-    int ah; unsigned al = 0, s0, b0, b1, s1, s2, s3;
+    samples[1] = 0; samples[2] = 1<<(QQ-1);
+    samples[4] = 0; samples[5] = 1<<(QQ-1);
 
-    s0 = samples[0]; ah = 0, al = 1<<(QQ-1);
-    _CONVOLVE_24p( ir_coeff+312*0+  0, ir_state+312*0+  0 );
-    _CONVOLVE_24p( ir_coeff+312*0+ 24, ir_state+312*0+ 24 );
-    _CONVOLVE_24p( ir_coeff+312*0+ 48, ir_state+312*0+ 48 );
-    _CONVOLVE_24p( ir_coeff+312*0+ 72, ir_state+312*0+ 72 );
-    _CONVOLVE_24p( ir_coeff+312*0+ 96, ir_state+312*0+ 96 );
-    _CONVOLVE_24p( ir_coeff+312*0+120, ir_state+312*0+120 );
-    _CONVOLVE_24p( ir_coeff+312*0+144, ir_state+312*0+144 );
-    _CONVOLVE_24p( ir_coeff+312*0+168, ir_state+312*0+168 );
-    _CONVOLVE_24p( ir_coeff+312*0+192, ir_state+312*0+192 );
-    _CONVOLVE_24p( ir_coeff+312*0+216, ir_state+312*0+216 );
-    _CONVOLVE_24p( ir_coeff+312*0+240, ir_state+312*0+240 );
-    _CONVOLVE_24p( ir_coeff+312*0+264, ir_state+312*0+264 );
-    _CONVOLVE_24p( ir_coeff+312*0+312, ir_state+312*0+312 );
-    //_CONVOLVE_24p( ir_coeff+312*0+336, ir_state+312*0+336 );
-    //_CONVOLVE_24p( ir_coeff+312*0+360, ir_state+312*0+360 );
-    samples[1] = ah; samples[2] = al;
-
-    s0 = samples[4]; ah = 0, al = 1<<(QQ-1);
-    _CONVOLVE_24p( ir_coeff+312*5+  0, ir_state+312*5+  0 );
-    _CONVOLVE_24p( ir_coeff+312*5+ 24, ir_state+312*5+ 24 );
-    _CONVOLVE_24p( ir_coeff+312*5+ 48, ir_state+312*5+ 48 );
-    _CONVOLVE_24p( ir_coeff+312*5+ 72, ir_state+312*5+ 72 );
-    _CONVOLVE_24p( ir_coeff+312*5+ 96, ir_state+312*5+ 96 );
-    _CONVOLVE_24p( ir_coeff+312*5+120, ir_state+312*5+120 );
-    _CONVOLVE_24p( ir_coeff+312*5+144, ir_state+312*5+144 );
-    _CONVOLVE_24p( ir_coeff+312*5+168, ir_state+312*5+168 );
-    _CONVOLVE_24p( ir_coeff+312*5+192, ir_state+312*5+192 );
-    _CONVOLVE_24p( ir_coeff+312*5+216, ir_state+312*5+216 );
-    _CONVOLVE_24p( ir_coeff+312*5+240, ir_state+312*5+240 );
-    _CONVOLVE_24p( ir_coeff+312*5+264, ir_state+312*5+264 );
-    _CONVOLVE_24p( ir_coeff+312*5+312, ir_state+312*5+312 );
-    //_CONVOLVE_24p( ir_coeff+312*5+336, ir_state+312*5+336 );
-    //_CONVOLVE_24p( ir_coeff+312*5+360, ir_state+312*5+360 );
-    samples[4] = ah; samples[5] = al;
+    samples[0] = dsp_convolve( samples[0], ir_coeff+312*0, ir_state+312*0, samples+1, samples+2 );
+    samples[3] = dsp_convolve( samples[3], ir_coeff+312*0, ir_state+312*0, samples+4, samples+5 );
 }
 
 void app_thread3( int samples[32], const int property[6] )
 {
-    int ah; unsigned al = 0, s0, b0, b1, s1, s2, s3;
-
-    s0 = samples[0]; ah = samples[1]; al = samples[2];
-    _CONVOLVE_24p( ir_coeff+312*1+  0, ir_state+312*1+  0 );
-    _CONVOLVE_24p( ir_coeff+312*1+ 24, ir_state+312*1+ 24 );
-    _CONVOLVE_24p( ir_coeff+312*1+ 48, ir_state+312*1+ 48 );
-    _CONVOLVE_24p( ir_coeff+312*1+ 72, ir_state+312*1+ 72 );
-    _CONVOLVE_24p( ir_coeff+312*1+ 96, ir_state+312*1+ 96 );
-    _CONVOLVE_24p( ir_coeff+312*1+120, ir_state+312*1+120 );
-    _CONVOLVE_24p( ir_coeff+312*1+144, ir_state+312*1+144 );
-    _CONVOLVE_24p( ir_coeff+312*1+168, ir_state+312*1+168 );
-    _CONVOLVE_24p( ir_coeff+312*1+192, ir_state+312*1+192 );
-    _CONVOLVE_24p( ir_coeff+312*1+216, ir_state+312*1+216 );
-    _CONVOLVE_24p( ir_coeff+312*1+240, ir_state+312*1+240 );
-    _CONVOLVE_24p( ir_coeff+312*1+264, ir_state+312*1+264 );
-    _CONVOLVE_24p( ir_coeff+312*1+312, ir_state+312*1+312 );
-    //_CONVOLVE_24p( ir_coeff+312*1+336, ir_state+312*1+336 );
-    //_CONVOLVE_24p( ir_coeff+312*1+360, ir_state+312*1+360 );
-    samples[1] = ah; samples[2] = al;
-
-    s0 = samples[4]; ah = samples[5]; al = samples[6];
-    _CONVOLVE_24p( ir_coeff+312*6+  0, ir_state+312*6+  0 );
-    _CONVOLVE_24p( ir_coeff+312*6+ 24, ir_state+312*6+ 24 );
-    _CONVOLVE_24p( ir_coeff+312*6+ 48, ir_state+312*6+ 48 );
-    _CONVOLVE_24p( ir_coeff+312*6+ 72, ir_state+312*6+ 72 );
-    _CONVOLVE_24p( ir_coeff+312*6+ 96, ir_state+312*6+ 96 );
-    _CONVOLVE_24p( ir_coeff+312*6+120, ir_state+312*6+120 );
-    _CONVOLVE_24p( ir_coeff+312*6+144, ir_state+312*6+144 );
-    _CONVOLVE_24p( ir_coeff+312*6+168, ir_state+312*6+168 );
-    _CONVOLVE_24p( ir_coeff+312*6+192, ir_state+312*6+192 );
-    _CONVOLVE_24p( ir_coeff+312*6+216, ir_state+312*6+216 );
-    _CONVOLVE_24p( ir_coeff+312*6+240, ir_state+312*6+240 );
-    _CONVOLVE_24p( ir_coeff+312*6+264, ir_state+312*6+264 );
-    _CONVOLVE_24p( ir_coeff+312*6+312, ir_state+312*6+312 );
-    //_CONVOLVE_24p( ir_coeff+312*6+336, ir_state+312*6+336 );
-    //_CONVOLVE_24p( ir_coeff+312*6+360, ir_state+312*6+360 );
-    samples[5] = ah; samples[6] = al;
+    samples[0] = dsp_convolve( samples[0], ir_coeff+312*1, ir_state+312*1, samples+1, samples+2 );
+    samples[3] = dsp_convolve( samples[3], ir_coeff+312*1, ir_state+312*1, samples+4, samples+5 );
 }
 
 void app_thread4( int samples[32], const int property[6] )
 {
-    int ah; unsigned al = 0, s0, b0, b1, s1, s2, s3;
-
-    s0 = samples[0]; ah = samples[1]; al = samples[2];
-    _CONVOLVE_24p( ir_coeff+312*2+  0, ir_state+312*2+  0 );
-    _CONVOLVE_24p( ir_coeff+312*2+ 24, ir_state+312*2+ 24 );
-    _CONVOLVE_24p( ir_coeff+312*2+ 48, ir_state+312*2+ 48 );
-    _CONVOLVE_24p( ir_coeff+312*2+ 72, ir_state+312*2+ 72 );
-    _CONVOLVE_24p( ir_coeff+312*2+ 96, ir_state+312*2+ 96 );
-    _CONVOLVE_24p( ir_coeff+312*2+120, ir_state+312*2+120 );
-    _CONVOLVE_24p( ir_coeff+312*2+144, ir_state+312*2+144 );
-    _CONVOLVE_24p( ir_coeff+312*2+168, ir_state+312*2+168 );
-    _CONVOLVE_24p( ir_coeff+312*2+192, ir_state+312*2+192 );
-    _CONVOLVE_24p( ir_coeff+312*2+216, ir_state+312*2+216 );
-    _CONVOLVE_24p( ir_coeff+312*2+240, ir_state+312*2+240 );
-    _CONVOLVE_24p( ir_coeff+312*2+264, ir_state+312*2+264 );
-    _CONVOLVE_24p( ir_coeff+312*2+312, ir_state+312*2+312 );
-    //_CONVOLVE_24p( ir_coeff+312*2+336, ir_state+312*2+336 );
-    //_CONVOLVE_24p( ir_coeff+312*2+360, ir_state+312*2+360 );
-    samples[1] = ah; samples[2] = al;
-
-    s0 = samples[4]; ah = samples[5]; al = samples[6];
-    _CONVOLVE_24p( ir_coeff+312*7+  0, ir_state+312*7+  0 );
-    _CONVOLVE_24p( ir_coeff+312*7+ 24, ir_state+312*7+ 24 );
-    _CONVOLVE_24p( ir_coeff+312*7+ 48, ir_state+312*7+ 48 );
-    _CONVOLVE_24p( ir_coeff+312*7+ 72, ir_state+312*7+ 72 );
-    _CONVOLVE_24p( ir_coeff+312*7+ 96, ir_state+312*7+ 96 );
-    _CONVOLVE_24p( ir_coeff+312*7+120, ir_state+312*7+120 );
-    _CONVOLVE_24p( ir_coeff+312*7+144, ir_state+312*7+144 );
-    _CONVOLVE_24p( ir_coeff+312*7+168, ir_state+312*7+168 );
-    _CONVOLVE_24p( ir_coeff+312*7+192, ir_state+312*7+192 );
-    _CONVOLVE_24p( ir_coeff+312*7+216, ir_state+312*7+216 );
-    _CONVOLVE_24p( ir_coeff+312*7+240, ir_state+312*7+240 );
-    _CONVOLVE_24p( ir_coeff+312*7+264, ir_state+312*7+264 );
-    _CONVOLVE_24p( ir_coeff+312*7+312, ir_state+312*7+312 );
-    //_CONVOLVE_24p( ir_coeff+312*7+336, ir_state+312*7+336 );
-    //_CONVOLVE_24p( ir_coeff+312*7+360, ir_state+312*7+360 );
-    samples[5] = ah; samples[6] = al;
+    samples[0] = dsp_convolve( samples[0], ir_coeff+312*2, ir_state+312*2, samples+1, samples+2 );
+    samples[3] = dsp_convolve( samples[3], ir_coeff+312*2, ir_state+312*2, samples+4, samples+5 );
 }
 
 void app_thread5( int samples[32], const int property[6] )
 {
-    int ah; unsigned al = 0, s0, b0, b1, s1, s2, s3;
+    samples[0] = dsp_convolve( samples[0], ir_coeff+312*3, ir_state+312*3, samples+1, samples+2 );
+    samples[3] = dsp_convolve( samples[3], ir_coeff+312*3, ir_state+312*3, samples+4, samples+5 );
 
-    s0 = samples[0]; ah = samples[1]; al = samples[2];
-    _CONVOLVE_24p( ir_coeff+312*3+  0, ir_state+312*3+  0 );
-    _CONVOLVE_24p( ir_coeff+312*3+ 24, ir_state+312*3+ 24 );
-    _CONVOLVE_24p( ir_coeff+312*3+ 48, ir_state+312*3+ 48 );
-    _CONVOLVE_24p( ir_coeff+312*3+ 72, ir_state+312*3+ 72 );
-    _CONVOLVE_24p( ir_coeff+312*3+ 96, ir_state+312*3+ 96 );
-    _CONVOLVE_24p( ir_coeff+312*3+120, ir_state+312*3+120 );
-    _CONVOLVE_24p( ir_coeff+312*3+144, ir_state+312*3+144 );
-    _CONVOLVE_24p( ir_coeff+312*3+168, ir_state+312*3+168 );
-    _CONVOLVE_24p( ir_coeff+312*3+192, ir_state+312*3+192 );
-    _CONVOLVE_24p( ir_coeff+312*3+216, ir_state+312*3+216 );
-    _CONVOLVE_24p( ir_coeff+312*3+240, ir_state+312*3+240 );
-    _CONVOLVE_24p( ir_coeff+312*3+264, ir_state+312*3+264 );
-    _CONVOLVE_24p( ir_coeff+312*3+312, ir_state+312*3+312 );
-    //_CONVOLVE_24p( ir_coeff+312*3+336, ir_state+312*3+336 );
-    //_CONVOLVE_24p( ir_coeff+312*3+360, ir_state+312*3+360 );
-    asm("lextract %0,%1,%2,%3,32":"=r"(samples[0]):"r"(ah),"r"(al),"r"(QQ));
-
-    s0 = samples[4]; ah = samples[5]; al = samples[6];
-    _CONVOLVE_24p( ir_coeff+312*8+  0, ir_state+312*8+  0 );
-    _CONVOLVE_24p( ir_coeff+312*8+ 24, ir_state+312*8+ 24 );
-    _CONVOLVE_24p( ir_coeff+312*8+ 48, ir_state+312*8+ 48 );
-    _CONVOLVE_24p( ir_coeff+312*8+ 72, ir_state+312*8+ 72 );
-    _CONVOLVE_24p( ir_coeff+312*8+ 96, ir_state+312*8+ 96 );
-    _CONVOLVE_24p( ir_coeff+312*8+120, ir_state+312*8+120 );
-    _CONVOLVE_24p( ir_coeff+312*8+144, ir_state+312*8+144 );
-    _CONVOLVE_24p( ir_coeff+312*8+168, ir_state+312*8+168 );
-    _CONVOLVE_24p( ir_coeff+312*8+192, ir_state+312*8+192 );
-    _CONVOLVE_24p( ir_coeff+312*8+216, ir_state+312*8+216 );
-    _CONVOLVE_24p( ir_coeff+312*8+240, ir_state+312*8+240 );
-    _CONVOLVE_24p( ir_coeff+312*8+264, ir_state+312*8+264 );
-    _CONVOLVE_24p( ir_coeff+312*8+312, ir_state+312*8+312 );
-    //_CONVOLVE_24p( ir_coeff+312*8+336, ir_state+312*8+336 );
-    //_CONVOLVE_24p( ir_coeff+312*8+360, ir_state+312*8+360 );
-    asm("lextract %0,%1,%2,%3,32":"=r"(samples[4]):"r"(ah),"r"(al),"r"(QQ));
+    samples[0] = dsp_ext( samples[1], samples[2] );
+    samples[1] = dsp_ext( samples[4], samples[5] );
 }
