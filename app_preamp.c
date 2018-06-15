@@ -1,3 +1,10 @@
+// Three preamp gain stages in series per left and right channel with internal highly
+// oversampled signal processing for articulate stereo overdrive/distortion voicing. The second
+// and third preamp stages for the left and right channels incorporate adjustable pre-filtering
+// and bias settings, midrange emphasis filter frequency and Q settings, and a tube-based gain
+// model with slew-rate limiting creating a configurable tube-like multi-stage guitar preamp.
+// Up to nine presets and USB/MIDI control. 
+
 #include <math.h>
 #include <string.h>
 #include "flexfx.i"

@@ -1,3 +1,8 @@
+// Stereo multi-voice flanger and chorus with up to three chorus voices per channel (left and
+// right) each with their own settings for LFO rate, base delay, modulated delay/depth, high
+// and low-pass filters for the feedback signal, regeneration/feedback level, and wet/dry mix.
+// Up to nine presets and USB/MIDI control. ​
+
 #include <math.h>
 #include <string.h>
 #include "flexfx.i"

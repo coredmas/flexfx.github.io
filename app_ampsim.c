@@ -1,3 +1,14 @@
+// Dual power amplifier and speaker cabinet simulation with tone/volume and USB audio recording
+// and playback/mixing. Dual/stereo power tube/amp stage with internal oversampling, followed
+// by the classic three knob (bass, midrange, treble) tone stack. The tone stack can be
+// adjusted to place the bass, midrange, and treble at different center frequencies. Up to 20
+// milliseconds of impulse response (IR) convolution in dual/stereo mode and 40 milliseconds
+// in mono mode using 32/64 bit fixed-point DSP at a 48 kHz sampling rate. Supports up to nine
+// presets each with its own amplifier and tonestack settings and set if IR's (left and right
+// channels). IR's can be downloaded as WAVE files via USB/MIDI using the 'app_ampsim.html' web
+// page and Google Chrome, or via other software applications conforming to the FlexFX USB/MIDI
+// data protocol (see 'https://github.com/flexfx/readme.md' for details).
+
 #include <math.h>
 #include <string.h>
 #include "flexfx.i"
