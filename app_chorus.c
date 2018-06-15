@@ -2,7 +2,7 @@
 #include <string.h>
 #include "flexfx.i"
 
-const char* product_name_string   = "FlexFX Stereo Chorus";
+const char* product_name_string   = "FlexFX Dual Chorus";
 const char* usb_audio_output_name = "FlexFX Audio Out";
 const char* usb_audio_input_name  = "FlexFX Audio In";
 const char* usb_midi_output_name  = "FlexFX MIDI Out";
@@ -18,27 +18,23 @@ const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK 
 
 const char controller_script[] = \
 	"" \
-	"ui_title( 'FlexFX Stereo Chorus'," \
-	    "['Blend', 'Rate', 'Tone',  'HiCut','Volume', 'Blend', 'Rate', 'Tone',  'HiCut','Volume']," \
-	    "['Delay', 'Depth','Feedbk','LoCut','Balance','Delay', 'Depth','Feedbk','LoCut','Balance'] );" \
+	"ui_title( 'FlexFX Dual Chorus'," \
+	    "['Blend', 'Rate', 'HiCut','Volume', 'Blend', 'Rate', 'HiCut','Volume']," \
+	    "['Feedbk','Depth','LoCut','Balance','Feedbk','Depth','LoCut','Balance'] );" \
     "" \
 	"ui_param( 'f', 15, 'Wet/Dry Blend (Left)', [],'Minimum is 100% dry, maximum is 100% wet' );" \
-	"ui_param( 'l', 15, 'Initial Delay (Left)', [],'' );" \
+	"ui_param( 'l', 15, 'Feedback Ratio (Left)', ['Min','','','','','','','','','','','','','','Max'],'' );" \
 	"ui_param( 'f', 15, 'Modulation Rate (Left)', ['Min','','','','','','','','','','','','','','Max'],'' );" \
 	"ui_param( 'l', 15, 'Modulation Depth (Left)', ['Min','','','','','','','','','','','','','','Max'],'' );" \
-	"ui_param( 'f', 15, 'Wet Output Tone (Left)', ['Min','','','','','','','','','','','','','','Max'],'' );" \
-	"ui_param( 'l', 15, 'Feedback Ratio (Left)', ['Min','','','','','','','','','','','','','','Max'],'' );" \
 	"ui_param( 'f', 15, 'Feedback Treble Cut (Left)', ['Min','','','','','','','','','','','','','','Max'],'' );" \
 	"ui_param( 'l', 15, 'Feedback Bass Cut (Left)', ['Min','','','','','','','','','','','','','','Max'],'' );" \
 	"ui_param( 'f', 99, 'Output Volume (Left)', [],'' );" \
 	"ui_param( 'l', 99, 'Output Balance (Left)', [],'' );" \
     "" \
 	"ui_param( 'f', 15, 'Wet/Dry Blend (Right)', [],'Minimum is 100% dry, maximum is 100% wet' );" \
-	"ui_param( 'l', 15, 'Initial Delay (Right)', [],'' );" \
+	"ui_param( 'l', 15, 'Feedback Ratio (Right)', ['Min','','','','','','','','','','','','','','Max'],'' );" \
 	"ui_param( 'f', 15, 'Modulation Rate (Right)', ['Min','','','','','','','','','','','','','','Max'],'' );" \
 	"ui_param( 'l', 15, 'Modulation Depth (Right)', ['Min','','','','','','','','','','','','','','Max'],'' );" \
-	"ui_param( 'f', 15, 'Wet Output Tone (Right)', ['Min','','','','','','','','','','','','','','Max'],'' );" \
-	"ui_param( 'l', 15, 'Feedback Ratio (Right)', ['Min','','','','','','','','','','','','','','Max'],'' );" \
 	"ui_param( 'f', 15, 'Feedback Treble Cut (Right)', ['Min','','','','','','','','','','','','','','Max'],'' );" \
 	"ui_param( 'l', 15, 'Feedback Bass Cut (Right)', ['Min','','','','','','','','','','','','','','Max'],'' );" \
 	"ui_param( 'f', 99, 'Output Volume (Right)', [],'' );" \

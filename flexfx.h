@@ -220,4 +220,8 @@ void calc_lowshelf ( int cc[5], double ff, double qq, double gg );
 void calc_highshelf( int cc[5], double ff, double qq, double gg );
 void calc_tonestack( int cc[7], double gb, double gm, double gt, double vb, double vm, double vt );
 
+int efx_preamp1( int xx, int* cc, int* ss );
+int efx_preamp2( int xx, int* cc, int* ss );
+int efx_pwramp ( int xx, int* cc, int* ss );
+
 #endif
