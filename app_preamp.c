@@ -32,7 +32,7 @@ const char controller_script[] = \
 	    "['','Emph', 'Slewlim','Voice3','Balance','','Emph', 'Slewlim','Voice3','Balance'] );" \
 	"ui_separator();" \
 	"ui_param( 'f', 15, 'Preamp Drive (Left)', ['Min','','','','','','','','','','','','','','Max'],'' );" \
-	"ui_param( 'l', 15, 'Midrange Boos (Left)', ['Min','','','','','','','','','','','','','','Max'],'Midrange boost frequency before stages 2 and 3' );" \
+	"ui_param( 'l', 15, 'Midrange Boost (Left)', ['Min','','','','','','','','','','','','','','Max'],'Midrange boost frequency before stages 2 and 3' );" \
 	"ui_param( 'f', 15, 'Bass Cut (Left)', [],'Reduces bass before preamp stages 2 and 3' );" \
 	"ui_param( 'l', 15, 'Slew Rate (Left)', [],'Increase slew-rate limiting for preamp stages 2 and 3' );" \
 	"ui_param( 'f', 15, 'Stage 2 Voice (Left)', ['Soft/Cold','Soft/Cool','Soft/Norm','Soft/Warm','Soft/Hot','Tube/Cold','Tube/Cool','Tube/Norm','Tube/Warm','Tube/Hot','Hard/Cold','Hard/Cool','Hard/Norm','Hard/Warm','Hard/Hot'],'Bias and clip shape (soft/hard are symmetrical, tube is asym)' );" \
@@ -41,7 +41,7 @@ const char controller_script[] = \
 	"ui_param( 'l', 99, 'Output Balance (Left)', [],'' );" \
 	"ui_separator();" \
 	"ui_param( 'f', 15, 'Preamp Drive (Left)', ['Min','','','','','','','','','','','','','','Max'],'' );" \
-	"ui_param( 'l', 15, 'Midrange Boos (Left)', ['Min','','','','','','','','','','','','','','Max'],'Midrange boost frequency before stages 2 and 3' );" \
+	"ui_param( 'l', 15, 'Midrange Boost (Left)', ['Min','','','','','','','','','','','','','','Max'],'Midrange boost frequency before stages 2 and 3' );" \
 	"ui_param( 'f', 15, 'Bass Cut (Left)', [],'Reduces bass before preamp stages 2 and 3' );" \
 	"ui_param( 'l', 15, 'Slew Rate (Left)', [],'Increase slew-rate limiting for preamp stages 2 and 3' );" \
 	"ui_param( 'f', 15, 'Stage 2 Voice (Left)', ['Soft/Cold','Soft/Cool','Soft/Norm','Soft/Warm','Soft/Hot','Tube/Cold','Tube/Cool','Tube/Norm','Tube/Warm','Tube/Hot','Hard/Cold','Hard/Cool','Hard/Norm','Hard/Warm','Hard/Hot'],'Bias and clip shape (soft/hard are symmetrical, tube is asym)' );" \
@@ -49,8 +49,6 @@ const char controller_script[] = \
 	"ui_param( 'f', 99, 'Output Volume (Left)', [],'' );" \
 	"ui_param( 'l', 99, 'Output Balance (Left)', [],'' );" \
 	"";
-
-int _preamp_tube_lut[47003];
 
 int _preamp_antialias_coeff[48] = // util_fir.py 0.0 0.165 1.0 -118
 {
@@ -65,20 +63,6 @@ int _preamp_antialias_coeff[48] = // util_fir.py 0.0 0.165 1.0 -118
     FQ(+0.000548053),FQ(+0.000141136),FQ(-0.000035800),FQ(-0.000067942),FQ(-0.000044475),
     FQ(-0.000017834),FQ(-0.000004062),FQ(-0.000000257)
 };
-
-void app_mixer( const int usb_output[32], int usb_input[32],
-                const int i2s_output[32], int i2s_input[32],
-                const int dsp_output[32], int dsp_input[32], const int property[6] )
-{
-    //dsp_input[0] = usb_output[0] / 8;
-    //i2s_input[0] = i2s_input[1] = 0;
-
-    dsp_input[0] = (i2s_output[0]/2 - i2s_output[1]/2) / 8;
-    i2s_input[0] = i2s_input[1] = dsp_output[0] / 16; // /2 instrument-level
-
-    usb_input[0] = dsp_output[0] * 8; // *8 line-level
-    usb_input[1] = dsp_output[3] * 8; // *8 line-level
-}
 
 void property_get_data( const int property[6], byte data[20] )
 {
@@ -100,10 +84,12 @@ void property_set_data( int property[6], const byte data[20] )
 	}
 }
 
+static int master_volume = 0, master_tone = 0;
+static int tone_coeffs[3] = {FQ(1.0),0,0}, tone_stateL[2] = {0,0}, tone_stateR[2] = {0,0};
+
 void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 {
 	static int preset = 0, countdown = 0;
-	//static int irdata[240*24/4], iroffs = 0;
 
 	static byte presets[16][20] =
 	{
@@ -133,9 +119,12 @@ void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 		//flash_close();
 	}
 
+    //calc_lowpass( tone_coeffs, 2000 + master_tone * 10000, 0.707 );
+
     /*
     static int value, previous = -1;
     double pots[8]; adc_read( pots );
+    master_volume = pots[0]; master_tone = pots[1];
     if(                            pots[2] < (0.0625-0.03) ) value = 1;
     if( pots[2] > (0.0625+0.03) && pots[2] < (0.1875-0.03) ) value = 2;
     if( pots[2] > (0.1875+0.03) && pots[2] < (0.3125-0.03) ) value = 3;
@@ -234,6 +223,30 @@ void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 		dsp_prop[2] = FQ(0.5); //FQ( 0.0666 * params[9] ); // Balance
 		dsp_prop[3] = FQ( ((double)params[6]) / 200 );
     }
+}
+
+void app_mixer( const int usb_output[32], int usb_input[32],
+                const int i2s_output[32], int i2s_input[32],
+                const int dsp_output[32], int dsp_input[32], const int property[6] )
+{
+    // Send pseudo-differential ADC input signal to the DSP threads and to USB audio in.
+    dsp_input[0] = usb_input[0] = i2s_output[0] / 2 - i2s_output[1] / 2; // Left
+    dsp_input[1] = usb_input[1] = i2s_output[0] / 2 - i2s_output[1] / 2; // Right
+    
+    // Convert I2S output format Q31 to DSP input format Q28.
+    dsp_input[0] /= 8; dsp_input[1] /= 8;
+    
+    // Apply master volume and send DSP left/right outputs to left/right DAC channels.
+    i2s_input[0] = dsp_mul( dsp_output[0], FQ(0.999)/*master_volume*/ ); // Left
+    i2s_input[1] = dsp_mul( dsp_output[1], FQ(0.999)/*master_volume*/ ); // Right
+    
+    // Apply master tone control to left/right channels before sending to the DAC and
+    // convert from Q28 to Q31.
+    i2s_input[0] = dsp_iir1( i2s_input[0], tone_coeffs, tone_stateL ) * 8;
+    i2s_input[1] = dsp_iir1( i2s_input[1], tone_coeffs, tone_stateR ) * 8;
+    
+    // Adjust preamp outputs to be instrument level rather than line level.
+    i2s_input[0] /= 8; i2s_input[1] /= 8;
 }
 
 int _preamp_amp1_coeff[18] = { 0,0,0,0,0,0, 0,0,0,0,0,0, 0,0,0,0,0,0 };

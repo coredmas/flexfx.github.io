@@ -52,118 +52,6 @@ const char controller_script[] = \
 	"ui_param( 'l', 99, 'Output Balance (Left)', [],'' );" \
 	"";
 
-#define _CONVOLVE_00(cc,ss) \
-    asm("ldd   %0,%1,%2[0]":"=r"(b1),"=r"(b0):"r"(cc)); \
-    asm("ldd   %0,%1,%2[0]":"=r"(s2),"=r"(s1):"r"(ss)); \
-    asm("std   %0,%1,%2[0]"::"r"(s1), "r"(s0),"r"(ss)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s0), "0"(ah),"1"(al)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s1), "0"(ah),"1"(al));
-
-#define _CONVOLVE_01(cc,ss) \
-    asm("ldd   %0,%1,%2[1]":"=r"(b1),"=r"(b0):"r"(cc)); \
-    asm("ldd   %0,%1,%2[1]":"=r"(s0),"=r"(s3):"r"(ss)); \
-    asm("std   %0,%1,%2[1]"::"r"(s3), "r"(s2),"r"(ss)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s2), "0"(ah),"1"(al)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s3), "0"(ah),"1"(al));
-
-#define _CONVOLVE_02(cc,ss) \
-    asm("ldd   %0,%1,%2[2]":"=r"(b1),"=r"(b0):"r"(cc)); \
-    asm("ldd   %0,%1,%2[2]":"=r"(s2),"=r"(s1):"r"(ss)); \
-    asm("std   %0,%1,%2[2]"::"r"(s1), "r"(s0),"r"(ss)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s0), "0"(ah),"1"(al)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s1), "0"(ah),"1"(al));
-
-#define _CONVOLVE_03(cc,ss) \
-    asm("ldd   %0,%1,%2[3]":"=r"(b1),"=r"(b0):"r"(cc)); \
-    asm("ldd   %0,%1,%2[3]":"=r"(s0),"=r"(s3):"r"(ss)); \
-    asm("std   %0,%1,%2[3]"::"r"(s3), "r"(s2),"r"(ss)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s2), "0"(ah),"1"(al)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s3), "0"(ah),"1"(al));
-
-#define _CONVOLVE_04(cc,ss) \
-    asm("ldd   %0,%1,%2[4]":"=r"(b1),"=r"(b0):"r"(cc)); \
-    asm("ldd   %0,%1,%2[4]":"=r"(s2),"=r"(s1):"r"(ss)); \
-    asm("std   %0,%1,%2[4]"::"r"(s1), "r"(s0),"r"(ss)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s0), "0"(ah),"1"(al)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s1), "0"(ah),"1"(al));
-
-#define _CONVOLVE_05(cc,ss) \
-    asm("ldd   %0,%1,%2[5]":"=r"(b1),"=r"(b0):"r"(cc)); \
-    asm("ldd   %0,%1,%2[5]":"=r"(s0),"=r"(s3):"r"(ss)); \
-    asm("std   %0,%1,%2[5]"::"r"(s3), "r"(s2),"r"(ss)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s2), "0"(ah),"1"(al)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s3), "0"(ah),"1"(al));
-
-#define _CONVOLVE_06(cc,ss) \
-    asm("ldd   %0,%1,%2[6]":"=r"(b1),"=r"(b0):"r"(cc)); \
-    asm("ldd   %0,%1,%2[6]":"=r"(s2),"=r"(s1):"r"(ss)); \
-    asm("std   %0,%1,%2[6]"::"r"(s1), "r"(s0),"r"(ss)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s0), "0"(ah),"1"(al)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s1), "0"(ah),"1"(al));
-
-#define _CONVOLVE_07(cc,ss) \
-    asm("ldd   %0,%1,%2[7]":"=r"(b1),"=r"(b0):"r"(cc)); \
-    asm("ldd   %0,%1,%2[7]":"=r"(s0),"=r"(s3):"r"(ss)); \
-    asm("std   %0,%1,%2[7]"::"r"(s3), "r"(s2),"r"(ss)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s2), "0"(ah),"1"(al)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s3), "0"(ah),"1"(al));
-
-#define _CONVOLVE_08(cc,ss) \
-    asm("ldd   %0,%1,%2[8]":"=r"(b1),"=r"(b0):"r"(cc)); \
-    asm("ldd   %0,%1,%2[8]":"=r"(s2),"=r"(s1):"r"(ss)); \
-    asm("std   %0,%1,%2[8]"::"r"(s1), "r"(s0),"r"(ss)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s0), "0"(ah),"1"(al)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s1), "0"(ah),"1"(al));
-
-#define _CONVOLVE_09(cc,ss) \
-    asm("ldd   %0,%1,%2[9]":"=r"(b1),"=r"(b0):"r"(cc)); \
-    asm("ldd   %0,%1,%2[9]":"=r"(s0),"=r"(s3):"r"(ss)); \
-    asm("std   %0,%1,%2[9]"::"r"(s3), "r"(s2),"r"(ss)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s2), "0"(ah),"1"(al)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s3), "0"(ah),"1"(al));
-
-#define _CONVOLVE_10(cc,ss) \
-    asm("ldd   %0,%1,%2[10]":"=r"(b1),"=r"(b0):"r"(cc)); \
-    asm("ldd   %0,%1,%2[10]":"=r"(s2),"=r"(s1):"r"(ss)); \
-    asm("std   %0,%1,%2[10]"::"r"(s1), "r"(s0),"r"(ss)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s0), "0"(ah),"1"(al)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s1), "0"(ah),"1"(al));
-
-#define _CONVOLVE_11(cc,ss) \
-    asm("ldd   %0,%1,%2[11]":"=r"(b1),"=r"(b0):"r"(cc)); \
-    asm("ldd   %0,%1,%2[11]":"=r"(s0),"=r"(s3):"r"(ss)); \
-    asm("std   %0,%1,%2[11]"::"r"(s3), "r"(s2),"r"(ss)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b0),"r"(s2), "0"(ah),"1"(al)); \
-    asm("maccs %0,%1,%2,%3" :"=r"(ah),"=r"(al):"r"(b1),"r"(s3), "0"(ah),"1"(al));
-
-#define _CONVOLVE_24p(cc,ss) \
-{ \
-    _CONVOLVE_00(cc,ss); _CONVOLVE_01(cc,ss); _CONVOLVE_02(cc,ss); _CONVOLVE_03(cc,ss); \
-    _CONVOLVE_04(cc,ss); _CONVOLVE_05(cc,ss); _CONVOLVE_06(cc,ss); _CONVOLVE_07(cc,ss); \
-    _CONVOLVE_08(cc,ss); _CONVOLVE_09(cc,ss); _CONVOLVE_10(cc,ss); _CONVOLVE_11(cc,ss); \
-}
-
-/*
-int _tone_coeff[16][6] = // util_iir.py lowpass (3000 * n^1.333) Hz) 0.707 0.0
-{
-    { FQ(+1.000921453),FQ(-1.998141473),FQ(+0.997226867),FQ(+1.998141473),FQ(-0.998148320),0 },
-    { FQ(+1.001151550),FQ(-1.997675241),FQ(+0.996534388),FQ(+1.997675241),FQ(-0.997685938),0 },
-    { FQ(+1.001381539),FQ(-1.997208370),FQ(+0.995842231),FQ(+1.997208370),FQ(-0.997223770),0 },
-    { FQ(+1.001611421),FQ(-1.996740861),FQ(+0.995150396),FQ(+1.996740861),FQ(-0.996761817),0 },
-    { FQ(+1.001841196),FQ(-1.996272714),FQ(+0.994458883),FQ(+1.996272714),FQ(-0.996300079),0 },
-    { FQ(+1.002070864),FQ(-1.995803931),FQ(+0.993767692),FQ(+1.995803931),FQ(-0.995838556),0 },
-    { FQ(+1.002300425),FQ(-1.995334511),FQ(+0.993076823),FQ(+1.995334511),FQ(-0.995377248),0 },
-    { FQ(+1.002529879),FQ(-1.994864455),FQ(+0.992386277),FQ(+1.994864455),FQ(-0.994916156),0 },
-    { FQ(+1.002759226),FQ(-1.994393765),FQ(+0.991696053),FQ(+1.994393765),FQ(-0.994455279),0 },
-    { 0,0,0,0,0,0 }, { 0,0,0,0,0,0 }, { 0,0,0,0,0,0 }, { 0,0,0,0,0,0 },
-    { 0,0,0,0,0,0 }, { 0,0,0,0,0,0 }, { 0,0,0,0,0,0 },
-};
-*/
-
-static int _volume_level = 0;
-static int _tone_coeff[5] = {0,0,0,0,0}, _tone_state[2][4] = {{0,0,0,0},{0,0,0,0}};
-static byte _wave_data[29*256];
-
 void property_get_data( const int property[6], byte data[20] )
 {
 	for( int nn = 0; nn < 5; ++nn ) {
@@ -183,6 +71,9 @@ void property_set_data( int property[6], const byte data[20] )
 					   + (((unsigned)data[4*nn+3])<< 0);
 	}
 }
+
+static int master_volume = 0, master_tone = 0;
+static int tone_coeffs[3] = {FQ(1.0),0,0}, tone_stateL[2] = {0,0}, tone_stateR[2] = {0,0};
 
 void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 {
@@ -216,6 +107,8 @@ void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 		//flash_read( 0, (void*)presets, sizeof(presets) );
 		//flash_close();
 	}
+
+    //calc_lowpass( tone_coeffs, 2000 + master_tone * 10000, 0.707 );
 
     /*
     static int value, previous = -1;
@@ -275,7 +168,6 @@ void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
     
     return;
 
-
 /*
 	else if( state == 99 )
 	{
@@ -294,19 +186,23 @@ void app_mixer( const int usb_output[32], int usb_input[32],
                 const int i2s_output[32], int i2s_input[32],
                 const int dsp_output[32], int dsp_input[32], const int property[6] )
 {
-    int guitar_in = i2s_output[0] - i2s_output[1];
-    usb_input[0] = dsp_input[0] = guitar_in;
-    usb_input[1] = dsp_input[1] = guitar_in;
-    i2s_input[0] = i2s_input[1] = dsp_output[0];
-    return;
+    // Send stereo ADC input signal to the DSP threads and to USB audio in and convert I2S
+    // output format Q31 to DSP input format Q28.
+    dsp_input[0] = usb_input[0] = i2s_output[0]; dsp_input[0] /= 8; // Left
+    dsp_input[1] = usb_input[1] = i2s_output[1]; dsp_input[1] /= 8; // Right
+    
+    // Apply master volume and send DSP left/right outputs to left/right DAC channels.
+    i2s_input[0] = dsp_mul( dsp_output[0], FQ(0.999)/*master_volume*/ ); // Left
+    i2s_input[1] = dsp_mul( dsp_output[1], FQ(0.999)/*master_volume*/ ); // Right
+    
+    // Apply master tone control to left/right channels before sending to the DAC and
+    // convert from Q28 to Q31.
+    i2s_input[0] = dsp_iir1( i2s_input[0], tone_coeffs, tone_stateL ) * 8; // Left
+    i2s_input[1] = dsp_iir1( i2s_input[1], tone_coeffs, tone_stateR ) * 8; // Right
 
-    //int sampleL = dsp_iir( dsp_output[0], _tone_coeff, _tone_state[0], 1 );
-    //int sampleR = dsp_iir( dsp_output[1], _tone_coeff, _tone_state[1], 1 );
-
-    usb_input[0] = dsp_input[0] = i2s_output[0] / 8;
-    usb_input[1] = dsp_input[3] = i2s_output[1] / 8;
-    i2s_input[0] = dsp_output[0]*8/4 + usb_output[0]/8;
-    i2s_input[1] = dsp_output[3]*8/4 + usb_output[1]/8;
+    // Mix in USB audio to DSP output 50/50.
+    i2s_input[0] = i2s_input[0] / 2 + usb_output[0] / 2; // Left
+    i2s_input[1] = i2s_input[1] / 2 + usb_output[1] / 2; // Right
 }
 
 int ir_coeff[3600], ir_state[3600];

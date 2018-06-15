@@ -66,6 +66,9 @@ void property_set_data( int property[6], const byte data[20] )
 	}
 }
 
+static int master_volume = 0, master_tone = 0;
+static int tone_coeffs[3] = {FQ(1.0),0,0}, tone_stateL[2] = {0,0}, tone_stateR[2] = {0,0};
+
 void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 {
 	static int preset = 0, countdown = 0;
@@ -98,6 +101,8 @@ void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 		//flash_read( 0, (void*)presets, sizeof(presets) );
 		//flash_close();
 	}
+
+    //calc_lowpass( tone_coeffs, 2000 + master_tone * 10000, 0.707 );
 
     /*
     static int value, previous = -1;
@@ -161,10 +166,23 @@ void app_mixer( const int usb_output[32], int usb_input[32],
                 const int dsp_output[32], int dsp_input[32],
                 const int property[6] )
 {
-    int guitar_in = i2s_output[0] - i2s_output[1];
-    usb_input[0] = dsp_input[0] = guitar_in;
-    usb_input[1] = dsp_input[1] = guitar_in;
-    i2s_input[0] = i2s_input[1] = dsp_output[0];
+    // Send stereo ADC input signal to the DSP threads and to USB audio in and convert I2S
+    // output format Q31 to DSP input format Q28.
+    dsp_input[0] = usb_input[0] = i2s_output[0]; dsp_input[0] /= 8; // Left
+    dsp_input[1] = usb_input[1] = i2s_output[1]; dsp_input[1] /= 8; // Right
+    
+    // Apply master volume and send DSP left/right outputs to left/right DAC channels.
+    i2s_input[0] = dsp_mul( dsp_output[0], FQ(0.999)/*master_volume*/ ); // Left
+    i2s_input[1] = dsp_mul( dsp_output[1], FQ(0.999)/*master_volume*/ ); // Right
+    
+    // Apply master tone control to left/right channels before sending to the DAC and
+    // convert from Q28 to Q31.
+    i2s_input[0] = dsp_iir1( i2s_input[0], tone_coeffs, tone_stateL ) * 8; // Left
+    i2s_input[1] = dsp_iir1( i2s_input[1], tone_coeffs, tone_stateR ) * 8; // Right
+
+    // Mix in USB audio to DSP output 50/50.
+    i2s_input[0] = i2s_input[0] / 2 + usb_output[0] / 2; // Left
+    i2s_input[1] = i2s_input[1] / 2 + usb_output[1] / 2; // Right
 }
 
 void app_initialize( void ) {}
