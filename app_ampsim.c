@@ -78,8 +78,6 @@ static int tone_coeffs[3] = {FQ(1.0),0,0}, tone_stateL[2] = {0,0}, tone_stateR[2
 void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 {
 	static int preset = 0, countdown = 0;
-	//static int irdata[240*24/4], iroffs = 0;
-
 	static byte presets[16][20] =
 	{
 		{ 8,8, 8,8, 8,8, 8,8, 50,50, 8,8, 8,8, 8,8, 8,8, 50,50 },
@@ -108,11 +106,10 @@ void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 		//flash_close();
 	}
 
-    //calc_lowpass( tone_coeffs, 2000 + master_tone * 10000, 0.707 );
-
-    /*
     static int value, previous = -1;
-    double pots[8]; adc_read( pots );
+    double pots[8];
+    adc_read( pots ); pots[0] = pots[1] = 0.5; pots[2] = 0.0;
+    
     if(                            pots[2] < (0.0625-0.03) ) value = 1;
     if( pots[2] > (0.0625+0.03) && pots[2] < (0.1875-0.03) ) value = 2;
     if( pots[2] > (0.1875+0.03) && pots[2] < (0.3125-0.03) ) value = 3;
@@ -123,7 +120,9 @@ void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
     if( pots[2] > (0.8125+0.03) && pots[2] < (0.9375-0.03) ) value = 8;
     if( pots[2] > (0.9375+0.03)                            ) value = 9;
     if( value != previous ) preset = previous = value;
-    */
+    
+    master_volume = pots[0]; master_tone = pots[1];
+    calc_lowpass( tone_coeffs, 2000 + master_tone * 10000, 0.707 );
     
 	// Properties ...
     // 15n0   Read name of bulk data for preset P (P=0 for active config ...)
@@ -171,6 +170,7 @@ void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 /*
 	else if( state == 99 )
 	{
+    	//static int irdata[240*24/4], iroffs = 0;
 		//flash_open(); flash_read(0,(void*)irdata,sizeof(irdata)); flash_close();
 		iroffs = 0;
 		dsp_prop[0] = 0x80000000 + iroffs;
@@ -192,8 +192,8 @@ void app_mixer( const int usb_output[32], int usb_input[32],
     dsp_input[1] = usb_input[1] = i2s_output[1]; dsp_input[1] /= 8; // Right
     
     // Apply master volume and send DSP left/right outputs to left/right DAC channels.
-    i2s_input[0] = dsp_mul( dsp_output[0], FQ(0.999)/*master_volume*/ ); // Left
-    i2s_input[1] = dsp_mul( dsp_output[1], FQ(0.999)/*master_volume*/ ); // Right
+    i2s_input[0] = dsp_mul( dsp_output[0], master_volume ); // Left
+    i2s_input[1] = dsp_mul( dsp_output[1], master_volume ); // Right
     
     // Apply master tone control to left/right channels before sending to the DAC and
     // convert from Q28 to Q31.
@@ -233,10 +233,8 @@ int _antialias_coeff[72] = // util_fir.py 0.1 0.21 1 -120
     FQ(+0.000001381),FQ(-0.000000006)
 };
 
-int _amp_lut[32768];
-
-int _amp1_coeff[8] = { 0,0,0,0,0,0,0,0 }, _amp1_state[10] = { 0,0,0,0,0,0,0,0,0,0 };
-int _amp2_coeff[8] = { 0,0,0,0,0,0,0,0 }, _amp2_state[10] = { 0,0,0,0,0,0,0,0,0,0 };
+int _amp1_coeff[8] = {FQ(1.0),0,0,0,0,0,0,FQ(1.0)}, _amp1_state[10] = {0,0,0,0,0,0,0,0,0,0};
+int _amp2_coeff[8] = {FQ(1.0),0,0,0,0,0,0,FQ(1.0)}, _amp2_state[10] = {0,0,0,0,0,0,0,0,0,0};
 
 int _upsample_state1[72], _upsample_state2[72];
 int _dnsample_state1[72], _dnsample_state2[72];
@@ -255,18 +253,23 @@ void app_thread1( int samples[32], const int property[6] )
     }
     if( property[0] == 0x1501 ) { offset = 0; muted = 0; }
 
-    //samples[4] = dsp_mul( samples[0], gain ); samples[0] = dsp_mul( samples[0], gain );
-    //samples[5] = dsp_mul( samples[1], gain ); samples[1] = dsp_mul( samples[1], gain );
-    //samples[6] = dsp_mul( samples[2], gain ); samples[2] = dsp_mul( samples[2], gain );
-    //samples[7] = dsp_mul( samples[3], gain ); samples[3] = dsp_mul( samples[3], gain );
-    
     _dsp_upsample( samples+0, _antialias_coeff,_upsample_state1, 72, 4 );
     _dsp_upsample( samples+4, _antialias_coeff,_upsample_state2, 72, 4 );
 
+    samples[3] = dsp_mul( samples[0], _amp1_coeff[7] );
+    samples[2] = dsp_mul( samples[1], _amp1_coeff[7] );
+    samples[1] = dsp_mul( samples[2], _amp1_coeff[7] );
+    samples[0] = dsp_mul( samples[3], _amp1_coeff[7] );
+    
     samples[3] = efx_pwramp( samples[3], _amp1_coeff, _amp1_state );
     samples[2] = efx_pwramp( samples[2], _amp1_coeff, _amp1_state );
     samples[1] = efx_pwramp( samples[1], _amp1_coeff, _amp1_state );
     samples[0] = efx_pwramp( samples[0], _amp1_coeff, _amp1_state );
+
+    samples[7] = dsp_mul( samples[0], _amp2_coeff[7] );
+    samples[6] = dsp_mul( samples[1], _amp2_coeff[7] );
+    samples[5] = dsp_mul( samples[2], _amp2_coeff[7] );
+    samples[4] = dsp_mul( samples[3], _amp2_coeff[7] );
 
     samples[7] = efx_pwramp( samples[7], _amp2_coeff, _amp2_state );
     samples[6] = efx_pwramp( samples[6], _amp2_coeff, _amp2_state );
@@ -276,8 +279,9 @@ void app_thread1( int samples[32], const int property[6] )
     _dsp_dnsample( samples+0, _antialias_coeff, _dnsample_state1, 72, 4 );
     _dsp_dnsample( samples+4, _antialias_coeff, _dnsample_state2, 72, 4 );
     
-    //samples[0] = dsp_iir3( samples[0], _amp1_coeff, _amp1_state+4 );
-    //samples[3] = dsp_iir3( samples[4], _amp2_coeff, _amp2_state+4 );
+    samples[0] = dsp_iir3( samples[0], _amp1_coeff, _amp1_state+4 );
+    samples[3] = dsp_iir3( samples[4], _amp2_coeff, _amp2_state+4 );
+    
     samples[3] = samples[0];
 }
 
@@ -307,6 +311,6 @@ void app_thread5( int samples[32], const int property[6] )
     samples[0] = dsp_convolve( samples[0], ir_coeff+312*3, ir_state+312*3, samples+1, samples+2 );
     samples[3] = dsp_convolve( samples[3], ir_coeff+312*3, ir_state+312*3, samples+4, samples+5 );
 
-    samples[0] = dsp_ext( samples[1], samples[2] );
+    samples[0] = dsp_ext( samples[2], samples[3] );
     samples[1] = dsp_ext( samples[4], samples[5] );
 }

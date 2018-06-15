@@ -119,12 +119,10 @@ void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 		//flash_close();
 	}
 
-    //calc_lowpass( tone_coeffs, 2000 + master_tone * 10000, 0.707 );
-
-    /*
     static int value, previous = -1;
-    double pots[8]; adc_read( pots );
-    master_volume = pots[0]; master_tone = pots[1];
+    double pots[8];
+    adc_read( pots ); pots[0] = pots[1] = 0.5; pots[2] = 0.0;
+    
     if(                            pots[2] < (0.0625-0.03) ) value = 1;
     if( pots[2] > (0.0625+0.03) && pots[2] < (0.1875-0.03) ) value = 2;
     if( pots[2] > (0.1875+0.03) && pots[2] < (0.3125-0.03) ) value = 3;
@@ -135,7 +133,9 @@ void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
     if( pots[2] > (0.8125+0.03) && pots[2] < (0.9375-0.03) ) value = 8;
     if( pots[2] > (0.9375+0.03)                            ) value = 9;
     if( value != previous ) preset = previous = value;
-    */
+    
+    master_volume = pots[0]; master_tone = pots[1];
+    calc_lowpass( tone_coeffs, 2000 + master_tone * 10000, 0.707 );
     
 	// Properties ...
     // 15n0   Read name of bulk data for preset P (P=0 for active config ...)
@@ -237,8 +237,8 @@ void app_mixer( const int usb_output[32], int usb_input[32],
     dsp_input[0] /= 8; dsp_input[1] /= 8;
     
     // Apply master volume and send DSP left/right outputs to left/right DAC channels.
-    i2s_input[0] = dsp_mul( dsp_output[0], FQ(0.999)/*master_volume*/ ); // Left
-    i2s_input[1] = dsp_mul( dsp_output[1], FQ(0.999)/*master_volume*/ ); // Right
+    i2s_input[0] = dsp_mul( dsp_output[0], master_volume ); // Left
+    i2s_input[1] = dsp_mul( dsp_output[1], master_volume ); // Right
     
     // Apply master tone control to left/right channels before sending to the DAC and
     // convert from Q28 to Q31.

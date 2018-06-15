@@ -1,7 +1,6 @@
-// Stereo multi-voice flanger and chorus with up to three chorus voices per channel (left and
-// right) each with their own settings for LFO rate, base delay, modulated delay/depth, high
-// and low-pass filters for the feedback signal, regeneration/feedback level, and wet/dry mix.
-// Up to nine presets and USB/MIDI control. ​
+// Dual chorus/flanger each with their own settings for LFO rate, base delay, modulated delay
+// high and low-pass filters for the feedback signal, regeneration/feedback level, and wet/dry
+// mix. Up to nine presets and USB/MIDI control. ​
 
 #include <math.h>
 #include <string.h>
@@ -13,7 +12,7 @@ const char* usb_audio_input_name  = "FlexFX Audio In";
 const char* usb_midi_output_name  = "FlexFX MIDI Out";
 const char* usb_midi_input_name   = "FlexFX MIDI In";
 
-const int audio_sample_rate     = 48000;
+const int audio_sample_rate     = 192000;
 const int usb_output_chan_count = 2;
 const int usb_input_chan_count  = 2;
 const int i2s_channel_count     = 2;
@@ -72,7 +71,6 @@ static int tone_coeffs[3] = {FQ(1.0),0,0}, tone_stateL[2] = {0,0}, tone_stateR[2
 void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 {
 	static int preset = 0, countdown = 0;
-	//static int irdata[240*24/4], iroffs = 0;
 
 	static byte presets[16][20] =
 	{
@@ -102,11 +100,10 @@ void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 		//flash_close();
 	}
 
-    //calc_lowpass( tone_coeffs, 2000 + master_tone * 10000, 0.707 );
-
-    /*
     static int value, previous = -1;
-    double pots[8]; adc_read( pots );
+    double pots[8];
+    adc_read( pots ); pots[0] = pots[1] = 0.5; pots[2] = 0.0;
+    
     if(                            pots[2] < (0.0625-0.03) ) value = 1;
     if( pots[2] > (0.0625+0.03) && pots[2] < (0.1875-0.03) ) value = 2;
     if( pots[2] > (0.1875+0.03) && pots[2] < (0.3125-0.03) ) value = 3;
@@ -117,8 +114,10 @@ void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
     if( pots[2] > (0.8125+0.03) && pots[2] < (0.9375-0.03) ) value = 8;
     if( pots[2] > (0.9375+0.03)                            ) value = 9;
     if( value != previous ) preset = previous = value;
-    */
     
+    master_volume = pots[0]; master_tone = pots[1];
+    calc_lowpass( tone_coeffs, 2000 + master_tone * 10000, 0.707 );
+
 	// Properties ...
     // 15n0   Read name of bulk data for preset P (P=0 for active config ...)
     // 15n1   Write name of bulk data and begin data upload for preset P
@@ -172,8 +171,8 @@ void app_mixer( const int usb_output[32], int usb_input[32],
     dsp_input[1] = usb_input[1] = i2s_output[1]; dsp_input[1] /= 8; // Right
     
     // Apply master volume and send DSP left/right outputs to left/right DAC channels.
-    i2s_input[0] = dsp_mul( dsp_output[0], FQ(0.999)/*master_volume*/ ); // Left
-    i2s_input[1] = dsp_mul( dsp_output[1], FQ(0.999)/*master_volume*/ ); // Right
+    i2s_input[0] = dsp_mul( dsp_output[0], master_volume ); // Left
+    i2s_input[1] = dsp_mul( dsp_output[1], master_volume ); // Right
     
     // Apply master tone control to left/right channels before sending to the DAC and
     // convert from Q28 to Q31.
@@ -189,65 +188,49 @@ void app_initialize( void ) {}
 
 void app_thread1( int samples[32], const int property[6] )
 {
-    static int delta1 = FQ(3.3/audio_sample_rate);
-    static int delta2 = FQ(2.7/audio_sample_rate);
-    static int delta3 = FQ(1.5/audio_sample_rate);
-
-    static int time1 = FQ(0.0); time1 += delta1; if(time1 > FQ(1.0)) time1 -= FQ(1.0);
-    static int time2 = FQ(0.0); time2 += delta2; if(time2 > FQ(1.0)) time2 -= FQ(1.0);
-    static int time3 = FQ(0.0); time3 += delta3; if(time3 > FQ(1.0)) time3 -= FQ(1.0);
-
+    static int delta = FQ(3.3/192.0), depth = FQ(+0.10);
+    
+    static int time = FQ(0.0); time += delta; if(time > FQ(1.0)) time -= FQ(1.0);
     int ii, ff; // // snnniiii,iiiiiiff,ffffffff,ffffffff
-    ii = (time1 & 0x0FFFFFFF) >> 18, ff = (time1 & 0x0003FFFF) << 10;
+    ii = (time & 0x0FFFFFFF) >> 18, ff = (time & 0x0003FFFF) << 10;
     samples[2] = dsp_lagrange( ff, dsp_sine_10[ii+0], dsp_sine_10[ii+1], dsp_sine_10[ii+2] );
-    ii = (time2 & 0x0FFFFFFF) >> 18, ff = (time2 & 0x0003FFFF) << 10;
-    samples[3] = dsp_lagrange( ff, dsp_sine_10[ii+0], dsp_sine_10[ii+1], dsp_sine_10[ii+2] );
-    ii = (time3 & 0x0FFFFFFF) >> 18, ff = (time3 & 0x0003FFFF) << 10;
-    samples[4] = dsp_lagrange( ff, dsp_sine_10[ii+0], dsp_sine_10[ii+1], dsp_sine_10[ii+2] );
 
-    samples[2] = dsp_mul( samples[2], FQ(0.999) );
-    samples[3] = dsp_mul( samples[3], FQ(0.999) );
-    samples[4] = dsp_mul( samples[4], FQ(0.999) );
+    static int delay_fifo[8192], delay_index = 0;
+     int lfo = (dsp_mul( samples[2], depth ) / 2) + FQ(0.4999); // [-1.0 < lfo < +1.0] to [+0.0 < lfo < +1.0]
+    ii = (lfo & 0x0FFFFFFF) >> 18, ff = (lfo & 0x0003FFFF) << 10; // snnniiii,iiiiiiff,ffffffff,ffffffff
+    delay_fifo[delay_index-- & 8191] = samples[0]; // Update the sample delay line.
+    int i1 = (delay_index+ii)&8191, i2 = (delay_index+ii+1)&8191, i3 = (delay_index+ii+2)&8191;
+    samples[2] = dsp_lagrange( ff, delay_fifo[i1], delay_fifo[i2], delay_fifo[i3] );
 }
 
 void app_thread2( int samples[32], const int property[6] )
 {
-    static int delay_fifo[1024], delay_index = 0;
-    static int depth = FQ(+0.10);
-    int lfo = (dsp_mul( samples[2], depth ) / 2) + FQ(0.4999); // [-1.0 < lfo < +1.0] to [+0.0 < lfo < +1.0]
-    int ii = (lfo & 0x0FFFFFFF) >> 18, ff = (lfo & 0x0003FFFF) << 10; // snnniiii,iiiiiiff,ffffffff,ffffffff
-    delay_fifo[delay_index-- & 1023] = samples[0]; // Update the sample delay line.
-    int i1 = (delay_index+ii)&1023, i2 = (delay_index+ii+1)&1023, i3 = (delay_index+ii+2)&1023;
-    samples[2] = dsp_lagrange( ff, delay_fifo[i1], delay_fifo[i2], delay_fifo[i3] );
 }
 
 void app_thread3( int samples[32], const int property[6] )
 {
-    static int delay_fifo[1024], delay_index = 0;
-    static int depth = FQ(+0.10);
-    int lfo = (dsp_mul( samples[3], depth ) / 2) + FQ(0.4999); // [-1.0 < lfo < +1.0] to [+0.0 < lfo < +1.0]
-    int ii = (lfo & 0x0FFFFFFF) >> 18, ff = (lfo & 0x0003FFFF) << 10; // snnniiii,iiiiiiff,ffffffff,ffffffff
-    delay_fifo[delay_index-- & 1023] = samples[0]; // Update the sample delay line.
-    int i1 = (delay_index+ii)&1023, i2 = (delay_index+ii+1)&1023, i3 = (delay_index+ii+2)&1023;
+    static int delta = FQ(1.5/192.0), depth = FQ(+0.10);
+    
+    static int time = FQ(0.0); time += delta; if(time > FQ(1.0)) time -= FQ(1.0);
+    int ii, ff; // // snnniiii,iiiiiiff,ffffffff,ffffffff
+    ii = (time & 0x0FFFFFFF) >> 18, ff = (time & 0x0003FFFF) << 10;
+    samples[3] = dsp_lagrange( ff, dsp_sine_10[ii+0], dsp_sine_10[ii+1], dsp_sine_10[ii+2] );
+
+    static int delay_fifo[8192], delay_index = 0;
+    int lfo = (dsp_mul( samples[2], depth ) / 2) + FQ(0.4999); // [-1.0 < lfo < +1.0] to [+0.0 < lfo < +1.0]
+    ii = (lfo & 0x0FFFFFFF) >> 18, ff = (lfo & 0x0003FFFF) << 10; // snnniiii,iiiiiiff,ffffffff,ffffffff
+    delay_fifo[delay_index-- & 8191] = samples[1]; // Update the sample delay line.
+    int i1 = (delay_index+ii)&8191, i2 = (delay_index+ii+1)&8191, i3 = (delay_index+ii+2)&8191;
     samples[3] = dsp_lagrange( ff, delay_fifo[i1], delay_fifo[i2], delay_fifo[i3] );
 }
 
 void app_thread4( int samples[32], const int property[6] )
 {
-    static int delay_fifo[1024], delay_index = 0;
-    static int depth = FQ(+0.10);
-    int lfo = (dsp_mul( samples[4], depth ) / 2) + FQ(0.4999); // [-1.0 < lfo < +1.0] to [+0.0 < lfo < +1.0]
-    int ii = (lfo & 0x0FFFFFFF) >> 18, ff = (lfo & 0x0003FFFF) << 10; // snnniiii,iiiiiiff,ffffffff,ffffffff
-    delay_fifo[delay_index-- & 1023] = samples[0]; // Update the sample delay line.
-    int i1 = (delay_index+ii)&1023, i2 = (delay_index+ii+1)&1023, i3 = (delay_index+ii+2)&1023;
-    samples[4] = dsp_lagrange( ff, delay_fifo[i1], delay_fifo[i2], delay_fifo[i3] );
 }
 
 void app_thread5( int samples[32], const int property[6] )
 {
-    int blend1 = FQ(+0.5), blend2 = FQ(+0.3), blend3 = FQ(+0.3);
-    samples[2] = dsp_blend( samples[0], samples[2], blend1 );
-    samples[3] = dsp_blend( samples[0], samples[3], blend2 );
-    samples[4] = dsp_blend( samples[0], samples[4], blend3 );
-    samples[0] = samples[0]/3 + samples[2]/3 + samples[3]/3;
+    int blendL = FQ(+0.3), blendR = FQ(+0.3);
+    samples[0] = dsp_blend( samples[0], samples[2], blendL );
+    samples[1] = dsp_blend( samples[1], samples[3], blendR );
 }
