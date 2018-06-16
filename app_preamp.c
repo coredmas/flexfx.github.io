@@ -9,7 +9,7 @@
 #include <string.h>
 #include "flexfx.i"
 
-const char* product_name_string   = "FlexFX Dual Preamp";
+const char* product_name_string   = "FlexFX Preamp";
 const char* usb_audio_output_name = "FlexFX Audio Out";
 const char* usb_audio_input_name  = "FlexFX Audio In";
 const char* usb_midi_output_name  = "FlexFX MIDI Out";
@@ -27,7 +27,7 @@ const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK 
 
 const char controller_script[] = \
 	"" \
-	"ui_title( 'FlexFX Dual Preamp'," \
+	"ui_title( 'FlexFX Preamp'," \
 	    "['','Drive','LowCut', 'Voice2','Volume', '','Drive','LowCut', 'Voice2','Volume' ]," \
 	    "['','Emph', 'Slewlim','Voice3','Balance','','Emph', 'Slewlim','Voice3','Balance'] );" \
 	"ui_separator();" \
@@ -85,7 +85,7 @@ void property_set_data( int property[6], const byte data[20] )
 }
 
 static int master_volume = 0, master_tone = 0;
-static int tone_coeffs[3] = {FQ(1.0),0,0}, tone_stateL[2] = {0,0}, tone_stateR[2] = {0,0};
+int tone_coeffs[3] = {FQ(1.0),0,0,0}, tone_stateL[2] = {0,0}, tone_stateR[2] = {0,0};
 
 void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 {
@@ -119,6 +119,7 @@ void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 		//flash_close();
 	}
 
+    /*
     static int value, previous = -1;
     double pots[8];
     adc_read( pots ); pots[0] = pots[1] = 0.5; pots[2] = 0.0;
@@ -136,6 +137,7 @@ void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
     
     master_volume = pots[0]; master_tone = pots[1];
     calc_lowpass( tone_coeffs, 2000 + master_tone * 10000, 0.707 );
+    */
     
 	// Properties ...
     // 15n0   Read name of bulk data for preset P (P=0 for active config ...)

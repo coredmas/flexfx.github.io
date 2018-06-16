@@ -6,7 +6,7 @@
 #include <string.h>
 #include "flexfx.i"
 
-const char* product_name_string   = "FlexFX Dual Chorus";
+const char* product_name_string   = "FlexFX Chorus";
 const char* usb_audio_output_name = "FlexFX Audio Out";
 const char* usb_audio_input_name  = "FlexFX Audio In";
 const char* usb_midi_output_name  = "FlexFX MIDI Out";
@@ -22,7 +22,7 @@ const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK 
 
 const char controller_script[] = \
 	"" \
-	"ui_title( 'FlexFX Dual Chorus'," \
+	"ui_title( 'FlexFX Chorus'," \
 	    "['Blend', 'Rate', 'HiCut','Volume', 'Blend', 'Rate', 'HiCut','Volume']," \
 	    "['Feedbk','Depth','LoCut','Balance','Feedbk','Depth','LoCut','Balance'] );" \
     "" \
@@ -66,7 +66,8 @@ void property_set_data( int property[6], const byte data[20] )
 }
 
 static int master_volume = 0, master_tone = 0;
-static int tone_coeffs[3] = {FQ(1.0),0,0}, tone_stateL[2] = {0,0}, tone_stateR[2] = {0,0};
+
+int tone_coeffs[3] = {FQ(1.0),0,0,0}, tone_stateL[2] = {0,0}, tone_stateR[2] = {0,0};
 
 void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 {
