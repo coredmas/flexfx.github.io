@@ -67,7 +67,7 @@ void property_set_data( int property[6], const byte data[20] )
 
 static int master_volume = 0, master_tone = 0;
 
-int tone_coeffs[3] = {FQ(1.0),0,0,0}, tone_stateL[2] = {0,0}, tone_stateR[2] = {0,0};
+int tone_coeffs[4] = {FQ(1.0),0,0,0}, tone_stateL[2] = {0,0}, tone_stateR[2] = {0,0};
 
 void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 {

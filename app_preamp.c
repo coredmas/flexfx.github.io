@@ -85,7 +85,7 @@ void property_set_data( int property[6], const byte data[20] )
 }
 
 static int master_volume = 0, master_tone = 0;
-int tone_coeffs[3] = {FQ(1.0),0,0,0}, tone_stateL[2] = {0,0}, tone_stateR[2] = {0,0};
+int tone_coeffs[4] = {FQ(1.0),0,0,0}, tone_stateL[2] = {0,0}, tone_stateR[2] = {0,0};
 
 void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 {
@@ -119,7 +119,6 @@ void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 		//flash_close();
 	}
 
-    /*
     static int value, previous = -1;
     double pots[8];
     adc_read( pots ); pots[0] = pots[1] = 0.5; pots[2] = 0.0;
@@ -137,7 +136,12 @@ void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
     
     master_volume = pots[0]; master_tone = pots[1];
     calc_lowpass( tone_coeffs, 2000 + master_tone * 10000, 0.707 );
-    */
+    
+    snd_prop[0] = 0xFFFFFFFF;
+    snd_prop[1] = master_volume; snd_prop[2] = master_tone; snd_prop[3] = pots[2];
+    snd_prop[4] = snd_prop[5] = 0;
+    
+    return;
     
 	// Properties ...
     // 15n0   Read name of bulk data for preset P (P=0 for active config ...)
