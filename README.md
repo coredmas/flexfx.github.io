@@ -323,37 +323,32 @@ properties 0x2pxx and properties 0x8000 to 0xFFFF are forwarded to the applicati
 
 ```
 ID        DIRECTION        DESCRIPTION
+1xxx      Bidirectional    FlexFX default/built-in properties
 1000      Bidirectional    Identify the device, return ID (3DEGFLEX) and version numbers
-1100      Bidirectional    Return the current volume,tone,preset,bypass settings
-1101      Bidirectional    Set the current volume,tone,preset,bypass settings
-1102      Bidirectional    Nofity the current volume,tone,preset,bypass settings
-120t      Bidirectional    Return tile T's DSP processing loads
-13nn      Bidirectional    Read line NN (20 bytes) of GUI interface text
-1401      Bidirectional    Begin firmware upgrade, echoed back to host
-1402      Bidirectional    Next 32 bytes of firmware image data, echoed
-1403      Host to Device   End firmware upgrade and reset (no USB property echo!)
-15n0      Bidirectional    Read name of bulk data for preset P (P=0 for active config ...)
-15n1      Bidirectional    Write name of bulk data and begin data upload for preset P
-15n2      Bidirectional    Next 32 bytes of bulk data for preset (... or 1 <= P <= 9 ...)
-15n3      Bidirectional    End bulk data upload (... for loading/storing for preset P)
-1700      Bidirectional    Dump preset data starting with preset 1, return 17p0 as property ID
-17p0      Bidirectional    Dump preset data starting with preset P (1 <= P <= 9)
-1701      Bidirectional    Read preset data for the active preset, return 17p0 as property ID
-17p1      Bidirectional    Read preset data for preset P (1 <= P <= 9)
-17p2      Bidirectional    Notification of preset settings update for preset P
-17p3      Bidirectional    Notification of preset settings and active preset update for preset P
-17p4      Bidirectional    Update data for preset P (1 <= P <= 9)
-17p5      Bidirectional    Update preset data and set the active preset to preset P (1 <= P <= 9)
-1801      Device to Host   Send raw MIDI data from device to host
-1802      Host to Device   Send raw MIDI data from host to device
-1803      Internal         MIDI beat clock control (start/stop/setBPM)
-1804      Internal         MIDI MTC/MPC control (MPC commands,MTC settings)
-2pxx      Undefined        Reserved
-3xxx      Undefined        Reserved
-4xxx      Undefined        Reserved
-5xxx      Undefined        Reserved
-6xxx      Undefined        Reserved
-7xxx      Undefined        Reserved
+1001      Bidirectional    Begin firmware upgrade, echoed back to host
+1002      Bidirectional    Next 32 bytes of firmware image data, echoed
+1003      Host to Device   End firmware upgrade and reset (no USB property echo!)
+101t      Bidirectional    Return tile T's DSP processing loads (1 <= t <= 3);
+
+2xxx      Bidirectional    FlexFX/C99 pedal hardware support properties
+2000      Bidirectional    Read the current volume,tone,preset,bypass settings
+2001      Bidirectional    Write the current volume,tone,preset,bypass settings
+2002      Bidirectional    Nofitication of changed volume,tone,preset,bypass settings
+
+3xxx      Bidirectional    FlexFX/C99 HTML-configured effects applications properties
+30n0      Bidirectional    Read name of bulk data for preset P (P=0 for active config ...)
+30n1      Bidirectional    Write name of bulk data and begin data upload for preset P
+30n2      Bidirectional    Next 32 bytes of bulk data for preset (1 <= P <= 9 ...)
+30n3      Bidirectional    End bulk data upload for preset P (1 <= P <= 9 ...)
+31p0      Bidirectional    Read preset label for preset P (1 <= P <= 9)
+32p0      Bidirectional    Read preset values for preset P (1 <= P <= 9)
+32p1      Bidirectional    Write preset values for preset P (1 <= P <= 9)
+32p2      Bidirectional    Notification of changed preset settings update for preset P
+
+4xxx      Undefined        User/application defined
+5xxx      Undefined        User/application defined
+6xxx      Undefined        User/application defined
+7xxx      Undefined        User/application defined
 8xxx      Undefined        User/application defined
 9xxx      Undefined        User/application defined
 Axxx      Undefined        User/application defined
