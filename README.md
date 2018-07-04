@@ -340,7 +340,7 @@ ID        DIRECTION        DESCRIPTION
 30n1      Bidirectional    Write name of bulk data and begin data upload for preset P
 30n2      Bidirectional    Next 32 bytes of bulk data for preset (1 <= P <= 9 ...)
 30n3      Bidirectional    End bulk data upload for preset P (1 <= P <= 9 ...)
-31p0      Bidirectional    Read preset label for preset P (1 <= P <= 9)
+31nn      Bidirectional    Read effect title (N=0) or label for parameter N (1 <= N <= 16)
 32p0      Bidirectional    Read preset values for preset P (1 <= P <= 9)
 32p1      Bidirectional    Write preset values for preset P (1 <= P <= 9)
 32p2      Bidirectional    Notification of changed preset settings update for preset P
