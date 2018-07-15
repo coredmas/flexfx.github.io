@@ -1,1 +1,702 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>FlexFX Controller</title><meta name="description" content=""><meta name="view_d60" content="width=device-width,initial-scale=1"></head><body><div class='container' id='controller'><script>var $=function(id){return document.getElementById(id);};</script></div></body><script>window.addEventListener('load',function(){ if(navigator.requestMIDIAccess){ navigator.requestMIDIAccess({sysex:true}).then(_e79,_3c9);} else document.write("USB/MIDI is not available.");});var _f58={},_b10={};var _848={},_57d=0,__279_index=0,m;__d60_list={};var _f13={},_06a={},_86e={},_379={};var _ff5=[[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]];function ui_load(key,name){ var hh="";var ss="";hh+="<div class='row' id='control"+_279+"'><div class='column'>";hh+="<table class='flexfx'><tbody><tr>";hh+="<td align='right'><h5>FlexFX</h5></td>";hh+="<td><h5>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</h5></td>";hh+="<td><button id='"+key+"'>Load "+name+"</button></td>";hh+="</tr></tbody></table>";hh+="</tbody></table></div></div>";ss+="$('"+key+"').onclick=function(ee){_070('"+key+"');};";return [hh,ss,0,0];} function ui_title(_279,name,heading,heading2){ var hh="";var ss="";hh+="<div class='row' id='control"+_279+"'><div class='column' style='margin-top:0%'>";hh+="<table class='flexfx2'><tbody>"; hh+="<tr>";hh+="<td><button id='moveL"+_279+"'><</button></td>";ss+="$('moveL"+_279+"').onclick=function(ee){_flexfx_moveL('"+_279+"');};";hh+="<td><h5>&nbsp;</h5></td>";hh+="<td><button id='moveR"+_279+"'>></button></td>";ss+="$('moveR"+_279+"').onclick=function(ee){_flexfx_moveR('"+_279+"');};";hh+="<td><h5>&nbsp;&nbsp;&nbsp;</h5></td>";hh+="<td align='left'><h4>"+name+"</h4></td>";hh+="<td id=info>&nbsp;&nbsp;&nbsp;</td>";hh+="<td><button id='mode"+_279+"'>Stereo</button></td>";hh+="<td id=info>&nbsp;&nbsp;&nbsp;</td>";hh+="<td><button id='morph"+_279+"'>Morph</button></td>";ss+="$('mode"+_279+"').onclick=function(ee){_flexf_morph_settings("+(_279<<16)+");};";hh+="<td id=info>&nbsp;&nbsp;&nbsp;</td>";hh+="<td><input type='file' style='display:none' id='input1"+_279+"'/>";hh+="<button id='dfu"+_279+"'>Upload</button></td>";ss+="$('dfu"+_279+"').onclick=function(ee){$('input1"+_279+"').click();};";ss+="$('input1"+_279+"').oninput=function(ee){_cb9("+(_279<<16)+",ee.target.files[0]);};";hh+="</tr>";hh+="</tbody></table>"; hh+="<table class='flexfx'><thead>";hh+="<tr><th style='border-bottom:0px'></th>";for(ii in heading)hh+="<th style='border-bottom:0px'>"+heading[ii]+"</th>";hh+="</tr><th>Preset</th>";for(ii in heading)hh+="<th>"+heading2[ii]+"</th>";hh+="</tr>";hh+="</thead><tbody>";return [hh,ss,heading.length];} function ui_separator(text){ var hh="";var ss="";hh+="<td></td>";return [hh,ss];} function ui_param(key,pos,count,name,labels,help){ width=25;min=1;max=count,step=1;var hh="";var ss="";var _279=key>>16;if(pos=='f'||pos=='s'||pos=='F'||pos=='S')hh+="<td><div style='display:inline-block'>";if(pos !='l')hh+="<div style='height:30px'>";hh+="<input class='vslider' style='width:"+width+"px' type='range' min='"+min+"' max='"+max+"' step='"+step+"' id='"+key.toString(16)+"'>";if(pos !='f')hh+="</div>";if(pos=='s'||pos=='l'||pos=='S'||pos=='L')hh+="</div></td>"; cc=labels.length;ss+="$('"+key.toString(16)+"').onchange=function(ee){";ss+="var vv=$('"+key.toString(16)+"').value;";ss+="var tt=[";for(ii=0;ii<cc;++ii){ss+="'";ss+=labels[ii];ss+="'";if(ii!=cc-1)ss+=",";}ss+="];";ss+="if(tt.length>0)if(tt[vv-1].length>0)vv+=':'+tt[vv-1];";ss+="$('info"+_279+"').innerHTML='"+name+"&nbsp;=&nbsp;'+vv;";ss+="$('help"+_279+"').innerHTML='"+help+"';";ss+="_fdf("+key+",$('"+key.toString(16)+"').value);";ss+="};"; ss+="$('"+key.toString(16)+"').onmousemove=function(ee){";ss+="var vv=$('"+key.toString(16)+"').value;";ss+="var tt=[";for(ii=0;ii<cc;++ii){ss+="'";ss+=labels[ii];ss+="'";if(ii!=cc-1)ss+=",";}ss+="];";ss+="if(tt.length>0)if(tt[vv-1].length>0)vv+=':'+tt[vv-1];";ss+="$('info"+_279+"').innerHTML='"+name+"&nbsp;=&nbsp;'+vv;";ss+="$('help"+_279+"').innerHTML='"+help+"';";ss+="};"; ss+="$('"+key.toString(16)+"').onmouseleave=function(ee){";ss+="$('info"+_279+"').innerHTML='';";ss+="};"; return [hh,ss];} function ui_finish(_279,count){ _279=parseInt(_279);var hh="";var ss=""; hh+="</tbody></table>";hh+="<table class='flexfx2'><tbody>"; hh+="<tr align='left'><td align='left'><div align='left' style='height:20px' id=info"+_279+">&nbsp;</div></td></tr>";hh+="<tr align='left'><td align='left'><div align='left' style='height:20px' id=help"+_279+">&nbsp;</div></td></tr>"; if(0){ hh+="<td><input type='file' style='display:none' id='input2"+_279+"'/>";hh+="<select id='blobs"+_279+"'>";hh+="<option value='0'>Load Data</option>";for(var ii=1;ii<=count;++ii){ hh+="<option value='"+ii+"'>"+ii+":Empty-No data loaded</option>";ss+="$('blobs"+_279+"').oninput=function(ee){$('input2"+_279+"').click();};";ss+="$('input2"+_279+"').oninput=function(ee){_d51("+(_279<<16)+",ee.target.files[0]);};";} hh+="</select></td>";} hh+="</tbody></table>";hh+="</tbody></table></div></div>";return [hh,ss];} function ui_create(_279,text){ var hh="";var ss="";var cc=0;var blobs=0;var lines=text.split(";");for(pp=0;pp<=9;++pp){ if(pp==0){ for(ll in lines){ if(lines[ll].substring(0,8)=="ui_title"){ lines[ll]=lines[ll].replace("(","("+_279+",");var rr=eval(lines[ll]);hh+=rr[0];ss+=rr[1],cc=rr[2];} else if(lines[ll].substring(0,7)=="ui_load"){ lines[ll]=lines[ll].replace("(","("+_279+",");var rr=eval(lines[ll]);hh+=rr[0];ss+=rr[1],cc=rr[2];}}} else if(cc>0){ var key=(_279<<16);var id="preset"+(key+(pp<<8)).toString(16);hh+="<tr class='preset'><td class='preset' id='"+id+"'>"+pp+"</td>";ss+="$('"+id+"').onclick=function(e){";for(ii=1;ii<=9;++ii)ss+="$('preset"+(key+(ii<<8)).toString(16)+"').innerHTML='"+ii+"';";ss+="$('"+id+"').innerHTML='[ "+pp+" ]';";ss+="_981("+(key+(pp<<8))+");};";var id=0;for(ll in lines){ var key=(parseInt(_279,16)<<16)+(pp<<8)+id;if(lines[ll].length<3)continue;if(lines[ll].substring(0,8)=="ui_title")continue;if(lines[ll].substring(0,7)=="ui_load")continue;line=lines[ll].replace("(","("+key+",");var rr=eval(line+";");hh+=rr[0];ss+=rr[1];if(lines[ll].substring(0,8)=="ui_param")id+=1;} hh+="</tr>";}} var rr=ui_finish(_279);hh+=rr[0];ss+=rr[1];return [hh,ss];} function _4f0(_279,text){ if(_live_update_image.length>0)text="ui_update(ID:0xFF,'"+_live_update_title+"');";text=text.slice(0,text.indexOf(String.fromCharCode(0)));var rr=ui_create(_279,text);var div=document.createElement('div');$('controller').appendChild(div);div.id='page'+_279.toString(16);div.style.display='table-cell';$('page'+_279.toString(16)).innerHTML=rr[0];var script=document.createElement('script');script.appendChild(document.createTextNode(rr[1]));script.type="text/javascript";document.getElementsByTagName("head")[0].appendChild(script);if(__279_index<_57d){ _d60=_b10[++__279_index];_d60.send(_8dd([(__279_index<<24)+4096,0,0,0,0,0]));}} function _e79(midiAccess){ _57d=__279_index=__d60_count=0;midiAccess.onstatechange=_920;var event=new Object();event.currentTarget=midiAccess;_920(event);} function _3c9(error){document.write("MIDI access denied.");} var _920_done=0;function _920(event){ if(_920_done)return;var _b6b=event.currentTarget;var _e50=event.currentTarget.inputs.values();var _c8d=event.currentTarget.outputs.values();for(var _279=1;_279<=_57d;++_279){ if($('controller').contains($(_279.toString(16)))){ $('controller').removeChild($(_279.toString(16)));}} _b10={};_f58={};_57d=0; for(var _d60=_e50.next();!_d60.done;_d60=_e50.next()){ if(_d60.value.manufacturer=="FlexFX"){ _d60.value.onmidimessage=_ab4;if(_d60.value.connection=="open")__d60_list[_d60.value.id]=_d60.value.id;}} for(var _d60=_c8d.next();!_d60.done;_d60=_c8d.next()){ if(_d60.value.manufacturer=="FlexFX"){ _279=++_57d;_b10[_279]=_d60.value;}} if(Object.keys(__d60_list).length==_57d&&_57d>0){ _920_done=1;_d60=_b10[++__279_index];_d60.send(_8dd([(__279_index<<24)+4096,0,0,0,0,0]));}} function _ab4(event){ var _4e6=_c28(event.data);if(_4e6[0]==0)return; var _279=_4e6[0]>>24;if(!(_279 in _f58))_f58[_279]=event.srcElement; if((_4e6[0]&0xFF00)==4096){ _848[_279]="";_f13[_279]=[];_06a[_279]=0;_b10[_279].send(_8dd([(_279<<24)+0x1300,0,0,0,0,0]));} else if((_4e6[0]&0xFF00)==0x1300){ _848[_279]+=_1cf(_4e6); if(_06a[_279]==255){ _4f0(_279,_848[_279]);_b10[_279].send(_8dd([(_279<<24)+0x1700,0,0,0,0,0]));} else{ var offset=++_06a[_279];_b10[_279].send(_8dd([(_279<<24)+0x1300+offset,0,0,0,0,0]));}} else if((_4e6[0]&0xFFFF)==0x1401||(_4e6[0]&0xFFFF)==0x1402){ if(_f13[_279].length>0){ var _4e6=[(_279<<24)+0x1402,0,0,0,0,0]; _4e6[1]=_c28be(_f13[_279]);_f13[_279]=_f13[_279].slice(4);_4e6[2]=_c28be(_f13[_279]);_f13[_279]=_f13[_279].slice(4);_4e6[3]=_c28be(_f13[_279]);_f13[_279]=_f13[_279].slice(4);_4e6[4]=_c28be(_f13[_279]);_f13[_279]=_f13[_279].slice(4); _b10[_279].send(_8dd(_4e6)); if(_06a[_279]==0||(_06a[_279]%16)==0){ _7ac=(1600.0 * _06a[_279])/ _86e[_279];if(_7ac>99)_7ac=99;$('dfu'+_279).innerHTML=_7ac.toPrecision(2)+"\%Complete";} _06a[_279]+=1;} else { _920_done=0;var _4e6=[(_279<<24)+0x1403,0,0,0,0,0];_b10[_279].send(_8dd(_4e6));$('dfu'+_279).innerHTML="Finished";}} else if((_4e6[0]&0xFF0F)==0x1501||(_4e6[0]&0xFF0F)==0x1502){ if(_f13[_279].length>0){ var _4e6=[(_279<<24)+0x1502,0,0,0,0,0];if(_f13[_279].length>=1)_4e6[1]=_f13[_279][0];if(_f13[_279].length>=2)_4e6[2]=_f13[_279][1];if(_f13[_279].length>=3)_4e6[3]=_f13[_279][2];if(_f13[_279].length>=4)_4e6[4]=_f13[_279][3];if(_f13[_279].length>=5)_4e6[5]=_f13[_279][4];_f13[_279]=_f13[_279].slice(5);_b10[_279].send(_8dd(_4e6));} else { _4e6=[ make_key(_279,_4e6,0)+0x1503,0,0,0,0,0 ];_b10[_279].send(_8dd(_4e6));}} else if((_4e6[0]&0xFF0F)==0x1700||(_4e6[0]&0xFF0F)==0x1701||(_4e6[0]&0xFF0F)==0x1702||(_4e6[0]&0xFF0F)==0x1703||(_4e6[0]&0xFF0F)==0x1704||(_4e6[0]&0xFF0F)==0x1705){ var _279=(_4e6[0]>>24)&15;var pp=(_4e6[0]>>4)&15;for(var ii=0;pp>0&&ii<5;++ii){ _ff5[_279-1][pp-1][4*ii+0]=(_4e6[ii+1]>>24)&255;_ff5[_279-1][pp-1][4*ii+1]=(_4e6[ii+1]>>16)&255;_ff5[_279-1][pp-1][4*ii+2]=(_4e6[ii+1]>>8)&255;_ff5[_279-1][pp-1][4*ii+3]=(_4e6[ii+1]>>0)&255;if($(((_279<<16)+(pp<<8)+(4*ii+0)).toString(16))==undefined)break;$(((_279<<16)+(pp<<8)+(4*ii+0)).toString(16)).value=_ff5[_279-1][pp-1][4*ii+0];if($(((_279<<16)+(pp<<8)+(4*ii+1)).toString(16))==undefined)break;$(((_279<<16)+(pp<<8)+(4*ii+1)).toString(16)).value=_ff5[_279-1][pp-1][4*ii+1];if($(((_279<<16)+(pp<<8)+(4*ii+2)).toString(16))==undefined)break;$(((_279<<16)+(pp<<8)+(4*ii+2)).toString(16)).value=_ff5[_279-1][pp-1][4*ii+2];if($(((_279<<16)+(pp<<8)+(4*ii+3)).toString(16))==undefined)break;$(((_279<<16)+(pp<<8)+(4*ii+3)).toString(16)).value=_ff5[_279-1][pp-1][4*ii+3];} if((_4e6[0]&0xFF0F)==0x1700){ var pp=(_4e6[0]>>4)&15;if(++pp<=9){ _b10[_279].send(_8dd([(_279<<24)+0x1700+(pp<<4),0,0,0,0,0]));}}}} function _flexfx_moveL(_279){ _279=parseInt(_279);var parent=$('control'+_279).parentNode.parentNode;var childR=$('control'+_279).parentNode;var childL=childR.previousSibling;parent.removeChild(childR);parent.insertBefore(childR,childL);} function _flexfx_moveR(_279){ _279=parseInt(_279);var parent=$('control'+_279).parentNode.parentNode;var childL=$('control'+_279).parentNode;var childR=childL.nextSibling;parent.removeChild(childR);parent.insertBefore(childR,childL);} function _429(_279,preset,prop_id){ var prop=[(_279<<24)+(preset<<4)+prop_id,0,0,0,0,0];var data=_ff5[_279-1][preset-1];prop[1]=(data[ 0]<<24)+(data[ 1]<<16)+(data[ 2]<<8)+data[ 3];prop[2]=(data[ 4]<<24)+(data[ 5]<<16)+(data[ 6]<<8)+data[ 7];prop[3]=(data[ 8]<<24)+(data[ 9]<<16)+(data[10]<<8)+data[11];prop[4]=(data[12]<<24)+(data[13]<<16)+(data[14]<<8)+data[15];prop[5]=(data[16]<<24)+(data[17]<<16)+(data[18]<<8)+data[19];_b10[_279].send(_8dd(prop));} function _981(key){ var _279=(key>>16)&255,preset=(key>>8)&255;_429(_279,preset,0x1705);} function _fdf(key,value){ var _279=(key>>16)&255;var preset=(key>>8)&255;var index=key&255;_ff5[_279-1][preset-1][index]=parseInt(value);_429(_279,preset,0x1704);} function _830(key){ var _279=(key>>16)&255,preset=(key>>8)&255;if($('mode'+_279).innerHTML=="Stereo")$('mode'+_279).innerHTML="Mono";else if($('mode'+_279).innerHTML=="Mono")$('mode'+_279).innerHTML="Stereo";} function _cb9(key,file){ var _279=key_to__279(key);var _4c4=new FileReader();_4c4.onload=function(ee){ data=new Uint8Array(ee.target.result);$('dfu'+_279).innerHTML="Erasing ...";_06a[_279]=0;_f13[_279]=data;_86e[_279]=data.length; _b10[_279].send(_8dd([(_279<<24)+0x1401,0,0,0,0,0]));};_4c4.readAsArrayBuffer(file);} function _d51(key,file){ var _279=key_to__279(key),preset=key_to_preset(key),index=key_to_index(key);var _4c4=new FileReader();_4c4.onload=function(ee){ var index=parseInt($('blobs'+_279).value); data=new Uint8Array(ee.target.result);data=_ba3(new Uint8Array(data));$('blobs'+_279).options[index].innerHTML=""+index+":"+file.name;_06a[_279]=0;_f13[_279]=data;_86e[_279]=data.length;if(_f13[_279].length>800)_f13[_279].length=800;prop=[(_279<<24)+0x1501+(index<<4),0,0,0,0,0];name="abcdefghijklmnopqrst";prop[1]=(name.charCodeAt(0)<<24)+(name.charCodeAt(1)<<16)+(name.charCodeAt(2)<<8)+name.charCodeAt(3);prop[2]=(name.charCodeAt(4)<<24)+(name.charCodeAt(5)<<16)+(name.charCodeAt(6)<<8)+name.charCodeAt(7);prop[3]=(name.charCodeAt(8)<<24)+(name.charCodeAt(9)<<16)+(name.charCodeAt(10)<<8)+name.charCodeAt(11);prop[4]=(name.charCodeAt(12)<<24)+(name.charCodeAt(13)<<16)+(name.charCodeAt(14)<<8)+name.charCodeAt(15);prop[5]=(name.charCodeAt(16)<<24)+(name.charCodeAt(17)<<16)+(name.charCodeAt(18)<<8)+name.charCodeAt(19); _b10[_279].send(_8dd(prop));};var index=parseInt($('blobs'+_279).value);if(index>0)_4c4.readAsArrayBuffer(file);} function _070(key){ data=new Uint8Array(_live_update_image.length);for(var ii=0;ii<_live_update_image.length;++ii)data[ii]=_live_update_image.charCodeAt(ii);_live_update_image='';_4c5=key;_379[_279]=key;_06a[_279]=0;_f13[_279]=data;_86e[_279]=data.length;_b10[_279].send(_8dd([(_279<<24)+0x1401,0,0,0,0,0]));} function _8dd(_4e6){ var _556=[0xF0];for(var ii=0;ii<6;++ii){ _556.push((_4e6[ii]>>28)&15);_556.push((_4e6[ii]>>24)&15);_556.push((_4e6[ii]>>20)&15);_556.push((_4e6[ii]>>16)&15);_556.push((_4e6[ii]>>12)&15);_556.push((_4e6[ii]>>8)&15);_556.push((_4e6[ii]>>4)&15);_556.push((_4e6[ii]>>0)&15);} _556.push(0xF7);return _556;} function _c28(_556){ var _4e6=[0,0,0,0,0,0]; if(_556.length<50)return _4e6;if(_556[ 0] !=0xF0)return _4e6;if(_556[49] !=0xF7)return _4e6; for(var ii=0;ii<6;++ii){ _4e6[ii]=(_556[8*ii+1]<<28)+(_556[8*ii+2]<<24)+(_556[8*ii+3]<<20)+(_556[8*ii+4]<<16)+(_556[8*ii+5]<<12)+(_556[8*ii+6]<<8)+(_556[8*ii+7]<<4)+(_556[8*ii+8]<<0);} return _4e6;} function _1cf(_4e6){ var text="";text+=String.fromCharCode(_4e6[1]&255,(_4e6[1]>>8)&255,(_4e6[1]>>16)&255,_4e6[1]>>24);text+=String.fromCharCode(_4e6[2]&255,(_4e6[2]>>8)&255,(_4e6[2]>>16)&255,_4e6[2]>>24);text+=String.fromCharCode(_4e6[3]&255,(_4e6[3]>>8)&255,(_4e6[3]>>16)&255,_4e6[3]>>24);text+=String.fromCharCode(_4e6[4]&255,(_4e6[4]>>8)&255,(_4e6[4]>>16)&255,_4e6[4]>>24);text+=String.fromCharCode(_4e6[5]&255,(_4e6[5]>>8)&255,(_4e6[5]>>16)&255,_4e6[5]>>24);return text;} function _b61(a){return a[0];}function _cf2be(a){return a[1]+256*a[0];}function _cf2le(a){return a[0]+256*a[1];}function _c28be(a){return 16777216*a[0]+65536*a[1]+256*a[2]+a[3];}function _c28le(a){return a[0]+256*a[1]+65536*a[2]+16777216*a[3];} function _ba3(data){ var format,channels,rate,thruput,align,width;var _163=new Array();var rate=0;_163=[];var group_id=_c28le(data);data=data.slice(4);var total_size=_c28le(data);data=data.slice(4);var type_id=_c28le(data);data=data.slice(4);while(1){ if(data.length<8)break;var blockid=_c28le(data);data=data.slice(4);var blocksz=_c28le(data);data=data.slice(4);if(blockid==0x20746D66){ if(data.length<16)break;format=_cf2le(data);data=data.slice(2);channels=_cf2le(data);data=data.slice(2);rate=_c28le(data);data=data.slice(4);thruput=_c28le(data);data=data.slice(4);align=_cf2le(data);data=data.slice(2);width=_cf2le(data);data=data.slice(2);} else if(blockid==0x61746164){ if(data.length<blocksz)break;var count=blocksz /(width/8);if(channels==1){ while(count-->0){ if(width==8){ _163.push(data[0]*256*256*256);data=data.slice(1);} if(width==16){ _163.push(data[1]*256*256*256+data[0]*256*256);data=data.slice(2);} if(width==24){ _163.push(data[2]*256*256*256+data[1]*256*256+data[0]*256);data=data.slice(3);} if(width==32){ _163.push(data[3]*256*256*256+data[2]*256*256+data[1]*256+data[0]);value+=data[0];data=data.slice(4);}}}} else{ break;}} return _163;} var _live_update_title='';var _live_update_image='';</script><style>html{font-family:sans-serif;-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;}body{margin:0;} a{background-color:transparent;}a:active,a:hover{outline:0;}b,strong{font-weight:bold;}h1{font-size:2em;margin:0.67em 0;} mark{background:#ff0;color:#000;}small{font-size:80%;}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline;}sup{top:-0.5em;}sub{bottom:-0.25em;}img{border:0;} button,input,optgroup,select,textarea{color:inherit;font:inherit;margin:0;}button{overflow:visible;}button,select{text-transform:none;} select{width:300px;} button,html input[type="button"],input[type="reset"],input[type="submit"]{-webkit-appearance:button;cursor:pointer;} button[disabled],html input[disabled]{cursor:default;} input{line-height:normal;}input[type="checkbox"],input[type="radio"]{box-sizing:border-box;padding:0;}input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{height:auto;} textarea{overflow:auto;}table{border-collapse:collapse;border-spacing:0;}td,th{padding:0;} tr.preset:hover{color:#ddd;background-color:#222;border-color:#333;font-weight:bold;}td.preset:hover{color:#eee;background-color:#357;border-color:#333;font-weight:bold;}td.preset{color:#ccc;background-color:#000;border-color:#000;font-weight:bold;}td.footsw{color:#ccc;background-color:#000;border-color:#000;font-weight:bold;} .container{ position:relative;width:500%;margin:0 auto;padding:0 10px;}.column,.columns{width:100%;float:left;box-sizing:border-box;padding:10px;} html{font-size:62.5%;}body{ font-size:1.5em;line-height:0.5;font-weight:400;font-family:"Raleway","HelveticaNeue","Helvetica Neue",Helvetica,Arial,sans-serif;background-color:#000;color:#CCC} h1,h2,h3,h4,h5,h6{margin-top:0;margin-bottom:1rem;font-weight:300;}h1{font-size:4.0rem;line-height:1.2;letter-spacing:-.1rem;}h2{font-size:3.6rem;line-height:1.25;letter-spacing:-.1rem;}h3{font-size:3.0rem;line-height:1.3;letter-spacing:-.1rem;}h4{font-size:2.4rem;line-height:1.35;letter-spacing:-.0rem;}h5{font-size:1.8rem;line-height:1.5;letter-spacing:-.05rem;}h6{font-size:1.5rem;line-height:1.6;letter-spacing:0;} @media(min-width:550px){ h1{font-size:5.0rem;} h2{font-size:4.2rem;} h3{font-size:3.6rem;} h4{font-size:3.0rem;} h5{font-size:2.4rem;} h6{font-size:1.8rem;}} p{margin-top:0;}a{color:#1EAEDB;}a:hover{color:#0FA0CE;} input[type="number"],input[type="text"],textarea,select{ height:28px;padding:6px 10px;background-color:#fff;border:1px solid #DDD;border-radius:4px;box-shadow:none;box-sizing:border-box;}input[type="number"],input[type="text"],textarea{-webkit-appearance:none;-moz-appearance:none;appearance:none;}textarea{min-height:65px;padding-top:6px;padding-bottom:6px;}input[type="number"]:focus,input[type="text"]:focus,textarea:focus,select:focus{border:1px solid #33C3F0;outline:0;}label,legend{display:block;margin-bottom:.5rem;font-weight:600;}fieldset{padding:0;border-width:0;}input[type="checkbox"],input[type="radio"]{display:inline;} ul{list-style:circle inside;}ol{list-style:decimal inside;}ol,ul{padding-left:0;margin-top:0;}ul ul,ul ol,ol ol,ol ul{margin:1.5rem 0 1.5rem 3rem;font-size:90%;}li{margin-bottom:1rem;} button,.button{margin-bottom:1rem;}input,textarea,select,fieldset{margin-bottom:1rem;}pre,blockquote,dl,figure,table,p,ul,ol,form{margin-bottom:1.0rem;} hr{margin-top:3rem;margin-bottom:3.5rem;border-width:0;border-top:1px solid #EEE;} .container:after,.row:after,.u-cf{content:"";display:table;clear:both;} table.flexfx2{text-align:left;}table.flexfx2 th,td{padding:0px 0px;text-align:center;border-bottom:0px solid #EEE;}table.flexfx2 tbody td{padding:0px 0px;text-align:center;border-bottom:0px solid #EEE;} table.flexfx{text-align:left;}table.flexfx th{padding:5px 5px;text-align:center;border-bottom:1px solid #EEE;}table.flexfx td{padding:5px 2px;text-align:center;border-bottom:1px solid #EEE;}table.flexfx tbody td{padding:5px 2px;text-align:center;border-bottom:1px solid #EEE;} .button,button,select,input[type="button"]{ display:inline-block;height:32px;padding:0 8px;text-align:center;font-size:11px;font-weight:600;line-height:32px;letter-spacing:.1rem;text-transform:uppercase;text-decoration:none;white-space:nowrap;background-color:transparent;color:#CCC;box-sizing:border-box;border-radius:5px;border:1px solid #BBB;cursor:pointer;} input.button:hover,button:hover,input[type="button"]:hover{color:#EEE;background-color:#357;border-color:#CCC;} select:hover{color:#EEE;background-color:#357;border-color:#CCC;} input.button:focus,button:focus,input[type="button"]:focus{color:#EEE;background-color:#333;border-color:#888;outline:0;} input.button:disabled,button:disabled,input[type="button"]:disabled{color:#AAA;background-color:#357;border-color:#BBB;outline:0;} input.slider{-webkit-appearance:none;-webkit-transition:.2s;width:96px;height:11px;outline:none;border-radius:3px;border:1px solid #CCC;background:#333;opacity:0.7;transition:opacity .2s;}input.slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:11px;height:13px;border-radius:3px;border:0px solid #CCC;background:#CCC;cursor:pointer;}input.slider:hover,slider:hover{color:#FFF;background-color:#000;border-color:#CCC;} input.slider::-webkit-slider-thumb:hover{color:#FFF;background-color:#7BF;border-color:#7BF;}{} input.vslider{-webkit-appearance:slider-vertical;width:20px;height:60px;border-radius:3px;border:1px solid #CCC;background:#333;opacity:0.7;outline:none;-webkit-transition:.2s;transition:opacity .2s;}input.vslider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:11px;height:13px;border-radius:3px;border:0px solid #CCC;background:#CCC;cursor:pointer;}input.vslider:hover,vslider:hover{color:#FFF;background-color:#000;border-color:#CCC;} input.vslider::-webkit-slider-thumb:hover{color:#FFF;background-color:#7BF;border-color:#7BF;}{}</style></html>
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>C99 Controller</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body><div class='container' id='controller'>
+  <script>var $ = function(id) { return document.getElementById(id); };</script>
+</div></body>
+
+<script>
+
+window.addEventListener('load', function()
+{	
+    if(navigator.requestMIDIAccess) {
+        navigator.requestMIDIAccess({sysex:true}).then(_on_midi_success,_on_midi_failure);
+    }
+    else document.write( "USB/MIDI is not available." );
+});
+
+var _midi_input_ports = {}, _midi_output_ports = {};
+var _javascript = {}, _unit_count = 0, _unit_index = 0, m;_port_list = {};
+var _transfer_data = {}, _transfer_count = {}, _transfer_size = {}, _transfer_prop = {};
+var _dumping_active = {};
+
+var _preset_data = [[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]];
+
+function ui_title( unit, name )
+{
+	var hh = ""; var ss = "";
+    hh += "<table class='flexfx2'><tbody>";
+    hh += "<tr><td align='left'><h4>"+name+"</h4></td>";
+    hh += "<td id=info>&nbsp;&nbsp;&nbsp;</td>";
+    hh += "<td><input type='file' style='display:none' id='input1"+unit+"'/>";
+    hh += "<button id='dfu"+unit+"'>Load Effect</button></td>";
+	ss += "$('dfu"+unit+"').onclick = function(ee) { $('input1"+unit+"').click(); };";
+	ss += "$('input1"+unit+"').oninput = function(ee) {_write_firmware_image("+(unit<<16)+",ee.target.files[0]);};";
+    hh += "<td id=info>&nbsp;&nbsp;&nbsp;</td>";
+    hh += "<td><button id='moveL"+unit+"'>Move Up</button></td>";
+	ss += "$('moveL"+unit+"').onclick = function(ee) {_move_interfaceL('"+unit+"');};";
+    hh += "<td><h5>&nbsp;</h5></td>";
+
+    hh += "</tr/tbody></table>";
+ 
+    hh += "<table class='flexfx'><thead>";
+    hh += "<td>"; if(0) hh+="Preset"; hh += "</td>";
+	for( pp = 1; pp <= 5; ++pp ) {
+        var key = (unit<<16); var id = "preset"+(key+(pp<<8)).toString(16);
+        hh += "<td class='preset' id='"+id+"'>"+pp+"</td>";
+        ss += "$('"+id+"').onclick = function(e) {";
+        for( ii = 1; ii <= 5; ++ii ) ss += "$('preset"+(key+(ii<<8)).toString(16)+"').innerHTML='"+ii+"';";
+        ss += "$('"+id+"').innerHTML='[ "+pp+" ]';";
+        ss += "_set_preset("+(key+(pp<<8))+");};";
+    }
+    hh += "</thead>";
+   
+	return [hh,ss];
+}
+
+function ui_param( key, name )
+{
+    width = 50; min = 1; max = 99, step=1;
+	var hh = ""; var ss = ""; var unit = key>>16;
+	
+	if( name != "" ) { hh += "<td style='width:108px'>"+name+"</td>"; return [hh,ss]; }
+
+	hh += "<td>";
+	hh += "<div style='height:13px'>";
+	hh += "<input class='slider' type='range' min='"+min+"' max='"+max+"' step='"+step+"' id='"+key.toString(16)+"'>";
+	hh += "</div>";
+	hh += "</td>";
+	
+	ss += "$('"+key.toString(16)+"').onchange = function(ee) {";
+	ss += "var vv=$('"+key.toString(16)+"').value;";
+	ss += "_write_parameter("+key+",$('"+key.toString(16)+"').value);";
+	ss += "};";
+	
+	return [hh,ss];
+}
+
+function ui_create( unit, text )
+{
+	var hh = ""; var ss = ""; var tt = ""; var cc = 0; var blobs = 0;
+	var labels = eval(text);
+	
+    hh += "<div class='row' id='control"+unit+"'><div class='column' style='margin-top:0%'>";    
+	
+    var rr = ui_title(unit,labels[0]); hh += rr[0]; ss += rr[1];    
+    hh += "<tbody>";
+    for( ll = 1; ll < labels.length; ++ll ) {
+        if( labels[ll].length < 3 ) continue;
+        hh += "<tr>";
+        var rr = ui_param(0,labels[ll]); hh += rr[0]; ss += rr[1];
+        for( pp = 1; pp <= 5; ++pp ) {
+            var key = (parseInt(unit,16)<<16)+(pp<<8)+(ll-1);
+            var rr = ui_param(key,""); hh += rr[0]; ss += rr[1];
+        }
+        hh += "</tr>";
+    }
+    hh += "</body>";
+    hh += "</tbody></table>";
+	return [hh,ss];
+}
+
+function _load_interface( unit, text )
+{
+	var rr = ui_create( unit, text );
+
+	var div = document.createElement('div');
+	$('controller').appendChild( div );
+	div.id = 'page'+unit.toString(16);
+	//div.style.display = 'table-cell';
+	$('page'+unit.toString(16)).innerHTML = rr[0];
+
+	var script = document.createElement( 'script' );
+	script.appendChild( document.createTextNode(rr[1]) );
+	script.type = "text/javascript";
+	document.getElementsByTagName("head")[0].appendChild(script);
+
+    if( _unit_index < _unit_count )
+    {
+        port = _midi_output_ports[++_unit_index];
+        port.send( _flexfx_prop_to_midi( [(_unit_index<<24)+0x1000,0,0,0,0,0] ));
+    }
+}
+
+function _on_midi_success( midiAccess )
+{
+    _unit_count = _unit_index = _port_count = 0;
+    midiAccess.onstatechange = _on_midi_connect;
+    var event = new Object();
+    event.currentTarget = midiAccess;
+    _on_midi_connect( event );
+}
+
+function _on_midi_failure( error ) { document.write( "MIDI access denied." ); }
+
+var _on_midi_connect_done = 0;
+
+function _on_midi_connect( event )
+{
+    if( _on_midi_connect_done ) return;
+
+    var midi_access  = event.currentTarget;
+    var midi_inputs  = event.currentTarget.inputs.values ();
+    var midi_outputs = event.currentTarget.outputs.values();
+
+	for( var unit = 1; unit <= _unit_count; ++unit ) {
+        if( $('controller').contains( $(unit.toString(16)) )) {
+            $('controller').removeChild( $(unit.toString(16)) );
+        }
+	}
+    _midi_output_ports = {}; _midi_input_ports = {}; _unit_count = 0;
+    
+    for( var port = midi_inputs.next(); !port.done; port = midi_inputs.next() ) {
+        if( port.value.manufacturer == "FlexFX" ) {
+            port.value.onmidimessage = _on_midi_message;
+            if( port.value.connection == "open" ) _port_list[port.value.id] = port.value.id;
+    }}
+    for( var port = midi_outputs.next(); !port.done; port = midi_outputs.next()) {
+        if( port.value.manufacturer == "FlexFX" ) {
+        	unit = ++_unit_count;
+            _midi_output_ports[unit] = port.value;
+    }}
+    if( Object.keys(_port_list).length == _unit_count && _unit_count > 0 )
+    {
+        _on_midi_connect_done = 1;
+        port = _midi_output_ports[++_unit_index];
+        port.send( _flexfx_prop_to_midi( [(_unit_index<<24)+0x1000,0,0,0,0,0] ));
+    }
+}
+
+function _on_midi_message( event )
+{
+    var property = _midi_to_prop( event.data );
+    if( property[0] == 0 ) return;
+    
+ 	var unit = property[0] >> 24;
+    if( !(unit in _midi_input_ports) ) _midi_input_ports[unit] = event.srcElement;
+    
+    if( (property[0] & 0xFF0F) == 0x1000 )
+    {
+		_javascript[unit] = "[";
+		_transfer_data[unit] = [];
+		_transfer_count[unit] = 0;
+		_dumping_active[unit] = 1;
+        _midi_output_ports[unit].send( _flexfx_prop_to_midi( [(unit<<24)+0x3100,0,0,0,0,0] ));
+    }
+    else if( (property[0] & 0xFFFF) == 0x1001 || (property[0] & 0xFFFF) == 0x1002 )
+    {
+		if( _transfer_data[unit].length > 0 )
+		{
+			var property = [(unit<<24)+0x1002,0,0,0,0,0];
+			
+			property[1] = array_to_ui4be( _transfer_data[unit] );
+			_transfer_data[unit] = _transfer_data[unit].slice(4);
+			property[2] = array_to_ui4be( _transfer_data[unit] );
+			_transfer_data[unit] = _transfer_data[unit].slice(4);
+			property[3] = array_to_ui4be( _transfer_data[unit] );
+			_transfer_data[unit] = _transfer_data[unit].slice(4);
+			property[4] = array_to_ui4be( _transfer_data[unit] );
+			_transfer_data[unit] = _transfer_data[unit].slice(4);
+			
+			_midi_output_ports[unit].send( _flexfx_prop_to_midi( property ));
+			
+			if( _transfer_count[unit] == 0 || (_transfer_count[unit] % 16) == 0 )
+			{
+				progress = (1600.0 * _transfer_count[unit]) / _transfer_size[unit];
+				if( progress > 99 ) progress = 99;
+				$('dfu'+unit).innerHTML = progress.toPrecision(2) + "\% Complete";
+			}
+			_transfer_count[unit] += 1;
+		}
+		else
+		{
+            _on_midi_connect_done = 0;
+			var property = [(unit<<24)+0x1003,0,0,0,0,0];
+			_midi_output_ports[unit].send( _flexfx_prop_to_midi( property ));
+			$('dfu'+unit).innerHTML = "Finished";
+		}
+    }    
+    else if( (property[0] & 0xFF0F) == 0x1501 || (property[0] & 0xFF0F) == 0x1502 || (property[0] & 0xFF0F) == 0x1503 )
+    {
+		if( _transfer_data[unit].length > 0 )
+		{
+			var property = [(unit<<24)+0x1502,0,0,0,0,0];
+			if( _transfer_data[unit].length >= 1 ) property[1] = _transfer_data[unit][0];
+			if( _transfer_data[unit].length >= 2 ) property[2] = _transfer_data[unit][1];
+			if( _transfer_data[unit].length >= 3 ) property[3] = _transfer_data[unit][2];
+			if( _transfer_data[unit].length >= 4 ) property[4] = _transfer_data[unit][3];
+			if( _transfer_data[unit].length >= 5 ) property[5] = _transfer_data[unit][4];
+			_transfer_data[unit] = _transfer_data[unit].slice(5);
+			_midi_output_ports[unit].send( _flexfx_prop_to_midi( property ));
+		}
+		else
+		{
+			property = [ make_key(unit,property,0)+0x1503,0,0,0,0,0 ];
+			_midi_output_ports[unit].send( _flexfx_prop_to_midi( property ));
+		}
+    }
+    else if( (property[0] & 0xFF00) == 0x3100 )
+    {
+        var unit = (property[0] >> 24) & 15;
+        label = _property_to_text(property);
+        label = label.slice(0,label.indexOf(String.fromCharCode(0)));
+        
+        if( _dumping_active[unit] != 0 )
+        {
+            if( label.length == 0 ) {
+                _javascript[unit] += "]";
+                _load_interface( unit, _javascript[unit] );
+                _midi_output_ports[unit].send( _flexfx_prop_to_midi( [(unit<<24)+0x3200,0,0,0,0,0] ));
+            }
+            else {
+            	_javascript[unit] += "'" + _property_to_text(property) + "'";
+                var nn = property[0] & 255;
+                if( ++nn < 17 ) {
+                    _javascript[unit] += ",";
+                    _midi_output_ports[unit].send( _flexfx_prop_to_midi( [(unit<<24)+0x3100+nn,0,0,0,0,0] ));
+                }
+                else {
+                    _javascript[unit] += "]";
+                    _load_interface( unit, _javascript[unit] );
+                    _midi_output_ports[unit].send( _flexfx_prop_to_midi( [(unit<<24)+0x3200,0,0,0,0,0] ));
+                }
+            }
+        }
+    }
+    else if( (property[0] & 0xFF0F) == 0x3200 )
+    {
+        var unit = (property[0] >> 24) & 15; var pp = (property[0] >> 4) & 15;
+                
+        for( var ii = 0; ii < 5; ++ii )
+        {
+            _preset_data[unit-1][pp-1][4*ii+0] = (property[ii+1] >> 24) & 255;
+            _preset_data[unit-1][pp-1][4*ii+1] = (property[ii+1] >> 16) & 255;
+            _preset_data[unit-1][pp-1][4*ii+2] = (property[ii+1] >>  8) & 255;
+            _preset_data[unit-1][pp-1][4*ii+3] = (property[ii+1] >>  0) & 255;
+            if( $(((unit<<16)+(pp<<8)+(4*ii+0)).toString(16) ) == undefined ) break;
+            $( ((unit<<16)+(pp<<8)+(4*ii+0)).toString(16) ).value = _preset_data[unit-1][pp-1][4*ii+0];
+            if( $(((unit<<16)+(pp<<8)+(4*ii+1)).toString(16) ) == undefined ) break;
+            $( ((unit<<16)+(pp<<8)+(4*ii+1)).toString(16) ).value = _preset_data[unit-1][pp-1][4*ii+1];
+            if( $(((unit<<16)+(pp<<8)+(4*ii+2)).toString(16) ) == undefined ) break;
+            $( ((unit<<16)+(pp<<8)+(4*ii+2)).toString(16) ).value = _preset_data[unit-1][pp-1][4*ii+2];
+            if( $(((unit<<16)+(pp<<8)+(4*ii+3)).toString(16) ) == undefined ) break;
+            $( ((unit<<16)+(pp<<8)+(4*ii+3)).toString(16) ).value = _preset_data[unit-1][pp-1][4*ii+3];
+        }
+        if( _dumping_active[unit] != 0 )
+        {
+            var pp = (property[0] >> 4) & 15;
+            if( ++pp < 9 ) {
+                _midi_output_ports[unit].send( _flexfx_prop_to_midi( [(unit<<24)+0x3200+(pp<<4),0,0,0,0,0] ));
+            }
+            else _dumping_active[unit] = 0;
+        }
+    }
+}
+
+function _move_interfaceL( unit )
+{
+    unit = parseInt(unit);
+    var parent = $('control'+unit).parentNode.parentNode;
+    var childR = $('control'+unit).parentNode;
+    var childL = childR.previousSibling;
+    parent.removeChild( childR );
+    parent.insertBefore( childR, childL );
+}
+
+function _move_interfaceR( unit )
+{
+    unit = parseInt(unit);
+    var parent = $('control'+unit).parentNode.parentNode;
+    var childL = $('control'+unit).parentNode;
+    var childR = childL.nextSibling;
+    parent.removeChild( childR );
+    parent.insertBefore( childR, childL );
+}
+
+function _write_preset( unit, preset )
+{
+    var prop = [(unit<<24)+(preset<<4)+0x3201,0,0,0,0,0];
+    var data = _preset_data[unit-1][preset-1];
+    prop[1] = (data[ 0] << 24) + (data[ 1] << 16) + (data[ 2] << 8) + data[ 3];
+    prop[2] = (data[ 4] << 24) + (data[ 5] << 16) + (data[ 6] << 8) + data[ 7];
+    prop[3] = (data[ 8] << 24) + (data[ 9] << 16) + (data[10] << 8) + data[11];
+    prop[4] = (data[12] << 24) + (data[13] << 16) + (data[14] << 8) + data[15];
+    prop[5] = (data[16] << 24) + (data[17] << 16) + (data[18] << 8) + data[19];
+    _midi_output_ports[unit].send( _flexfx_prop_to_midi( prop ));
+}
+
+function _write_parameter( key, value )
+{
+	var unit = (key >> 16) & 255; var preset = (key >> 8) & 255; var index = key & 255;
+	_preset_data[unit-1][preset-1][index] = parseInt(value);
+    _write_preset( unit, preset );
+}
+
+function _write_firmware_image( key, file )
+{
+	var unit = (key >> 16) & 255;
+    var reader = new FileReader();
+    reader.onload = function(ee)
+    {
+		data = new Uint8Array( ee.target.result );
+		$('dfu'+unit).innerHTML = "Erasing ...";
+
+        _transfer_count[unit] = 0;
+        _transfer_data[unit] = data;
+        _transfer_size[unit] = data.length;
+                
+        _midi_output_ports[unit].send( _flexfx_prop_to_midi( [(unit<<24)+0x1001,0,0,0,0,0] ));
+    };
+    reader.readAsArrayBuffer( file );
+}
+
+function _write_bulk_data( key, file )
+{
+	var unit = key_to_unit(key), preset = key_to_preset(key), index = key_to_index(key);
+    var reader = new FileReader();
+    reader.onload = function(ee)
+    {
+        var index = parseInt($('blobs'+unit).value);
+        
+		data = new Uint8Array( ee.target.result );
+		data = _wave_to_samples( new Uint8Array(data) );
+        $('blobs'+unit).options[index].innerHTML = ""+index+": "+file.name;
+
+        _transfer_count[unit] = 0;
+        _transfer_data[unit] = data;
+        _transfer_size[unit] = data.length;
+
+        if( _transfer_data[unit].length > 800 ) _transfer_data[unit].length = 800;
+
+        prop = [(unit<<24)+0x1501+(index<<4),0,0,0,0,0];
+        name = "abcdefghijklmnopqrst";
+        prop[1] = (name.charCodeAt( 0)<<24)+(name.charCodeAt( 1)<<16) + (name.charCodeAt( 2)<<8) + name.charCodeAt( 3);
+        prop[2] = (name.charCodeAt( 4)<<24)+(name.charCodeAt( 5)<<16) + (name.charCodeAt( 6)<<8) + name.charCodeAt( 7);
+        prop[3] = (name.charCodeAt( 8)<<24)+(name.charCodeAt( 9)<<16) + (name.charCodeAt(10)<<8) + name.charCodeAt(11);
+        prop[4] = (name.charCodeAt(12)<<24)+(name.charCodeAt(13)<<16) + (name.charCodeAt(14)<<8) + name.charCodeAt(15);
+        prop[5] = (name.charCodeAt(16)<<24)+(name.charCodeAt(17)<<16) + (name.charCodeAt(18)<<8) + name.charCodeAt(19);
+        
+        _midi_output_ports[unit].send( _flexfx_prop_to_midi( prop ));
+    };
+    var index = parseInt($('blobs'+unit).value);
+    if( index > 0 ) reader.readAsArrayBuffer( file );
+}
+
+function _flexfx_prop_to_midi( property )
+{
+    var midi_data = [0xF0];
+    for( var ii = 0; ii < 6; ++ii )
+    {
+        midi_data.push( (property[ii]>>28)&15 ); midi_data.push( (property[ii]>>24)&15 );
+        midi_data.push( (property[ii]>>20)&15 ); midi_data.push( (property[ii]>>16)&15 );
+        midi_data.push( (property[ii]>>12)&15 ); midi_data.push( (property[ii]>> 8)&15 );
+        midi_data.push( (property[ii]>> 4)&15 ); midi_data.push( (property[ii]>> 0)&15 );
+    }
+    midi_data.push( 0xF7 );
+    return midi_data;
+}
+
+function _midi_to_prop( midi_data )
+{
+    var property = [0,0,0,0,0,0];
+        
+    if( midi_data.length < 50 ) return property;
+    if( midi_data[ 0] != 0xF0 ) return property;
+    if( midi_data[49] != 0xF7 ) return property;
+    
+    for( var ii = 0; ii < 6; ++ii )
+    {
+        property[ii] = (midi_data[8*ii+1]<<28) + (midi_data[8*ii+2]<<24)
+                     + (midi_data[8*ii+3]<<20) + (midi_data[8*ii+4]<<16)
+                     + (midi_data[8*ii+5]<<12) + (midi_data[8*ii+6]<< 8)
+                     + (midi_data[8*ii+7]<< 4) + (midi_data[8*ii+8]<< 0);
+    }
+    return property;
+}
+
+function _property_to_text( property )
+{
+	var text = "";
+	text += String.fromCharCode( property[1]>>24, (property[1]>>16)&255, (property[1]>>8)&255, property[1]&255 );
+	text += String.fromCharCode( property[2]>>24, (property[2]>>16)&255, (property[2]>>8)&255, property[2]&255 );
+	text += String.fromCharCode( property[3]>>24, (property[3]>>16)&255, (property[3]>>8)&255, property[3]&255 );
+	text += String.fromCharCode( property[4]>>24, (property[4]>>16)&255, (property[4]>>8)&255, property[4]&255 );
+	text += String.fromCharCode( property[5]>>24, (property[5]>>16)&255, (property[5]>>8)&255, property[5]&255 );
+	return text;
+}
+
+function array_to_ui1  (a) { return a[0]; }
+function array_to_ui2be(a) { return a[1]+256*a[0]; }
+function array_to_ui2le(a) { return a[0]+256*a[1]; }
+function array_to_ui4be(a) { return 16777216*a[0]+65536*a[1]+256*a[2]+a[3]; }
+function array_to_ui4le(a) { return a[0]+256*a[1]+65536*a[2]+16777216*a[3]; }
+
+function _wave_to_samples( data )
+{
+    var format, channels, rate, thruput, align, width;
+    var samples = new Array();
+    var rate = 0; samples = [];
+    var group_id   = array_to_ui4le(data); data = data.slice(4);
+    var total_size = array_to_ui4le(data); data = data.slice(4);
+    var type_id    = array_to_ui4le(data); data = data.slice(4);
+
+    while( 1 )
+    {
+        if( data.length < 8 ) break;
+        var blockid = array_to_ui4le(data); data = data.slice(4);
+        var blocksz = array_to_ui4le(data); data = data.slice(4);
+
+        if( blockid == 0x20746D66)
+        {
+            if( data.length < 16 ) break;
+            format   = array_to_ui2le(data); data = data.slice(2);
+            channels = array_to_ui2le(data); data = data.slice(2);
+            rate     = array_to_ui4le(data); data = data.slice(4);
+            thruput  = array_to_ui4le(data); data = data.slice(4);
+            align    = array_to_ui2le(data); data = data.slice(2);
+            width    = array_to_ui2le(data); data = data.slice(2);
+        }
+        else if( blockid == 0x61746164 )
+        {
+            if( data.length < blocksz ) break;
+            var count = blocksz / (width/8);
+
+            if( channels == 1 ) {
+                while( count-- > 0  ) {
+                    if( width == 8 ) {
+                        samples.push( data[0]*256*256*256 );
+                        data = data.slice(1);
+                    }
+                    if( width == 16 ) {
+                        samples.push( data[1]*256*256*256 + data[0]*256*256 );
+                        data = data.slice(2);
+                    }
+                    if( width == 24 ) {
+                        samples.push( data[2]*256*256*256 + data[1]*256*256 + data[0]*256 );
+                        data = data.slice(3);
+                    }
+                    if( width == 32 ) {
+                        samples.push( data[3]*256*256*256 + data[2]*256*256 + data[1]*256 + data[0] );
+                        value += data[0];
+                        data = data.slice(4);
+                    }
+                }
+            }
+        }
+        else {
+        	break;
+        }
+    }
+    return samples;
+}
+
+</script>
+
+<style>
+
+html { font-family: sans-serif; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; }
+body { margin: 0; }
+
+a { background-color: transparent; }
+a:active,
+a:hover { outline: 0; }
+b, strong { font-weight: bold; }
+h1 { font-size: 2em; margin: 0.67em 0; }
+
+mark { background: #ff0; color: #000; }
+small { font-size: 80%; }
+sub, sup { font-size: 75%; line-height: 0; position: relative; vertical-align: baseline; }
+sup { top: -0.5em; }
+sub { bottom: -0.25em; }
+img { border: 0; }
+
+button, input, optgroup, select, textarea { color: inherit; font: inherit; margin: 0; }
+button { overflow: visible; }
+button, select { text-transform: none; }
+
+select {width: 300px;}
+
+button, html input[type="button"],
+input[type="reset"],
+input[type="submit"] { -webkit-appearance: button; cursor: pointer; }
+
+button[disabled], html input[disabled] { cursor: default; }
+
+input { line-height: normal; }
+input[type="checkbox"],
+input[type="radio"] { box-sizing: border-box; padding: 0; }
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { height: auto; }
+
+textarea { overflow: auto; }
+table { border-collapse: collapse; border-spacing: 0; }
+td, th { padding: 0; }
+
+tr.preset:hover { color:#ddd; background-color: #222; border-color: #333; font-weight: bold;}
+td.preset:hover { color:#eee; background-color: #357; border-color: #333; font-weight: bold;}
+td.preset       { color:#ccc; background-color: #000; border-color: #000; font-weight: bold;}
+td.footsw       { color:#ccc; background-color: #000; border-color: #000; font-weight: bold;}
+
+.container {
+  position: relative; width: 100%; 
+  margin: 0 auto; padding: 0 10px; 
+}
+.container_old {
+  position: relative; width: 500%; 
+  margin: 0 auto; padding: 0 10px; 
+}
+.column,
+.columns { width: 100%; float: left; box-sizing: border-box; padding: 10px;}
+
+html { font-size: 62.5%; }
+body {
+  font-size: 1.5em; line-height: 0.5; font-weight: 400;
+  font-family: "Raleway", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background-color: #000; color:#CCC }
+
+h1, h2, h3, h4, h5, h6 { margin-top: 0; margin-bottom: 1rem; font-weight: 300; }
+h1 { font-size: 4.0rem; line-height: 1.2;  letter-spacing: -.1rem;}
+h2 { font-size: 3.6rem; line-height: 1.25; letter-spacing: -.1rem; }
+h3 { font-size: 3.0rem; line-height: 1.3;  letter-spacing: -.1rem; }
+h4 { font-size: 2.4rem; line-height: 1.35; letter-spacing: -.0rem; }
+h5 { font-size: 1.8rem; line-height: 1.5;  letter-spacing: -.05rem; }
+h6 { font-size: 1.5rem; line-height: 1.6;  letter-spacing: 0; }
+
+@media (min-width: 550px) {
+  h1 { font-size: 5.0rem; }
+  h2 { font-size: 4.2rem; }
+  h3 { font-size: 3.6rem; }
+  h4 { font-size: 3.0rem; }
+  h5 { font-size: 2.4rem; }
+  h6 { font-size: 1.8rem; }
+}
+
+p { margin-top: 0; }
+a { color: #1EAEDB; }
+a:hover { color: #0FA0CE; }
+
+input[type="number"],
+input[type="text"],
+textarea,
+select {
+  height: 28px; padding: 6px 10px; background-color: #fff;
+  border: 1px solid #DDD; border-radius: 4px;
+  box-shadow: none; box-sizing: border-box; }
+input[type="number"],
+input[type="text"],
+textarea { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+textarea { min-height: 65px; padding-top: 6px; padding-bottom: 6px; }
+input[type="number"]:focus,
+input[type="text"]:focus,
+textarea:focus,
+select:focus { border: 1px solid #33C3F0; outline: 0; }
+label, legend { display: block; margin-bottom: .5rem; font-weight: 600; }
+fieldset { padding: 0; border-width: 0; }
+input[type="checkbox"],
+input[type="radio"] { display: inline; }
+
+ul { list-style: circle inside; }
+ol { list-style: decimal inside; }
+ol, ul { padding-left: 0; margin-top: 0; }
+ul ul, ul ol, ol ol, ol ul { margin: 1.5rem 0 1.5rem 3rem; font-size: 90%; }
+li { margin-bottom: 1rem; }
+
+button, .button { margin-bottom: 1rem; }
+input, textarea, select, fieldset { margin-bottom: 1rem; }
+pre, blockquote, dl, figure, table, p, ul, ol, form { margin-bottom: 1.0rem; }
+
+hr { margin-top:3rem; margin-bottom:3.5rem; border-width:0; border-top:1px solid #EEE; }
+
+.container:after,
+.row:after,
+.u-cf { content: ""; display: table; clear: both; }
+
+table.flexfx2 { text-align: center; }
+table.flexfx2 th, td { padding: 0px 0px; text-align: center; border-bottom: 0px solid #EEE; }
+table.flexfx2 tbody td { padding: 0px 0px; text-align: center; border-bottom: 0px solid #EEE; }
+
+table.flexfx { text-align: center; }
+table.flexfx th { padding: 10px 5px; text-align: center; border-bottom: 1px solid #EEE; border-top: 1px solid #EEE; }
+table.flexfx td { padding: 10px 10px; text-align: center; border-bottom: 1px solid #EEE; border-top: 1px solid #EEE; }
+table.flexfx tbody td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #EEE; }
+
+.button,
+button,
+select,
+input[type="button"] {
+  display: inline-block; height: 32px; padding: 0 10px;
+  text-align: center; font-size: 11px; font-weight: 600;
+  line-height: 32px; letter-spacing: .1rem;
+  text-transform: uppercase; text-decoration: none; white-space: nowrap;
+  background-color: transparent; color: #CCC;
+  box-sizing: border-box; border-radius: 5px; border: 1px solid #BBB;
+  cursor: pointer;
+}
+
+input.button:hover,
+button:hover,
+input[type="button"]:hover { color: #EEE; background-color: #357; border-color: #CCC; }
+
+select:hover { color: #EEE; background-color: #357; border-color: #CCC; }
+
+input.button:focus,
+button:focus,
+input[type="button"]:focus { color: #EEE; background-color: #333; border-color: #888; outline: 0; }
+
+input.button:disabled,
+button:disabled,
+input[type="button"]:disabled { color: #AAA; background-color: #357; border-color: #BBB; outline: 0; }
+
+input.slider {
+    -webkit-appearance: none; -webkit-transition: .2s;
+    width: 60px; height: 11px; outline: none;
+    border-radius: 3px; border: 1px solid #CCC;
+    background: #333; opacity: 0.7; transition: opacity .2s;
+}
+input.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 11px; height: 14px;
+    border-radius: 3px; border: 0px solid #CCC;
+    background: #CCC;
+    cursor: pointer;
+}
+input.slider:hover,
+slider:hover { color: #FFF; background-color: #000; border-color: #CCC; }
+
+input.slider::-webkit-slider-thumb:hover { color: #FFF; background-color: #7BF; border-color: #7BF; } {}
+
+input.vslider {
+    -webkit-appearance: slider-vertical;
+    width: 20px; height: 60px;
+    border-radius: 3px; border: 1px solid #CCC;
+    background: #333; opacity: 0.7;
+    outline: none;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+}
+input.vslider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 11px; height: 13px;
+    border-radius: 3px; border: 0px solid #CCC;
+    background: #CCC;
+    cursor: pointer;
+}
+input.vslider:hover,
+vslider:hover { color: #FFF; background-color: #000; border-color: #CCC; }
+
+input.vslider::-webkit-slider-thumb:hover { color: #FFF; background-color: #7BF; border-color: #7BF; } {
+}
+
+</style>
+
+</html>
