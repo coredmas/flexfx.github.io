@@ -174,18 +174,6 @@ void i2c_stop ( void );       // Assert an I2C stop condition.
 void port_set( int mask, int value ); // Write 0 or 1 to ports/pins indicated by 'mask'
 int  port_get( int mask );            // Read ports indicated by 'mask', set to HiZ state
 
-// Read ADC values via I2C.  This function supports the MAX11600-MAX11605 series of devices.
-
-void adc_read( double values[8] ); // 0.0 <= value[n] < 1.0
-
-void log_chr( char val );
-void log_str( const char* val );
-void log_bin( const byte* data, int len );
-void log_hex( unsigned char val );
-void log_hex2( unsigned val );
-void log_hex4( unsigned val );
-void log_dec( int value, int width, char pad );
-
 #endif
 ```
 
