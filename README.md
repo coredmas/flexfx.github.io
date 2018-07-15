@@ -82,7 +82,7 @@ All threads are executed once per audio cycle and therefore operate on USB and I
 Programming Interface
 -----------------------------------------
 
-The application programmer only needs to add control and audip processing code to create a complete application.  The code below is a complete application.  Just add code to the 'app\_control', 'app\_mixer', and 'app\_thread' functions.  The complete FlexFX programming interface is show below:
+The application programmer only needs to add control and audip processing code to create a complete application.  The code below is a complete application.  Just add code to the 'app\_control', 'app\_mixer', and 'app\_thread' functions.
 
 ```C
 #include "xio.h"
@@ -446,7 +446,7 @@ bash$ python util_plot.py output.txt time 0 150
 Prebuilt Effects
 ----------------------------------
 
-The FlexFX kit contains some highly optimized effects. These effects are in binary (\*.bin) form and can be used for free on FlexFX boards. The FlexFX properties definitions for prebuilt effects are documented in the effect's respective text file (e.g. efx_cabsim.txt for the prebuild efx_cabsim.bin effect). These properties allow for full control over each effect via FlexFX properties sent and received over USB/MIDI.
+The FlexFX kit contains some highly optimized effects. These effects are in source and binary (\*.bin) form and can be used for free on FlexFX boards.  All effects support full control over each effect via FlexFX properties sent and received over USB/MIDI.
 
-The effects also supports the HTML5 interface for controlling the device (firmware upgrading, uploading IR data, etc) since the web interfaces uses FlexFX properties and USB/MIDI for control. Javascript code for an effect is returned via USB MIDI by issueing the FlexFX USB/MIDI property for returning a device's javascript controller interface.  The HTML5 application called 'flexfx.html' does this automatically and will displayt this device's GUI interface if the device is pluged into the host computer via a USB cable. Google Chrome must be used.
+The effects also support the HTML5 interface for controlling the device (firmware upgrading, uploading IR data, etc) since the web interfaces uses FlexFX properties and USB/MIDI for control. The HTML5 application called 'flexfx.html' does this automatically and will displayt this device's GUI interface if the device is pluged into the host computer via a USB cable. Google Chrome must be used.
 
