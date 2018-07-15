@@ -3,7 +3,7 @@
 // incorporate adjustable pre-filtering and bias settings, midrange emphasis filter frequency,
 // post filtering, and a tube-based gain model with slew-rate limiting creating a configurable
 // tube-like multi-stage guitar preamp. Three bypass-switch controlled presets, USB/MIDI/HTML
-// control, and parameter-set morphing. 
+// control. 
 
 #include <math.h>
 #include <string.h>
