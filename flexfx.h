@@ -3,7 +3,10 @@
 
 #include "xio.h"
 
-void flexfx_control( byte presets[20], bool updated, int dsp_prop[6] );
+void flexfx_control( int preset, byte parameters[20], int dsp_prop[6] );
+
+void flash_read ( int blocknum, byte buffer[4096] );
+void flash_write( int blocknum, const byte buffer[4096] );
 
 // FQ converts Q28 fixed-point to floating point
 // QF converts floating-point to Q28 fixed-point

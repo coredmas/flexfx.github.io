@@ -3,14 +3,13 @@
 #include "flexfx.h"
 #include "flexfx.i"
 
-const char* product_name_string   = "C99 GraphicEQ";
+const char* product_name_string   = "C99 Equalizer";
 const char* usb_audio_output_name = "GraphEQ Audio Out";
 const char* usb_audio_input_name  = "GraphEQ Audio In";
 const char* usb_midi_output_name  = "GraphEQ MIDI Out";
 const char* usb_midi_input_name   = "GraphEQ MIDI In";
 
 const int audio_sample_rate     = 192000;
-const int dsp_channel_count     = 1;
 const int usb_output_chan_count = 2;
 const int usb_input_chan_count  = 2;
 const int i2s_channel_count     = 2;
@@ -18,25 +17,22 @@ const int i2s_is_bus_master     = 1;
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 };
 
-const char* control_labels[17] = { "C99 GraphicEQ",
+const char* control_labels[21] = { "C99 Equalizer",
                                    "01 - 56 Hz", "02 - 84 Hz", "03 - 126 Hz",
                                    "04 - 190 Hz", "05 - 284 Hz", "06 - 427 Hz",
-                                   "07 - 640 Hz", "08 - 960 Hz", "09 - 1.44 kHz",
-                                   "10 - 2.16 kHz", "11 - 3.24 kHz", "12 - 4.86 kHz",
-                                   "13 - 7.29 kHz", "14 - 10.9 kHz", "15 - 16.4 kHz",
-                                   "Output Volume" };
+                                   "07 - 640 Hz", "08 - 960 Hz", "Output Volume",
+                                   "","","","","","","","","","" };
 
-void flexfx_control( byte presets[20], bool updated, int dsp_prop[6] )
+void flexfx_control( int preset, byte parameters[20], int dsp_prop[6] )
 {
 	static int state = 1;
-	static byte* data = NULL;
 	
 	double param_band[15], max_gain = 0;
 	for( int ii = 0; ii < 15; ++ii ) {
-	    param_band[ii] = (double) presets[ii] / 100.0;
+	    param_band[ii] = (double) parameters[ii] / 100.0;
 	    if( param_band[ii] > max_gain ) max_gain = param_band[ii];
 	}
-    double param_volume = (double) presets[15] / 100.0;
+    double param_volume = (double) parameters[15] / 100.0;
     double volume_min = 0.100, volume_max = 0.900;
     
     if( state == 1 ) // Volume, Gain

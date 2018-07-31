@@ -3,7 +3,7 @@
 // the classic three knob (bass, midrange, treble) tone stack. The tone stack can be adjusted
 // to place the bass, midrange, and treble at different center frequencies. 30 milliseconds of
 // impulse response (IR) convolution using 32/64 bit fixed-point DSP at a 48 kHz sampling rate.
-// Supports up to nine presets each with its own amplifier and tonestack settings and cabsim
+// Supports up to nine parameters each with its own amplifier and tonestack settings and cabsim
 // impulse responses. IR's can be downloaded as WAVE files via USB/MIDI using the
 // 'app_ampsim.html' web page and Google Chrome, or via other software applications conforming
 // to the FlexFX USB/MIDI data protocol (see 'https://github.com/flexfx/readme.md' for details).
@@ -20,7 +20,6 @@ const char* usb_midi_output_name  = "Cabsim MIDI Out";
 const char* usb_midi_input_name   = "Cabsim MIDI In";
 
 const int audio_sample_rate     = 48000;
-const int dsp_channel_count     = 1;
 const int usb_output_chan_count = 2;
 const int usb_input_chan_count  = 2;
 const int i2s_channel_count     = 2;
@@ -28,13 +27,14 @@ const int i2s_is_bus_master     = 1;
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 };
 
-const char* control_labels[17] = { "C99 Cabsim",
+const char* control_labels[21] = { "C99 Cabsim",
                                    "Input Drive",
                                    "Bass Level", "Bass Freq",
                                    "Midrange Level", "Midrange Freq",
                                    "Treble Level", "Treble Freq",
                                    "Supply Sag", "Output Volume",
-                                   "Cabinet IR", "","","","","","" };
+                                   "Cabinet IR",
+                                   "","","","","","","","","","" };
 
 int _ampcab_gain_lut[32768];
 int _ampcab_gain_model( int xx, int* cc, int* ss )
@@ -102,11 +102,10 @@ int _ampcab_upsample_coeff[120];
 
 int _ampcab_upsample_state[120], _ampcab_dnsample_state[120];
 int _ampcab_pwramp_coeff[6] = { 0,0,0,0,0,0 }, _ampcab_pwramp_state[4] = { 0,0,0,0 };
-int _ampcab_ir_coeff[1680], _ampcab_ir_state[1680];
 int _ampcab_tone_data[7];
 int _ampcab_tone_coeff[8]={FQ(1.0),0,0,0,0,0,0,0}, _ampcab_tone_state[6];
 
-extern int _wave_data[2400];
+int _ampcab_ir_coeff[11][1680], _ampcab_ir_state[1680];
 
 void _calc_peaking( int* coeffs, double min, double max, double val )
 {
@@ -117,20 +116,19 @@ void _calc_lowpass( int* coeffs, double min, double max, double val )
     calc_lowpass( coeffs, (min+val*(max-min)) / 576000.0, 0.500 );
 }
 
-void flexfx_control( byte presets[20], bool updated, int dsp_prop[6] )
+void flexfx_control( int preset, byte parameters[20], int dsp_prop[6] )
 {
-	static int state = 1, offset = 0;
-	static byte* data = NULL;
+	static int state = 1;
 	
-    double param_drive  = (double) presets[0] / 100.0;
-    double param_bassG  = (double) presets[1] / 100.0;
-    double param_bassF  = (double) presets[2] / 100.0;
-    double param_midG   = (double) presets[3] / 100.0;
-    double param_midF   = (double) presets[4] / 100.0;
-    double param_trebG  = (double) presets[5] / 100.0;
-    double param_trebF  = (double) presets[6] / 100.0;
-    double param_sag    = (double) presets[7] / 100.0;
-    double param_volume = (double) presets[8] / 100.0;
+    double param_drive  = (double) parameters[0] / 100.0;
+    double param_bassG  = (double) parameters[1] / 100.0;
+    double param_bassF  = (double) parameters[2] / 100.0;
+    double param_midG   = (double) parameters[3] / 100.0;
+    double param_midF   = (double) parameters[4] / 100.0;
+    double param_trebG  = (double) parameters[5] / 100.0;
+    double param_trebF  = (double) parameters[6] / 100.0;
+    //double param_sag    = (double) parameters[7] / 100.0;
+    double param_volume = (double) parameters[8] / 100.0;
 
     double drive_min  = 0.100, drive_max  = 0.999;
     double bassG_min  = 0.000, bassG_max  = 0.999;
@@ -139,23 +137,9 @@ void flexfx_control( byte presets[20], bool updated, int dsp_prop[6] )
     double midF_min   = 0.8,   midF_max   = 1.2;
     double trebG_min  = 0.000, trebG_max  = 0.999;
     double trebF_min  = 0.8,   trebF_max  = 1.2;
-    double sag_min    = 0.0,   sag_max    = 0.0;
+    //double sag_min    = 0.0,   sag_max    = 0.0;
     double volume_min = 0.100, volume_max = 0.999;
 
-    if( updated )
-    {
-        state = 0x8000;
-        //offset = 0; int ii; double gg = 0;
-        //#define FQ31(hh) (((hh)<0.0)?((int)((double)(1u<<31)*(hh)-0.5)):((int)(((double)(1u<<31)-1)*(hh)+0.5)))
-        //#define QF31(xx) (((int)(xx)<0)?((double)(int)(xx))/(1u<<31):((double)(xx))/((1u<<31)-1))
-        // IR data is Q31.  Adjust for total FIR gain then convert to Q28.
-        //for( ii = 0; ii < 1680; ++ii ) gg += QF31(_wave_data[ii]); gg = 1.0;
-        //for( ii = 0; ii < 1680; ++ii ) {
-        //    double xx = QF31(_wave_data[ii]) / gg; // Normalize to unity gain
-        //    _wave_data[ii] = FQ( xx ); // Convert to Q28
-        //}
-    }
-        
     if( state == 1 )
     {
         dsp_prop[0] = state; state = 2;
@@ -186,13 +170,6 @@ void flexfx_control( byte presets[20], bool updated, int dsp_prop[6] )
         dsp_prop[0] = state; state = 1;
         memcpy( dsp_prop+1, _ampcab_tone_data+5, 2*sizeof(int) );
     }
-    else if( state == 0x8000 )
-    {
-        dsp_prop[1] = _wave_data[5*offset+0]; dsp_prop[2] = _wave_data[5*offset+1];
-        dsp_prop[3] = _wave_data[5*offset+2]; dsp_prop[4] = _wave_data[5*offset+3];
-        dsp_prop[5] = _wave_data[5*offset+4];
-        dsp_prop[0] = state + offset++; if( offset == 1680/5 ) state = 1;
-    }
 }
 
 void app_initialize( void )
@@ -206,7 +183,7 @@ void app_initialize( void )
 
     mix_fir_coeffs( _ampcab_upsample_coeff, _ampcab_dnsample_coeff, 120, 5 );
     
-    _ampcab_ir_coeff[0] = FQ(+0.8);
+    _ampcab_ir_coeff[0][0] = FQ(+0.8);
 }
 
 void app_thread1( int samples[32], const int property[6] )
@@ -225,19 +202,19 @@ void app_thread1( int samples[32], const int property[6] )
 void app_thread2( int samples[32], const int property[6] )
 {
     samples[1] = 0; samples[2] = 1<<(QQ-1);
-    samples[0] = dsp_convolve( samples[0], _ampcab_ir_coeff+0*20*24, _ampcab_ir_state+0*20*24,
+    samples[0] = dsp_convolve( samples[0], _ampcab_ir_coeff[0]+0*20*24, _ampcab_ir_state+0*20*24,
                                samples+1, samples+2, 20 );
 }
 
 void app_thread3( int samples[32], const int property[6] )
 {
-    samples[0] = dsp_convolve( samples[0], _ampcab_ir_coeff+1*20*24, _ampcab_ir_state+1*20*24,
+    samples[0] = dsp_convolve( samples[0], _ampcab_ir_coeff[0]+1*20*24, _ampcab_ir_state+1*20*24,
                                samples+1, samples+2, 20 );
 }
 
 void app_thread4( int samples[32], const int property[6] )
 {
-    samples[0] = dsp_convolve( samples[0], _ampcab_ir_coeff+2*20*24, _ampcab_ir_state+2*20*24,
+    samples[0] = dsp_convolve( samples[0], _ampcab_ir_coeff[0]+2*20*24, _ampcab_ir_state+2*20*24,
                                samples+1, samples+2, 20 );
     samples[0] = dsp_ext( samples[1], samples[2] );
 }
@@ -256,17 +233,6 @@ void app_thread5( int samples[32], const int property[6] )
     if( property[0] == 2 ) memcpy( _ampcab_pwramp_coeff, property+1, 5*sizeof(int) );
     if( property[0] == 3 ) memcpy( _ampcab_tone_coeff+0, property+1, 5*sizeof(int) );
     if( property[0] == 4 ) memcpy( _ampcab_tone_coeff+5, property+1, 2*sizeof(int) );
-    
-    if( property[0] & 0x8000 )
-    {
-        int offset = property[0] & 0xFFF;
-        // Attenuate to avoid overflow and convert to Q28 <FIXME>
-        _ampcab_ir_coeff[ 5 * offset + 0 ] = property[1] / 128;
-        _ampcab_ir_coeff[ 5 * offset + 1 ] = property[2] / 128;
-        _ampcab_ir_coeff[ 5 * offset + 2 ] = property[3] / 128;
-        _ampcab_ir_coeff[ 5 * offset + 3 ] = property[4] / 128;
-        _ampcab_ir_coeff[ 5 * offset + 4 ] = property[5] / 128;
-    }
 }
 
 int _ampcab_gain_lut[32768] =
@@ -4368,3 +4334,17 @@ int _ampcab_gain_lut[32768] =
     FQ(+0.999999),FQ(+0.999999),FQ(+0.999999),FQ(+0.999999),FQ(+0.999999),FQ(+0.999999),FQ(+0.999999),FQ(+0.999999),
     FQ(+0.999999),FQ(+0.999999),FQ(+0.999999),FQ(+0.999999),FQ(+0.999999),FQ(+0.999999),FQ(+0.999999),FQ(+0.999999),
 };
+
+int _ampcab_ir_coeff[11][1680] =
+{{ // 0
+},{ // 1
+},{ // 2
+},{ // 3
+},{ // 4
+},{ // 5
+},{ // 6
+},{ // 7
+},{ // 8
+},{ // 9
+},{ // 10
+}};

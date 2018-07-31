@@ -1,6 +1,6 @@
 // Delay/chorus/flanger with settings for LFO depth and rate, base delay, modulated delay
 // high and low-pass filters, feedback ration, delay regeneration ratio, and wet/dry blending.
-// Three bypass-switch controlled presets, USB/MIDI/HTML control, and parameter-set morphing.
+// Three bypass-switch controlled parameters, USB/MIDI/HTML control, and parameter-set morphing.
 
 #include <math.h>
 #include <string.h>
@@ -13,7 +13,6 @@ const char* usb_midi_output_name  = "Delay MIDI Out";
 const char* usb_midi_input_name   = "Delay MIDI In";
 
 const int audio_sample_rate     = 192000;
-const int dsp_channel_count     = 1;
 const int usb_output_chan_count = 2;
 const int usb_input_chan_count  = 2;
 const int i2s_channel_count     = 2;
@@ -21,13 +20,13 @@ const int i2s_is_bus_master     = 1;
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 };
 
-const char* control_labels[17] = { "C99 Delay",
-                                   "Input Drive",
+const char* control_labels[21] = { "C99 Delay",
                                    "Delay Time", "LFO Rate", "LFO Depth",
                                    "Regeneration", "Diffusion",
                                    "Filter Freq", "Filter Q",
                                    "Feedback Level", "Dry/Wet Mix",
-                                   "Output Volume","","","","","" };
+                                   "Output Volume",
+                                   "","","","","","","","","","" };
 
 int _delay_dnsample_coeff[80] = // util_fir.py 0.036 0.125 1.0 108
 {
@@ -52,37 +51,36 @@ int _delay_upsample_coeff[80], _delay_dnsample_state[80], _delay_upsample_state[
 
 int _sine_lut[1024];
 
-void flexfx_control( byte presets[20], bool updated, int dsp_prop[6] )
+void flexfx_control( int preset, byte parameters[20], int dsp_prop[6] )
 {
 	static int state = 1;
 	
     if( state == 1 ) // Volume
     {
         dsp_prop[0] = state; state = 2;
-        dsp_prop[1] = FQ( (double) presets[10] / 100.0 );
+        dsp_prop[1] = FQ( (double) parameters[10] / 100.0 );
     }
     else if( state == 2 ) // delay,rate,depth,blend
     {
-        double fs = (double) audio_sample_rate;
-        double rr = (double) (presets[2]/100.0); // LFO rate
+        double rr = (double) (parameters[2]/100.0); // LFO rate
 
         dsp_prop[0] = state; state = 3;        
-        dsp_prop[1] = FQ( (double) presets[ 1] / 100.0 ); // Delay base
+        dsp_prop[1] = FQ( (double) parameters[ 1] / 100.0 ); // Delay base
         dsp_prop[2] = FQ( 0.0000005 + rr * 0.00002 ); // LFO time delta
-        dsp_prop[3] = FQ( (double) presets[ 3] / 100.0 ); // Modulation depth
-        dsp_prop[4] = FQ( (double) presets[ 9] / 100.0 ); // Wet/dry mix
+        dsp_prop[3] = FQ( (double) parameters[ 3] / 100.0 ); // Modulation depth
+        dsp_prop[4] = FQ( (double) parameters[ 9] / 100.0 ); // Wet/dry mix
     }
     else if( state == 3 ) // diffusion,feedback,regeneration
     {
         dsp_prop[0] = state; state = 4;
-        dsp_prop[1] = FQ( (double) presets[ 5] / 100.0 ); // Diffusion
-        dsp_prop[2] = FQ( (double) presets[ 4] / 100.0 ); // Feedback ratio
-        dsp_prop[3] = FQ( (double) presets[ 8] / 100.0 ); // Regeneration ratio
+        dsp_prop[1] = FQ( (double) parameters[ 5] / 100.0 ); // Diffusion
+        dsp_prop[2] = FQ( (double) parameters[ 4] / 100.0 ); // Feedback ratio
+        dsp_prop[3] = FQ( (double) parameters[ 8] / 100.0 ); // Regeneration ratio
     }
     else if( state == 4 ) // filtF,filtQ
     {
-        double fc = (double) presets[ 6] / 100.0; // Filter frequency
-        double qq = (double) presets[ 7] / 100.0; // Filter bandwidth
+        double fc = (double) parameters[ 6] / 100.0; // Filter frequency
+        double qq = (double) parameters[ 7] / 100.0; // Filter bandwidth
         dsp_prop[0] = state; state = 5;
         calc_bandpassQ( dsp_prop+1, 0.001+fc*0.01, 0.1+qq*0.9 );
     }
@@ -90,7 +88,6 @@ void flexfx_control( byte presets[20], bool updated, int dsp_prop[6] )
     {
         dsp_prop[0] = state; state = 1;
     }
-    
 }
 
 int _delay_base = 0, _delay_depth = 0, _delay_rate = 0, _delay_blend = 0;
@@ -104,7 +101,6 @@ void app_initialize( void )
 
 void app_thread1( int samples[32], const int property[6] )
 {
-    
     //samples[1] = _delay_drive( samples[0], _delay_drive_coeff, _delay_drive_state );
     //samples[1] = samples[0];
 }
@@ -113,7 +109,7 @@ void app_thread1( int samples[32], const int property[6] )
         +-------------------------------------------------------+
         |                                                       |
         |                                                      \|/
-input --+--> Delay ------> Modulation ----+--> Filter ---+--> Mixer --->
+Input --+--> Delay ------> Modulation ----+--> Filter ---+--> Mixer --->
               /|\             /|\         |               |
                |               |          |               |
                |               +--Regen --+               |

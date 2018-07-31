@@ -24,15 +24,14 @@ window.addEventListener('load', function()
 });
 
 var _midi_input_ports = {}, _midi_output_ports = {};
-var _javascript = {}, _unit_count = 0, _unit_index = 0, m;_port_list = {};
-var _transfer_data = {}, _transfer_count = {}, _transfer_size = {}, _transfer_prop = {};
-var _dumping_active = {};
-
-var _preset_data = [[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]];
+var _parameter_names = {}, _unit_count = 0, _unit_index = 0, m;_port_list = {};
+var _transfer_data = {}, _transfer_count = {}, _transfer_size = {};
+var _parameter_data = {}, _current_preset = {};
 
 function ui_title( unit, name )
 {
 	var hh = ""; var ss = "";
+	
     hh += "<table class='flexfx2'><tbody>";
     hh += "<tr><td align='left'><h4>"+name+"</h4></td>";
     hh += "<td id=info>&nbsp;&nbsp;&nbsp;</td>";
@@ -44,17 +43,17 @@ function ui_title( unit, name )
     hh += "<td><button id='moveL"+unit+"'>Move Up</button></td>";
 	ss += "$('moveL"+unit+"').onclick = function(ee) {_move_interfaceL('"+unit+"');};";
     hh += "<td><h5>&nbsp;</h5></td>";
-
     hh += "</tr/tbody></table>";
  
     hh += "<table class='flexfx'><thead>";
-    hh += "<td>"; if(0) hh+="Preset"; hh += "</td>";
-	for( pp = 1; pp <= 5; ++pp ) {
+    hh += "<td class='preset' style='text-align:left !important;'>Parameter</td>";	
+	for( pp = 0; pp < 5; ++pp )
+	{
         var key = (unit<<16); var id = "preset"+(key+(pp<<8)).toString(16);
-        hh += "<td class='preset' id='"+id+"'>"+pp+"</td>";
+        hh += "<td class='preset' id='"+id+"'>"+'Preset '+(pp+1)+"</td>";
         ss += "$('"+id+"').onclick = function(e) {";
-        for( ii = 1; ii <= 5; ++ii ) ss += "$('preset"+(key+(ii<<8)).toString(16)+"').innerHTML='"+ii+"';";
-        ss += "$('"+id+"').innerHTML='[ "+pp+" ]';";
+        for( ii = 0; ii < 5; ++ii ) ss += "$('preset"+(key+(ii<<8)).toString(16)+"').innerHTML='Preset "+(ii+1)+"';";
+        ss += "$('"+id+"').innerHTML='[Preset "+(pp+1)+"]';";
         ss += "_set_preset("+(key+(pp<<8))+");};";
     }
     hh += "</thead>";
@@ -62,44 +61,52 @@ function ui_title( unit, name )
 	return [hh,ss];
 }
 
-function ui_param( key, name )
+function ui_label( name )
 {
-    width = 50; min = 1; max = 99, step=1;
-	var hh = ""; var ss = ""; var unit = key>>16;
-	
-	if( name != "" ) { hh += "<td style='width:108px'>"+name+"</td>"; return [hh,ss]; }
-
-	hh += "<td>";
-	hh += "<div style='height:13px'>";
-	hh += "<input class='slider' type='range' min='"+min+"' max='"+max+"' step='"+step+"' id='"+key.toString(16)+"'>";
-	hh += "</div>";
-	hh += "</td>";
-	
-	ss += "$('"+key.toString(16)+"').onchange = function(ee) {";
-	ss += "var vv=$('"+key.toString(16)+"').value;";
-	ss += "_write_parameter("+key+",$('"+key.toString(16)+"').value);";
-	ss += "};";
-	
+	var hh = "", ss = "";
+	hh += "<td style='width:108px'>"+name+"</td>";
 	return [hh,ss];
 }
 
-function ui_create( unit, text )
+function ui_param( unit, index )
+{
+	var hh = "", ss = "";
+    min = 1; max = 99, step=1;
+    
+    for( var preset = 0; preset < 5; ++preset )
+    {	
+        var key = (unit << 16) + (preset << 8) + index;
+        
+        hh += "<td>"; hh += "";
+        hh += "<div style='height:17px'>";
+        hh += "<input class='slider' type='range' min='"+min+"' max='"+max+"' step='"+step+"' id='"+key.toString(16)+"'>";
+        hh += "</div>";
+        
+        ss += "$('"+key.toString(16)+"').onchange = function(ee) {";
+        ss += "var vv=$('"+key.toString(16)+"').value;";
+        ss += "_update_param("+key+",$('"+key.toString(16)+"').value);";
+        ss += "};";
+        
+        hh += "</td>";    
+    }	
+	return [hh,ss];
+}
+
+function ui_create( unit )
 {
 	var hh = ""; var ss = ""; var tt = ""; var cc = 0; var blobs = 0;
-	var labels = eval(text);
+	var labels = _parameter_names[unit];
 	
-    hh += "<div class='row' id='control"+unit+"'><div class='column' style='margin-top:0%'>";    
-	
-    var rr = ui_title(unit,labels[0]); hh += rr[0]; ss += rr[1];    
+    hh += "<div class='row' id='control"+unit+"'><div class='column' style='margin-top:0%'>";
+    var rr = ui_title(unit,labels[0]); hh += rr[0]; ss += rr[1];
     hh += "<tbody>";
-    for( ll = 1; ll < labels.length; ++ll ) {
-        if( labels[ll].length < 3 ) continue;
+    var cc = 0;
+    for( cc = 0; cc < labels.length-1 && labels[cc+1].length >= 3; ++cc ) {};
+    for( ll = 0; ll < cc; ++ll )
+    {
         hh += "<tr>";
-        var rr = ui_param(0,labels[ll]); hh += rr[0]; ss += rr[1];
-        for( pp = 1; pp <= 5; ++pp ) {
-            var key = (parseInt(unit,16)<<16)+(pp<<8)+(ll-1);
-            var rr = ui_param(key,""); hh += rr[0]; ss += rr[1];
-        }
+        var rr = ui_label(labels[ll+1]); hh += rr[0]; ss += rr[1];
+        var rr = ui_param(unit,ll); hh += rr[0]; ss += rr[1];
         hh += "</tr>";
     }
     hh += "</body>";
@@ -107,9 +114,9 @@ function ui_create( unit, text )
 	return [hh,ss];
 }
 
-function _load_interface( unit, text )
+function _load_interface( unit )
 {
-	var rr = ui_create( unit, text );
+	var rr = ui_create( unit );
 
 	var div = document.createElement('div');
 	$('controller').appendChild( div );
@@ -125,7 +132,7 @@ function _load_interface( unit, text )
     if( _unit_index < _unit_count )
     {
         port = _midi_output_ports[++_unit_index];
-        port.send( _flexfx_prop_to_midi( [(_unit_index<<24)+0x1000,0,0,0,0,0] ));
+        port.send( _prop_to_midi( [(_unit_index<<16)+0x1000,0,0,0,0,0] ));
     }
 }
 
@@ -171,7 +178,7 @@ function _on_midi_connect( event )
     {
         _on_midi_connect_done = 1;
         port = _midi_output_ports[++_unit_index];
-        port.send( _flexfx_prop_to_midi( [(_unit_index<<24)+0x1000,0,0,0,0,0] ));
+        port.send( _prop_to_midi( [(_unit_index<<16)+0x1000,0,0,0,0,0] ));
     }
 }
 
@@ -180,22 +187,26 @@ function _on_midi_message( event )
     var property = _midi_to_prop( event.data );
     if( property[0] == 0 ) return;
     
- 	var unit = property[0] >> 24;
+ 	var unit = property[0] >> 16;
     if( !(unit in _midi_input_ports) ) _midi_input_ports[unit] = event.srcElement;
     
+    // 1000: Identify the device, should be ID (3DEGFLEX) and version numbers
     if( (property[0] & 0xFF0F) == 0x1000 )
     {
-		_javascript[unit] = "[";
-		_transfer_data[unit] = [];
-		_transfer_count[unit] = 0;
-		_dumping_active[unit] = 1;
-        _midi_output_ports[unit].send( _flexfx_prop_to_midi( [(unit<<24)+0x3100,0,0,0,0,0] ));
+        // TODO: Check for property[1:2] == "3DEG","FLEX"
+		_parameter_names[unit] = [];
+		_parameter_data[unit] = [];
+		_current_preset[unit] = 0;
+        _midi_output_ports[unit].send( _prop_to_midi( [(unit<<16)+0x2000,0,0,0,0,0] ));
     }
+    // 1001: Begin firmware upgrade, echoed back to host
+    // 1002: Next 20 bytes of firmware image data, echoed
+    // 1003: End firmware upgrade and reset (no USB property echo!)
     else if( (property[0] & 0xFFFF) == 0x1001 || (property[0] & 0xFFFF) == 0x1002 )
     {
 		if( _transfer_data[unit].length > 0 )
 		{
-			var property = [(unit<<24)+0x1002,0,0,0,0,0];
+			var property = [(unit<<16)+0x1002,0,0,0,0,0];
 			
 			property[1] = array_to_ui4be( _transfer_data[unit] );
 			_transfer_data[unit] = _transfer_data[unit].slice(4);
@@ -206,7 +217,7 @@ function _on_midi_message( event )
 			property[4] = array_to_ui4be( _transfer_data[unit] );
 			_transfer_data[unit] = _transfer_data[unit].slice(4);
 			
-			_midi_output_ports[unit].send( _flexfx_prop_to_midi( property ));
+			_midi_output_ports[unit].send( _prop_to_midi( property ));
 			
 			if( _transfer_count[unit] == 0 || (_transfer_count[unit] % 16) == 0 )
 			{
@@ -219,86 +230,100 @@ function _on_midi_message( event )
 		else
 		{
             _on_midi_connect_done = 0;
-			var property = [(unit<<24)+0x1003,0,0,0,0,0];
-			_midi_output_ports[unit].send( _flexfx_prop_to_midi( property ));
+			var property = [(unit<<16)+0x1003,0,0,0,0,0];
+			_midi_output_ports[unit].send( _prop_to_midi( property ));
 			$('dfu'+unit).innerHTML = "Finished";
 		}
-    }    
-    else if( (property[0] & 0xFF0F) == 0x1501 || (property[0] & 0xFF0F) == 0x1502 || (property[0] & 0xFF0F) == 0x1503 )
-    {
-		if( _transfer_data[unit].length > 0 )
-		{
-			var property = [(unit<<24)+0x1502,0,0,0,0,0];
-			if( _transfer_data[unit].length >= 1 ) property[1] = _transfer_data[unit][0];
-			if( _transfer_data[unit].length >= 2 ) property[2] = _transfer_data[unit][1];
-			if( _transfer_data[unit].length >= 3 ) property[3] = _transfer_data[unit][2];
-			if( _transfer_data[unit].length >= 4 ) property[4] = _transfer_data[unit][3];
-			if( _transfer_data[unit].length >= 5 ) property[5] = _transfer_data[unit][4];
-			_transfer_data[unit] = _transfer_data[unit].slice(5);
-			_midi_output_ports[unit].send( _flexfx_prop_to_midi( property ));
-		}
-		else
-		{
-			property = [ make_key(unit,property,0)+0x1503,0,0,0,0,0 ];
-			_midi_output_ports[unit].send( _flexfx_prop_to_midi( property ));
-		}
     }
-    else if( (property[0] & 0xFF00) == 0x3100 )
+    // 20nn - Read effect title (N=0) or label for parameter N (1 <= N <= 16)
+    else if( (property[0] & 0xFF00) == 0x2000 )
     {
-        var unit = (property[0] >> 24) & 15;
+        var unit = (property[0] >> 16) & 15, index = property[0] & 0x00FF;
+        
         label = _property_to_text(property);
         label = label.slice(0,label.indexOf(String.fromCharCode(0)));
-        
-        if( _dumping_active[unit] != 0 )
-        {
-            if( label.length == 0 ) {
-                _javascript[unit] += "]";
-                _load_interface( unit, _javascript[unit] );
-                _midi_output_ports[unit].send( _flexfx_prop_to_midi( [(unit<<24)+0x3200,0,0,0,0,0] ));
-            }
-            else {
-            	_javascript[unit] += "'" + _property_to_text(property) + "'";
-                var nn = property[0] & 255;
-                if( ++nn < 17 ) {
-                    _javascript[unit] += ",";
-                    _midi_output_ports[unit].send( _flexfx_prop_to_midi( [(unit<<24)+0x3100+nn,0,0,0,0,0] ));
-                }
-                else {
-                    _javascript[unit] += "]";
-                    _load_interface( unit, _javascript[unit] );
-                    _midi_output_ports[unit].send( _flexfx_prop_to_midi( [(unit<<24)+0x3200,0,0,0,0,0] ));
-                }
-            }
+        if( label.length > 0 ) {
+            _parameter_names[unit].push( _property_to_text(property) );
+            var prop = _prop_to_midi( [(unit<<16)+0x2000+index+1,0,0,0,0,0] );
+            _midi_output_ports[unit].send( prop );
+        }
+        else {
+            _load_interface( unit );
+            var prop = _prop_to_midi( [(_unit_index<<16)+0x2100,0,0,0,0,0] );
+            _midi_output_ports[unit].send( prop );
         }
     }
-    else if( (property[0] & 0xFF0F) == 0x3200 )
+    // 2100 - Read the current preset_num,volume,tone,preset,bypass settings
+    // 2102 - Notification of changes to preset_num,volume,tone,preset,bypass settings
+    else if( (property[0] & 0xFFFF) == 0x2100 || (property[0] & 0xFFFF) == 0x2102 )
     {
-        var unit = (property[0] >> 24) & 15; var pp = (property[0] >> 4) & 15;
-                
+        var unit = (property[0] >> 16) & 15;
+        var preset = property[1];
+        var key = "preset" + ((unit<<16)+(preset<<8)).toString(16);
+        
+        //if( $(key) != undefined )
+        //{
+        //  _current_preset[unit] = property[1];
+        //  $(key).click();
+        //}
+        var prop = _prop_to_midi( [(unit<<16)+0x2200,0,0,0,0,0] );
+        _midi_output_ports[unit].send( prop );
+    }
+    // 22p0 - Read preset parameter values for preset P (0 <= P < 16)
+    else if( (property[0] & 0xFF0F) == 0x2200)
+    {
+        var unit = (property[0] >> 16) & 15;
+        var preset = (property[0] & 0x00F0) >> 4;
+
+        params = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
         for( var ii = 0; ii < 5; ++ii )
         {
-            _preset_data[unit-1][pp-1][4*ii+0] = (property[ii+1] >> 24) & 255;
-            _preset_data[unit-1][pp-1][4*ii+1] = (property[ii+1] >> 16) & 255;
-            _preset_data[unit-1][pp-1][4*ii+2] = (property[ii+1] >>  8) & 255;
-            _preset_data[unit-1][pp-1][4*ii+3] = (property[ii+1] >>  0) & 255;
-            if( $(((unit<<16)+(pp<<8)+(4*ii+0)).toString(16) ) == undefined ) break;
-            $( ((unit<<16)+(pp<<8)+(4*ii+0)).toString(16) ).value = _preset_data[unit-1][pp-1][4*ii+0];
-            if( $(((unit<<16)+(pp<<8)+(4*ii+1)).toString(16) ) == undefined ) break;
-            $( ((unit<<16)+(pp<<8)+(4*ii+1)).toString(16) ).value = _preset_data[unit-1][pp-1][4*ii+1];
-            if( $(((unit<<16)+(pp<<8)+(4*ii+2)).toString(16) ) == undefined ) break;
-            $( ((unit<<16)+(pp<<8)+(4*ii+2)).toString(16) ).value = _preset_data[unit-1][pp-1][4*ii+2];
-            if( $(((unit<<16)+(pp<<8)+(4*ii+3)).toString(16) ) == undefined ) break;
-            $( ((unit<<16)+(pp<<8)+(4*ii+3)).toString(16) ).value = _preset_data[unit-1][pp-1][4*ii+3];
+            params[4*ii+0] = (property[ii+1] >> 24) & 255;
+            params[4*ii+1] = (property[ii+1] >> 16) & 255;
+            params[4*ii+2] = (property[ii+1] >>  8) & 255;
+            params[4*ii+3] = (property[ii+1] >>  0) & 255;
         }
-        if( _dumping_active[unit] != 0 )
+        _parameter_data[unit].push( params );
+
+        for( var ii = 0; ii < 20; ++ii )
         {
-            var pp = (property[0] >> 4) & 15;
-            if( ++pp < 9 ) {
-                _midi_output_ports[unit].send( _flexfx_prop_to_midi( [(unit<<24)+0x3200+(pp<<4),0,0,0,0,0] ));
-            }
-            else _dumping_active[unit] = 0;
+            var key = (unit<<16)+(preset<<8)+ii;
+            if( $(key.toString(16) ) == undefined ) break;
+            $(key.toString(16)).value = params[ii];
+        }        
+        if( ++preset < 5 ) {
+            var prop = _prop_to_midi( [(unit<<16)+0x2200+(preset<<4),0,0,0,0,0] );
+            _midi_output_ports[unit].send( prop );
         }
     }
+}
+
+// 2101 - Write the current preset_num and volume,tone,preset,bypass settings
+function _set_preset( key )
+{
+	var unit = (key>>16)&255, preset = (key>>8)&15;
+    var prop = [(unit<<16)+0x2101,preset,0,0,0,0];
+    _midi_output_ports[unit].send( _prop_to_midi( prop ));
+}
+
+// 22p1 - Write preset parameter values for preset P (0 <= P < 16)
+function _update_param( key )
+{
+	var unit = (key>>16)&255, preset = (key>>8)&15, param = key&255;
+    var data = _parameter_data[ preset ];
+
+	_parameter_data[unit][preset][param] = parseInt($(key.toString(16)).value);
+
+    var prop = [(unit<<16)+0x2201+(preset<<4),0,0,0,0,0];
+    var data = _parameter_data[unit][preset];
+    
+    prop[1] = (data[ 0] << 24) + (data[ 1] << 16) + (data[ 2] << 8) + data[ 3];
+    prop[2] = (data[ 4] << 24) + (data[ 5] << 16) + (data[ 6] << 8) + data[ 7];
+    prop[3] = (data[ 8] << 24) + (data[ 9] << 16) + (data[10] << 8) + data[11];
+    prop[4] = (data[12] << 24) + (data[13] << 16) + (data[14] << 8) + data[15];
+    prop[5] = (data[16] << 24) + (data[17] << 16) + (data[18] << 8) + data[19];
+    
+    _midi_output_ports[unit].send( _prop_to_midi( prop ));
 }
 
 function _move_interfaceL( unit )
@@ -321,25 +346,6 @@ function _move_interfaceR( unit )
     parent.insertBefore( childR, childL );
 }
 
-function _write_preset( unit, preset )
-{
-    var prop = [(unit<<24)+(preset<<4)+0x3201,0,0,0,0,0];
-    var data = _preset_data[unit-1][preset-1];
-    prop[1] = (data[ 0] << 24) + (data[ 1] << 16) + (data[ 2] << 8) + data[ 3];
-    prop[2] = (data[ 4] << 24) + (data[ 5] << 16) + (data[ 6] << 8) + data[ 7];
-    prop[3] = (data[ 8] << 24) + (data[ 9] << 16) + (data[10] << 8) + data[11];
-    prop[4] = (data[12] << 24) + (data[13] << 16) + (data[14] << 8) + data[15];
-    prop[5] = (data[16] << 24) + (data[17] << 16) + (data[18] << 8) + data[19];
-    _midi_output_ports[unit].send( _flexfx_prop_to_midi( prop ));
-}
-
-function _write_parameter( key, value )
-{
-	var unit = (key >> 16) & 255; var preset = (key >> 8) & 255; var index = key & 255;
-	_preset_data[unit-1][preset-1][index] = parseInt(value);
-    _write_preset( unit, preset );
-}
-
 function _write_firmware_image( key, file )
 {
 	var unit = (key >> 16) & 255;
@@ -353,44 +359,12 @@ function _write_firmware_image( key, file )
         _transfer_data[unit] = data;
         _transfer_size[unit] = data.length;
                 
-        _midi_output_ports[unit].send( _flexfx_prop_to_midi( [(unit<<24)+0x1001,0,0,0,0,0] ));
+        _midi_output_ports[unit].send( _prop_to_midi( [(unit<<16)+0x1001,0,0,0,0,0] ));
     };
     reader.readAsArrayBuffer( file );
 }
 
-function _write_bulk_data( key, file )
-{
-	var unit = key_to_unit(key), preset = key_to_preset(key), index = key_to_index(key);
-    var reader = new FileReader();
-    reader.onload = function(ee)
-    {
-        var index = parseInt($('blobs'+unit).value);
-        
-		data = new Uint8Array( ee.target.result );
-		data = _wave_to_samples( new Uint8Array(data) );
-        $('blobs'+unit).options[index].innerHTML = ""+index+": "+file.name;
-
-        _transfer_count[unit] = 0;
-        _transfer_data[unit] = data;
-        _transfer_size[unit] = data.length;
-
-        if( _transfer_data[unit].length > 800 ) _transfer_data[unit].length = 800;
-
-        prop = [(unit<<24)+0x1501+(index<<4),0,0,0,0,0];
-        name = "abcdefghijklmnopqrst";
-        prop[1] = (name.charCodeAt( 0)<<24)+(name.charCodeAt( 1)<<16) + (name.charCodeAt( 2)<<8) + name.charCodeAt( 3);
-        prop[2] = (name.charCodeAt( 4)<<24)+(name.charCodeAt( 5)<<16) + (name.charCodeAt( 6)<<8) + name.charCodeAt( 7);
-        prop[3] = (name.charCodeAt( 8)<<24)+(name.charCodeAt( 9)<<16) + (name.charCodeAt(10)<<8) + name.charCodeAt(11);
-        prop[4] = (name.charCodeAt(12)<<24)+(name.charCodeAt(13)<<16) + (name.charCodeAt(14)<<8) + name.charCodeAt(15);
-        prop[5] = (name.charCodeAt(16)<<24)+(name.charCodeAt(17)<<16) + (name.charCodeAt(18)<<8) + name.charCodeAt(19);
-        
-        _midi_output_ports[unit].send( _flexfx_prop_to_midi( prop ));
-    };
-    var index = parseInt($('blobs'+unit).value);
-    if( index > 0 ) reader.readAsArrayBuffer( file );
-}
-
-function _flexfx_prop_to_midi( property )
+function _prop_to_midi( property )
 {
     var midi_data = [0xF0];
     for( var ii = 0; ii < 6; ++ii )
@@ -431,71 +405,6 @@ function _property_to_text( property )
 	text += String.fromCharCode( property[4]>>24, (property[4]>>16)&255, (property[4]>>8)&255, property[4]&255 );
 	text += String.fromCharCode( property[5]>>24, (property[5]>>16)&255, (property[5]>>8)&255, property[5]&255 );
 	return text;
-}
-
-function array_to_ui1  (a) { return a[0]; }
-function array_to_ui2be(a) { return a[1]+256*a[0]; }
-function array_to_ui2le(a) { return a[0]+256*a[1]; }
-function array_to_ui4be(a) { return 16777216*a[0]+65536*a[1]+256*a[2]+a[3]; }
-function array_to_ui4le(a) { return a[0]+256*a[1]+65536*a[2]+16777216*a[3]; }
-
-function _wave_to_samples( data )
-{
-    var format, channels, rate, thruput, align, width;
-    var samples = new Array();
-    var rate = 0; samples = [];
-    var group_id   = array_to_ui4le(data); data = data.slice(4);
-    var total_size = array_to_ui4le(data); data = data.slice(4);
-    var type_id    = array_to_ui4le(data); data = data.slice(4);
-
-    while( 1 )
-    {
-        if( data.length < 8 ) break;
-        var blockid = array_to_ui4le(data); data = data.slice(4);
-        var blocksz = array_to_ui4le(data); data = data.slice(4);
-
-        if( blockid == 0x20746D66)
-        {
-            if( data.length < 16 ) break;
-            format   = array_to_ui2le(data); data = data.slice(2);
-            channels = array_to_ui2le(data); data = data.slice(2);
-            rate     = array_to_ui4le(data); data = data.slice(4);
-            thruput  = array_to_ui4le(data); data = data.slice(4);
-            align    = array_to_ui2le(data); data = data.slice(2);
-            width    = array_to_ui2le(data); data = data.slice(2);
-        }
-        else if( blockid == 0x61746164 )
-        {
-            if( data.length < blocksz ) break;
-            var count = blocksz / (width/8);
-
-            if( channels == 1 ) {
-                while( count-- > 0  ) {
-                    if( width == 8 ) {
-                        samples.push( data[0]*256*256*256 );
-                        data = data.slice(1);
-                    }
-                    if( width == 16 ) {
-                        samples.push( data[1]*256*256*256 + data[0]*256*256 );
-                        data = data.slice(2);
-                    }
-                    if( width == 24 ) {
-                        samples.push( data[2]*256*256*256 + data[1]*256*256 + data[0]*256 );
-                        data = data.slice(3);
-                    }
-                    if( width == 32 ) {
-                        samples.push( data[3]*256*256*256 + data[2]*256*256 + data[1]*256 + data[0] );
-                        value += data[0];
-                        data = data.slice(4);
-                    }
-                }
-            }
-        }
-        else {
-        	break;
-        }
-    }
-    return samples;
 }
 
 </script>
@@ -543,14 +452,9 @@ td, th { padding: 0; }
 tr.preset:hover { color:#ddd; background-color: #222; border-color: #333; font-weight: bold;}
 td.preset:hover { color:#eee; background-color: #357; border-color: #333; font-weight: bold;}
 td.preset       { color:#ccc; background-color: #000; border-color: #000; font-weight: bold;}
-td.footsw       { color:#ccc; background-color: #000; border-color: #000; font-weight: bold;}
 
 .container {
   position: relative; width: 100%; 
-  margin: 0 auto; padding: 0 10px; 
-}
-.container_old {
-  position: relative; width: 500%; 
   margin: 0 auto; padding: 0 10px; 
 }
 .column,
@@ -569,15 +473,6 @@ h3 { font-size: 3.0rem; line-height: 1.3;  letter-spacing: -.1rem; }
 h4 { font-size: 2.4rem; line-height: 1.35; letter-spacing: -.0rem; }
 h5 { font-size: 1.8rem; line-height: 1.5;  letter-spacing: -.05rem; }
 h6 { font-size: 1.5rem; line-height: 1.6;  letter-spacing: 0; }
-
-@media (min-width: 550px) {
-  h1 { font-size: 5.0rem; }
-  h2 { font-size: 4.2rem; }
-  h3 { font-size: 3.6rem; }
-  h4 { font-size: 3.0rem; }
-  h5 { font-size: 2.4rem; }
-  h6 { font-size: 1.8rem; }
-}
 
 p { margin-top: 0; }
 a { color: #1EAEDB; }
@@ -626,7 +521,7 @@ table.flexfx2 tbody td { padding: 0px 0px; text-align: center; border-bottom: 0p
 table.flexfx { text-align: center; }
 table.flexfx th { padding: 10px 5px; text-align: center; border-bottom: 1px solid #EEE; border-top: 1px solid #EEE; }
 table.flexfx td { padding: 10px 10px; text-align: center; border-bottom: 1px solid #EEE; border-top: 1px solid #EEE; }
-table.flexfx tbody td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #EEE; }
+table.flexfx tbody td { padding: 4px 5px; text-align: left; border-bottom: 1px solid #EEE; }
 
 .button,
 button,
@@ -657,7 +552,7 @@ input[type="button"]:disabled { color: #AAA; background-color: #357; border-colo
 
 input.slider {
     -webkit-appearance: none; -webkit-transition: .2s;
-    width: 60px; height: 11px; outline: none;
+    width: 80px; height: 11px; outline: none;
     border-radius: 3px; border: 1px solid #CCC;
     background: #333; opacity: 0.7; transition: opacity .2s;
 }
@@ -673,29 +568,6 @@ input.slider:hover,
 slider:hover { color: #FFF; background-color: #000; border-color: #CCC; }
 
 input.slider::-webkit-slider-thumb:hover { color: #FFF; background-color: #7BF; border-color: #7BF; } {}
-
-input.vslider {
-    -webkit-appearance: slider-vertical;
-    width: 20px; height: 60px;
-    border-radius: 3px; border: 1px solid #CCC;
-    background: #333; opacity: 0.7;
-    outline: none;
-    -webkit-transition: .2s;
-    transition: opacity .2s;
-}
-input.vslider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 11px; height: 13px;
-    border-radius: 3px; border: 0px solid #CCC;
-    background: #CCC;
-    cursor: pointer;
-}
-input.vslider:hover,
-vslider:hover { color: #FFF; background-color: #000; border-color: #CCC; }
-
-input.vslider::-webkit-slider-thumb:hover { color: #FFF; background-color: #7BF; border-color: #7BF; } {
-}
 
 </style>
 

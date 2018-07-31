@@ -2,7 +2,7 @@
 // clean and articulate overdrive/distortion voicing. The second and third preamp stages 
 // incorporate adjustable pre-filtering and bias settings, midrange emphasis filter frequency,
 // post filtering, and a tube-based gain model with slew-rate limiting creating a configurable
-// tube-like multi-stage guitar preamp. Three bypass-switch controlled presets, USB/MIDI/HTML
+// tube-like multi-stage guitar preamp. Three bypass-switch controlled parameters, USB/MIDI/HTML
 // control, and parameter-set morphing. 
 
 #include <math.h>
@@ -16,7 +16,6 @@ const char* usb_midi_output_name  = "Preamp MIDI Out";
 const char* usb_midi_input_name   = "Preamp MIDI In";
 
 const int audio_sample_rate     = 192000;
-const int dsp_channel_count     = 1;
 const int usb_output_chan_count = 2;
 const int usb_input_chan_count  = 2;
 const int i2s_channel_count     = 2;
@@ -26,11 +25,12 @@ const double pi = 3.14159265359;
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 };
 
-const char* control_labels[17] = { "C99 Preamp",
+const char* control_labels[21] = { "C99 Preamp",
                                    "Input Drive", "Pre Low Cut", "Mid Emphasis",
                                    "Stage Gain", "Slewrate Limit", "Post High Cut",
                                    "Triode 1 Bias", "Triode 2 Bias", "Triode 3 Bias",
-                                   "Output Volume", "", "", "", "", "","" };
+                                   "Output Volume",
+                                   "","","","","","","","","","" };
 
 //util_fir.py 0 0.5 1.0 58
 //FQ(-0.001603981),FQ(-0.021411303),FQ(+0.093966609),FQ(+0.429048675),FQ(+0.429048675),
@@ -78,7 +78,7 @@ int _preamp_gain_model( int xx, int* cc, int* ss ) // block,gain,bias,slew
 	asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(_preamp_gain_lut[ii+1]),"r"(z2),"0"(ah),"1"(al));
 	asm volatile("maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(_preamp_gain_lut[ii+2]),"r"(z3),"0"(ah),"1"(al));
 	asm volatile("lextract %0,%1,%2,%3,32":"=r"(xx):"r"(ah),"r"(al),"r"(QQ));
-    /* 6th Order FIR noise attenuation, util_fir.py 0 0.5 1.0 40 */
+    /* 6th order FIR noise attenuation, util_fir.py 0 0.5 1.0 40 */
     asm volatile( "ldd %0,%1,%2[6]"  :"=r"(s2),"=r"(s1):"r"(ss) );
     asm volatile( "std %0,%1,%2[6]" ::"r" (s1), "r"(xx),"r"(ss) );
     asm volatile( "maccs %0,%1,%2,%3":"=r"(ah),"=r"(al):"r"(FQ(-0.013268164)),"r"(xx),"0"(0),"1"(1<<(QQ-1)) );
@@ -149,22 +149,21 @@ void _calc_lowpass( int* coeffs, double min, double max, double val )
     calc_lowpass( coeffs, (min+val*(max-min)) / 576000.0, 0.500 );
 }
 
-void flexfx_control( byte presets[20], bool updated, int dsp_prop[6] )
+void flexfx_control( int preset, byte parameters[20], int dsp_prop[6] )
 {
     static int state = 1;
     
-    double param_drive  = (double) presets[0] / 100.0;
-    double param_locut  = (double) presets[1] / 100.0;
-    double param_emph   = (double) presets[2] / 100.0;
-    double param_gain   = (double) presets[3] / 100.0;
-    double param_slew   = (double) presets[4] / 100.0;
-    double param_hicut  = (double) presets[5] / 100.0;
-    double param_bias1  = (double) presets[6] / 100.0;
-    double param_bias2  = (double) presets[7] / 100.0;
-    double param_bias3  = (double) presets[8] / 100.0;
-    double param_volume = (double) presets[9] / 100.0;
+    double param_drive  = (double) parameters[0] / 100.0;
+    double param_locut  = (double) parameters[1] / 100.0;
+    double param_emph   = (double) parameters[2] / 100.0;
+    double param_gain   = (double) parameters[3] / 100.0;
+    double param_slew   = (double) parameters[4] / 100.0;
+    double param_hicut  = (double) parameters[5] / 100.0;
+    double param_bias1  = (double) parameters[6] / 100.0;
+    double param_bias2  = (double) parameters[7] / 100.0;
+    double param_bias3  = (double) parameters[8] / 100.0;
+    double param_volume = (double) parameters[9] / 100.0;
     
-    double A_drive_min = 0.000, A_drive_max = 0.999;
     double A_locut_min = 0.995, A_locut_max = 0.99999;
     double A_emph_min  = 400,   A_emph_max  = 1500;
     double A_gain_min  = 0.25,  A_gain_max  = 0.99;
@@ -180,7 +179,6 @@ void flexfx_control( byte presets[20], bool updated, int dsp_prop[6] )
     double B_hicut_min = 3000,  B_hicut_max = 12000;
     double B_bias_min  = -0.01, B_bias_max  = +0.01;
     
-    double C_drive_min = 0.000, C_drive_max = 0.999;
     double C_locut_min = 0.995, C_locut_max = 0.99999;
     double C_emph_min  = 400,   C_emph_max  = 1500;
     double C_gain_min  = 0.25,  C_gain_max  = 0.99;
@@ -217,10 +215,12 @@ void flexfx_control( byte presets[20], bool updated, int dsp_prop[6] )
     {
         dsp_prop[0] = state; state = 0x22;
         dsp_prop[1] = FQ( B_locut_min + param_locut * (B_locut_max - B_locut_min) );
-        //int drive = FQ( B_drive_min + param_drive * (B_drive_max - B_drive_min) );
-        //int gain  = FQ( B_gain_min  + param_gain  * (B_gain_max  - B_gain_min) );
-        //dsp_prop[2] = dsp_mul( drive, gain );
-        dsp_prop[2] = FQ( B_gain_min  + param_gain  * (B_gain_max  - B_gain_min) );
+        
+        int drive = FQ( B_drive_min + param_drive * (B_drive_max - B_drive_min) );
+        int gain  = FQ( B_gain_min  + param_gain  * (B_gain_max  - B_gain_min) );
+        dsp_prop[2] = dsp_mul( drive, gain );
+        //dsp_prop[2] = FQ( B_gain_min  + param_gain  * (B_gain_max  - B_gain_min) );
+        
         dsp_prop[3] = FQ( B_bias_min  + param_bias2 * (B_bias_max  - B_bias_min) );
         dsp_prop[4] = FQ( B_slew_min  + param_slew  * (B_slew_max  - B_slew_min) );
     }
