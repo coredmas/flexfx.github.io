@@ -12,21 +12,23 @@ const char* usb_audio_input_name  = "Delay Audio In";
 const char* usb_midi_output_name  = "Delay MIDI Out";
 const char* usb_midi_input_name   = "Delay MIDI In";
 
-const int audio_sample_rate     = 192000;
-const int usb_output_chan_count = 2;
-const int usb_input_chan_count  = 2;
-const int i2s_channel_count     = 2;
-const int i2s_is_bus_master     = 1;
+const int audio_sample_rate     = 192000; // Default sample rate at boot-up
+const int audio_clock_mode      = 0; // 0=internal/master,1=external/master,2=slave
+const int usb_output_chan_count = 2; // 2 USB audio class 2.0 output channels
+const int usb_input_chan_count  = 2; // 2 USB audio class 2.0 input channels
+const int i2s_channel_count     = 2; // Channels per SDIN/SDOUT wire (2,4,or 8)
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 };
 
+const int one_over_e = FQ(1.0/2.71828182845);
+
 const char* control_labels[21] = { "C99 Delay",
-                                   "Delay Time", "LFO Rate", "LFO Depth",
-                                   "Regeneration", "Diffusion",
+                                   "Input Drive", "Delay (Range)", "Delay (Time)",
+                                   "LFO Rate", "LFO Depth",
                                    "Filter Freq", "Filter Q",
-                                   "Feedback Level", "Dry/Wet Mix",
+                                   "Diffusion", "Feedback", "Dry/Wet Mix",
                                    "Output Volume",
-                                   "","","","","","","","","","" };
+                                   "","","","","","","","","" };
 
 int _delay_dnsample_coeff[80] = // util_fir.py 0.036 0.125 1.0 108
 {
@@ -51,73 +53,72 @@ int _delay_upsample_coeff[80], _delay_dnsample_state[80], _delay_upsample_state[
 
 int _sine_lut[1024];
 
-void flexfx_control( int preset, byte parameters[20], int dsp_prop[6] )
+void audio_control( const double parameters[20], int property[6] )
 {
 	static int state = 1;
 	
     if( state == 1 ) // Volume
     {
-        dsp_prop[0] = state; state = 2;
-        dsp_prop[1] = FQ( (double) parameters[10] / 100.0 );
+        property[0] = state; state = 2;
+        property[1] = FQ( 0.25 + 0.75 * parameters[10] ); // Volume
     }
     else if( state == 2 ) // delay,rate,depth,blend
     {
-        double rr = (double) (parameters[2]/100.0); // LFO rate
-
-        dsp_prop[0] = state; state = 3;        
-        dsp_prop[1] = FQ( (double) parameters[ 1] / 100.0 ); // Delay base
-        dsp_prop[2] = FQ( 0.0000005 + rr * 0.00002 ); // LFO time delta
-        dsp_prop[3] = FQ( (double) parameters[ 3] / 100.0 ); // Modulation depth
-        dsp_prop[4] = FQ( (double) parameters[ 9] / 100.0 ); // Wet/dry mix
+        property[0] = state; state = 3;   
+        property[2] = FQ( parameters[0] ); // Input drive
+        property[2] = FQ( parameters[1] * parameters[2] ); // Delay base time
+        property[3] = FQ( 0.0000005 +  parameters[3] * 0.00002 ); // LFO time delta
+        property[4] = FQ( parameters[4] ); // Modulation depth
+        property[5] = FQ( parameters[9] ); // Wet/dry mix
     }
     else if( state == 3 ) // diffusion,feedback,regeneration
     {
-        dsp_prop[0] = state; state = 4;
-        dsp_prop[1] = FQ( (double) parameters[ 5] / 100.0 ); // Diffusion
-        dsp_prop[2] = FQ( (double) parameters[ 4] / 100.0 ); // Feedback ratio
-        dsp_prop[3] = FQ( (double) parameters[ 8] / 100.0 ); // Regeneration ratio
+        property[0] = state; state = 4;
+        property[1] = FQ( parameters[7] ); // Diffusion
+        property[2] = FQ( parameters[8] ); // Feedback ratio
     }
     else if( state == 4 ) // filtF,filtQ
     {
-        double fc = (double) parameters[ 6] / 100.0; // Filter frequency
-        double qq = (double) parameters[ 7] / 100.0; // Filter bandwidth
-        dsp_prop[0] = state; state = 5;
-        calc_bandpassQ( dsp_prop+1, 0.001+fc*0.01, 0.1+qq*0.9 );
+        double fc = parameters[5]; // Filter frequency
+        double qq = parameters[6]; // Filter bandwidth
+        
+        property[0] = state; state = 5;
+        calc_bandpassQ( property+1, 0.001+fc*0.01, 0.1+qq*0.9 );
     }
     else if( state == 5 ) // 
     {
-        dsp_prop[0] = state; state = 1;
+        property[0] = state; state = 1;
     }
 }
 
-int _delay_base = 0, _delay_depth = 0, _delay_rate = 0, _delay_blend = 0;
-int _delay_diffuse = 0, _delay_regen = 0, _delay_fback = 0, _delay_volume = 0;
-int _delay_filter_coeff[5], _delay_filter_state[4];
-
-void app_initialize( void )
+void audio_mixer( const int usb_output[32], int usb_input[32],
+                  const int adc_output[32], int dac_input[32],
+                  const int dsp_output[32], int dsp_input[32], const int property[6] )
 {
-    mix_fir_coeffs( _delay_upsample_coeff, _delay_dnsample_coeff, 80, 5 );
+    dsp_input[1] = dsp_output[1];
 }
 
-void app_thread1( int samples[32], const int property[6] )
+int _delay_drive = 0;
+int _delay_base = 0, _delay_depth = 0, _delay_rate = 0, _delay_blend = 0;
+int _delay_diffuse = 0, _delay_fback = 0, _delay_volume = 0;
+int _delay_filter_coeff[5], _delay_filter_state[4];
+
+void dsp_initialize( void )
 {
-    //samples[1] = _delay_drive( samples[0], _delay_drive_coeff, _delay_drive_state );
-    //samples[1] = samples[0];
+    mix_fir_coeffs( _delay_upsample_coeff, _delay_dnsample_coeff, 80, 5 );
 }
 
 /*
         +-------------------------------------------------------+
         |                                                       |
         |                                                      \|/
-Input --+--> Delay ------> Modulation ----+--> Filter ---+--> Mixer --->
-              /|\             /|\         |               |
-               |               |          |               |
-               |               +--Regen --+               |
-               |                                          | 
-               +------------------Fdback------------------+
+input --+--> Delay ------> Modulation ----+--> Filter ---+--> Mixer --->
+              /|\                         |
+               |                          |
+               +<----------Feedback-------+
 */
         
-void app_thread2( int samples[32], const int property[6] )
+void dsp_thread1( int samples[32], const int property[6] )
 {
     static int delay_fifo[38400], insert = 0, remove = 0, phase = 0;
     static int samples_dn[5] = {0,0,0,0,0 }, samples_up[5] = {0,0,0,0,0 };
@@ -126,15 +127,13 @@ void app_thread2( int samples[32], const int property[6] )
     int count = _delay_base >> 13; // delay_q28 = 0000nnnn,nnnnnnnn,nnnfffff,ffffffff
     if( count > 38400 ) count = 38400;
 
-    _delay_regen = 0;
-    
-    int regen = dsp_mul( _delay_fback, FQ(0.8) );
-
     samples_dn[4] = samples_dn[3]; samples_dn[3] = samples_dn[2];
     samples_dn[2] = samples_dn[1]; samples_dn[1] = samples_dn[0];
-    samples_dn[0] = samples[0] + dsp_mul( samples[1], regen );
+    
+    int fdback = dsp_mul( _delay_fback, FQ(0.8) );
+    samples_dn[0] = samples[0] + dsp_mul( samples[1], fdback );
 
-    if( phase == 0 )
+    if( phase == 0 ) // Downsample by 5 from 192k to 38.4k
     {
         memcpy( samples_xx, samples_dn, 5 * sizeof(int) );
         _dsp_fir_dn( samples_xx, _delay_dnsample_coeff, _delay_dnsample_state, 80, 5 ); 
@@ -158,9 +157,15 @@ void app_thread2( int samples[32], const int property[6] )
     samples_up[2] = samples_up[1]; samples_up[1] = samples_up[0];
 }
 
-void app_thread3( int samples[32], const int property[6] )
+void dsp_thread2( int samples[32], const int property[6] )
+{    
+    //samples[1] = _delay_drive( samples[0], _delay_drive_coeff, _delay_drive_state );
+    //samples[1] = samples[0];
+}
+
+void dsp_thread3( int samples[32], const int property[6] )
 {
-    int lfo, ii,ff, i1,i2,i3; static int regen = 0;
+    int lfo, ii,ff, i1,i2,i3;
 
     // Generate the LFO signal for delay modulation
     static int time = FQ(0.0); time += _delay_rate; if(time > FQ(1.0)) time -= FQ(1.0);
@@ -170,26 +175,22 @@ void app_thread3( int samples[32], const int property[6] )
     
     // Update the sample delay line with input (for chorous) and feedback (for flanger).
     static int delay_fifo[1024], delay_index = 0;
-    delay_fifo[delay_index-- & 1023] = samples[1] + dsp_mul( regen, _delay_regen );
+    delay_fifo[delay_index-- & 1023] = samples[1];
     
     // Generate chorus wet signal
     lfo = dsp_mul(lfo,_delay_depth/2) / 2 + _delay_depth / 2;
     ii = (lfo & 0x0FFFFFFF) >> 18; ff = (lfo & 0x0003FFFF) << 10;
     i1 = (delay_index+ii+0)&1023, i2 = (delay_index+ii+1)&1023, i3 = (delay_index+ii+2)&1023;
-    samples[1] = dsp_lagrange( ff, delay_fifo[i1], delay_fifo[i2], delay_fifo[i3] );
-
-    // Generate flanger feedback signal
-    lfo = _delay_depth / 2; ii = (lfo & 0x0FFFFFFF) >> 18; ff = (lfo & 0x0003FFFF) << 10;
-    i1 = (delay_index+ii+0)&1023, i2 = (delay_index+ii+1)&1023, i3 = (delay_index+ii+2)&1023;
-    regen = dsp_lagrange( ff, delay_fifo[i1], delay_fifo[i2], delay_fifo[i3] );
+    samples[2] = dsp_lagrange( ff, delay_fifo[i1], delay_fifo[i2], delay_fifo[i3] );
 }
 
-void app_thread4( int samples[32], const int property[6] )
+void dsp_thread4( int samples[32], const int property[6] )
 {
-    int lfo, ii,ff, i1,i2,i3, wet;
+    int lfo, ii,ff, i1,i2,i3;
+    int rate = dsp_mul( _delay_rate, one_over_e );
     
     // Generate the LFO signal for delay modulation
-    static int time = FQ(0.0); time += _delay_rate/3; if(time > FQ(1.0)) time -= FQ(1.0);
+    static int time = FQ(0.0); time += rate; if(time > FQ(1.0)) time -= FQ(1.0);
     ii = (time & 0x0FFFFFFF) >> 18; ff = (time & 0x0003FFFF) << 10;
     lfo = dsp_lagrange( ff, dsp_sine_10[ii+0], dsp_sine_10[ii+1], dsp_sine_10[ii+2] );
     lfo = dsp_mul( lfo, FQ(0.999) ); // Make sure it doesn't overflow beyond +/- 1.0
@@ -202,26 +203,27 @@ void app_thread4( int samples[32], const int property[6] )
     lfo = dsp_mul(lfo,_delay_depth/6) / 2 + _delay_depth / 6;
     ii = (lfo & 0x0FFFFFFF) >> 18; ff = (lfo & 0x0003FFFF) << 10;
     i1 = (delay_index+ii+0)&1023, i2 = (delay_index+ii+1)&1023, i3 = (delay_index+ii+2)&1023;
-    wet = dsp_lagrange( ff, delay_fifo[i1], delay_fifo[i2], delay_fifo[i3] ) / 3;    
-    samples[1] += dsp_mul( wet, FQ(1.0) - _delay_regen );
+    samples[3] = dsp_lagrange( ff, delay_fifo[i1], delay_fifo[i2], delay_fifo[i3] );
 }
 
-void app_thread5( int samples[32], const int property[6] )
+void dsp_thread5( int samples[32], const int property[6] )
 {
     //sample[1] = diffuse( sample[1], _delay_diffuse );
+
     samples[1] = dsp_iir2( samples[1], _delay_filter_coeff, _delay_filter_state );
-    
-    samples[0] = dsp_blend( samples[0], samples[1], _delay_blend/2 ); // Max is 50%
+
+    samples[1] = dsp_mul( samples[2], FQ(0.75) ) + dsp_mul( samples[3], FQ(0.25) );
+    samples[0] = dsp_blend( samples[0], samples[2], _delay_blend/2 ); // Max is 50%
     samples[0] = dsp_mul( samples[0], _delay_volume );
     
     if( property[0] == 1 ) _delay_volume = property[1];
     if( property[0] == 2 ) {
-        _delay_base = property[1]; _delay_rate = property[2];
-        _delay_depth = property[3]; _delay_blend = property[4];
+        _delay_drive = property[1];
+        _delay_base = property[2]; _delay_rate = property[3];
+        _delay_depth = property[4]; _delay_blend = property[5];
     }
     if( property[0] == 3 ) {
-        _delay_diffuse = property[1]; _delay_regen = property[2];
-        _delay_fback = property[3];
+        _delay_diffuse = property[1]; _delay_fback = property[2];
     }
     if( property[0] == 4 ) {
         _delay_filter_coeff[0] = property[1]; _delay_filter_coeff[1] = property[2];

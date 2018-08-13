@@ -13,11 +13,11 @@ const char* usb_audio_input_name  = "Reverb Audio In";
 const char* usb_midi_output_name  = "Reverb MIDI Out";
 const char* usb_midi_input_name   = "Reverb MIDI In";
 
-const int audio_sample_rate     = 48000;
-const int usb_output_chan_count = 2;
-const int usb_input_chan_count  = 2;
-const int i2s_channel_count     = 2;
-const int i2s_is_bus_master     = 1;
+const int audio_sample_rate     = 48000; // Default sample rate at boot-up
+const int audio_clock_mode      = 0; // 0=internal/master,1=external/master,2=slave
+const int usb_output_chan_count = 2; // 2 USB audio class 2.0 output channels
+const int usb_input_chan_count  = 2; // 2 USB audio class 2.0 input channels
+const int i2s_channel_count     = 2; // Channels per SDIN/SDOUT wire (2,4,or 8)
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 };
 
@@ -25,19 +25,25 @@ const char* control_labels[11] = { "C99 Reverb",
                                    "","","","","","","","","",
                                    "Output Volume" };
 
-void flexfx_control( int preset, byte parameters[20], int dsp_prop[6] )
+void audio_control( const double parameters[20], int property[6] )
 {
 	static int state = 1;
 
     if( state == 1 ) // Volume, Gain
     {
-        dsp_prop[0] = state; state = 0x11;
-        dsp_prop[1] = FQ( volume_min + param_volume * (volume_max - volume_min) );
-        dsp_prop[2] = FQ( exp(10, (-24.0 * (max_gain/100.0-0.5)) ));
+        property[0] = state; state = 0x11;
+        property[1] = FQ( volume_min + param_volume * (volume_max - volume_min) );
+        property[2] = FQ( exp(10, (-24.0 * (max_gain/100.0-0.5)) ));
     }
 }
 
-nline int _comb_filterL( int xx, int ii, int nn ) // yy[k] = xx[k] + g1*xx[k-M1] - g2*yy[k-M2]
+void audio_mixer( const int usb_output[32], int usb_input[32],
+                  const int i2s_output[32], int i2s_input[32],
+                  const int dsp_output[32], int dsp_input[32], const int property[6] )
+{
+}
+
+inline int _comb_filterL( int xx, int ii, int nn ) // yy[k] = xx[k] + g1*xx[k-M1] - g2*yy[k-M2]
 {
     ii = (_comb_delays[nn] + ii) & 2047; // Index into sample delay FIFO
     int yy = _comb_bufferL[nn][ii];
@@ -73,7 +79,7 @@ inline int _allpass_filterR( int xx, int ii, int nn ) // yy[k] = xx[k] + g * xx[
     return yy;
 }
 
-void app_initialize( void )
+void dsp_initialize( void )
 {
     memset( _comb_bufferL, 0, sizeof(_comb_bufferL) );
     memset( _comb_stateL,  0, sizeof(_comb_stateL) );
@@ -97,7 +103,7 @@ int _stereo_width   = FQ(0.2); // Parameter: Stereo width setting
 int _comb_damping   = FQ(0.2); // Parameter: Reflection damping factor (aka 'reflectivity')
 int _comb_feedbk    = FQ(0.2); // Parameter: Reflection feedback ratio (aka 'room size')
 
-void app_thread1( int samples[32], const int property[6] )
+void dsp_thread1( int samples[32], const int property[6] )
 {
     static int index = 0; ++index; // Used to index into the sample FIFO delay buffer
     // Eight parallel comb filters ...
@@ -112,14 +118,14 @@ void app_thread1( int samples[32], const int property[6] )
     samples[2] = _allpass_filterL( samples[2], index, 3 );
 }
 
-void app_thread2( int samples[32], const int property[6] )
+void dsp_thread2( int samples[32], const int property[6] )
 {
 }
 
-void app_thread3( int samples[32], const int property[6] ) {}
-void app_thread4( int samples[32], const int property[6] ) {}
+void dsp_thread3( int samples[32], const int property[6] ) {}
+void dsp_thread4( int samples[32], const int property[6] ) {}
 
-void app_thread5( int samples[32], const int property[6] )
+void dsp_thread5( int samples[32], const int property[6] )
 {
     samples[0] = dsp_mul( samples[0], _reverb_volume );
 

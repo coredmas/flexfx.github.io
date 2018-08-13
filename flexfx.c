@@ -21,17 +21,16 @@ static byte _preset_data[4096];
 int _master_volume = 0, _master_preset = 0, _master_sync = 0;
 int _master_tone_coeff[8] = {FQ(1.0),0,0,0,0,0}, _master_tone_state[4] = {0,0,0,0};
 
-void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
+void dsp_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
 {
     static int state = 0, preset = 0, sync = 0;
-    
+        
     if( state == 0 )
     {
         state = 1;
         //flash_read( 0, _preset_data );
         if( 1 || _preset_data[0] == 0xFF ) { // FLASH has been erased.
-            memset( _preset_data, 0, sizeof(_preset_data) );
-            memset( _preset_data+20, 50, 5*20 ); // Initialize params to default (50=midpoint).
+            memset( _preset_data, 50, 5*20 ); // Initialize params to default (50=midpoint).
             //flash_write( 0, _preset_data );
         }
         return;
@@ -42,25 +41,35 @@ void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
         double tone, pots[8] = {0,0,0,0,0,0,0,0};
         _read_adc( pots );
         
-        _master_volume = FQ(pots[2]); tone = pots[1];
-        calc_lowpass( _master_tone_coeff, (2000+12000*tone)/audio_sample_rate, 0.707 );
-    
-        int knob = -1;
-        if(                   pots[0] < 0.08 ) knob = 0;
-        if( pots[0] > 0.09 && pots[0] < 0.36 ) knob = 1;
-        if( pots[0] > 0.37 && pots[0] < 0.63 ) knob = 2;
-        if( pots[0] > 0.64 && pots[0] < 0.91 ) knob = 3;
-        if( pots[0] > 0.92                   ) knob = 4;
-        
-        if( knob >= 0 && knob != _master_preset ) {
-            preset = _master_preset = knob;
-            snd_prop[0] = 0x2102; snd_prop[1] = preset;
+        _master_volume = FQ( 0.25 + (0.75 * pots[2]) );
+        tone = pots[1];
+        calc_lowpass( _master_tone_coeff, (1000+12000*tone)/audio_sample_rate, 0.707 );
+
+        int idx1 = 0, idx2 = 0; double ratio = 0.0;
+        if( pots[0]>=0.00 && pots[0]<0.25 ) {idx1=0; idx2=1; ratio=(4*(pots[0]-0.00));}
+        if( pots[0]>=0.25 && pots[0]<0.50 ) {idx1=1; idx2=2; ratio=(4*(pots[0]-0.25));}
+        if( pots[0]>=0.50 && pots[0]<0.75 ) {idx1=2; idx2=3; ratio=(4*(pots[0]-0.50));}
+        if( pots[0]>=0.75 && pots[0]<1.00 ) {idx1=3; idx2=4; ratio=(4*(pots[0]-0.75));}
+
+        double parameters[20] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+        double targets[20] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+        for( int ii = 0; ii < 20; ++ii ) {
+            targets[ii] = _preset_data[20*idx1] * (1-ratio) + _preset_data[20*idx2] * ratio;
         }
-        if( sync != _master_sync ) {
-            preset = sync = _master_sync;
-            snd_prop[0] = 0x2102; snd_prop[1] = preset;
+        for( int ii = 0; ii < 20; ++ii ) {
+            double diff = targets[ii] - parameters[ii];
+            if( diff > +0.01 ) diff = +0.01; if( diff > -0.01 ) diff = -0.01;
+            parameters[ii] += diff;
         }
-        flexfx_control( preset, _preset_data + 20 * preset, dsp_prop );
+        //if( knob >= 0 && knob != _master_preset ) {
+        //    preset = _master_preset = knob;
+        //    snd_prop[0] = 0x2102; snd_prop[1] = preset;
+        //}
+        //if( sync != _master_sync ) {
+        //    preset = sync = _master_sync;
+        //    snd_prop[0] = 0x2102; snd_prop[1] = preset;
+        //}
+        audio_control( parameters, dsp_prop );
     }
 
     // 20nn - Read parameter label for parameter N
@@ -68,43 +77,43 @@ void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
     {
         int ii = rcv_prop[0] & 0xFF;
         snd_prop[0] = rcv_prop[0];
-        if( ii <= 10 ) _property_set_text( snd_prop, (void*) control_labels[ii] );
+        _property_set_text( snd_prop, (void*) control_labels[ii] );
     }
     // 2100 - Read the current preset_num,volume,tone,preset,bypass settings
     // 2101 - Write the current preset_num,volume,tone,preset,bypass settings
     // 2102 - Notification of changes to preset_num,volume,tone,preset,bypass settings
-    else if( (rcv_prop[0] & 0xFFFF) == 0x2100 )
-    {
-        snd_prop[0] = rcv_prop[0]; snd_prop[1] = preset;
-    }
-    else if( (rcv_prop[0] & 0xFFFF) == 0x2101 )
-    {
-        snd_prop[0] = rcv_prop[0]; _master_sync = rcv_prop[1];
-    }
+    //else if( (rcv_prop[0] & 0xFFFF) == 0x2100 )
+    //{
+    //    snd_prop[0] = rcv_prop[0]; snd_prop[1] = preset;
+    //}
+    //else if( (rcv_prop[0] & 0xFFFF) == 0x2101 )
+    //{
+    //    snd_prop[0] = rcv_prop[0]; _master_sync = rcv_prop[1];
+    //}
     // 22p0 - Read preset parameter values for preset P (0 <= P < 16)
     // 22p1 - Write preset parameter values for preset P (0 <= P < 16)
     else if( (rcv_prop[0] & 0xFF0F) == 0x2200)
     {
         int pp = (rcv_prop[0] & 0x00F0) >> 4;
         snd_prop[0] = (rcv_prop[0] & 0xFF0F) + 16*pp;
-        _property_set_data( snd_prop, _preset_data + 20 + 20*pp );
+        _property_set_data( snd_prop, _preset_data + 20*pp );
     }
     else if( (rcv_prop[0] & 0xFF0F) == 0x2201)
     {
         int pp = (rcv_prop[0] & 0x00F0) >> 4;
         snd_prop[0] = (rcv_prop[0] & 0xFF0F) + 16*pp;
-        _property_get_data( rcv_prop, _preset_data + 20 + 20*pp );
+        _property_get_data( rcv_prop, _preset_data + 20*pp );
     }
 }
 
-void app_mixer( const int usb_output[32], int usb_input[32],
-                const int i2s_output[32], int i2s_input[32],
+void dsp_mixer( const int usb_output[32], int usb_input[32],
+                const int adc_output[32], int dac_input[32],
                 const int dsp_output[32], int dsp_input[32], const int property[6] )
 {
     //static int active = 0, footsw = 0, sync_tx = 0, sync_rx = 0;
     //int level, period = audio_sample_rate / 1000;
     
-    int input  = i2s_output[0]; // Guitar/instrument input Q31
+    int input  = adc_output[0]; // Guitar/instrument input Q31
     int result = dsp_output[0]; // DSP Preamp output Q28
 
     result = dsp_iir2( result, _master_tone_coeff, _master_tone_state ); // Tone knob/control
@@ -113,8 +122,8 @@ void app_mixer( const int usb_output[32], int usb_input[32],
     usb_input[0] = input;      // USB input left Q31 = guitar input (ADC) Q31
     usb_input[1] = result * 8; // USB input right Q31 = DSP result Q28
     dsp_input[0] = input  / 8; // DSP input Q28 = guitar input Q31
-    i2s_input[0] = result * 8; // DAC left Q31 = DSP result Q28
-    i2s_input[1] = result * 8; // DAC right Q31 = DSP result Q28
+    dac_input[0] = result * 8; // DAC left Q31 = DSP result Q28
+    dac_input[1] = result * 8; // DAC right Q31 = DSP result Q28
 
     /*
     if( sync_tx > 0 ) { i2s_input[2] = 0xFFFFFFFF; --sync_tx; } // Transmit sync signal to others
@@ -144,6 +153,7 @@ void app_mixer( const int usb_output[32], int usb_input[32],
     }
     i2s_input[2] = active; // Set LED to 1 if footsw == 1 (active, not bypassed)
     */
+    audio_mixer( usb_output, usb_input, adc_output, dac_input, dsp_output, dsp_input, property );
 }
 
 static void _property_get_data( const int property[6], byte data[20] )
@@ -206,7 +216,7 @@ static double pi = 3.14159265359;
 
 #define RR (1<<(QQ-1))
 
-//int  math_random (int  gg, int seed)
+int  math_random (int gg, int seed);
 //int  math_sqr_x  (int xx)
 int  math_min_X  (const int* xx,int nn)                       {return _math_min_X(xx,nn);}
 int  math_max_X  (const int* xx,int nn)                       {return _math_max_X(xx,nn);}
@@ -226,7 +236,7 @@ void math_mac_XyZ(int* xx,int        yy,const int* zz,int nn) {_math_mac_XyZ(xx,
 void math_mac_XYz(int* xx,const int* yy,int        zz,int nn) {_math_mac_XYz(xx,yy,zz,nn);}
 void math_mac_XYZ(int* xx,const int* yy,const int* zz,int nn) {_math_mac_XYZ(xx,yy,zz,nn);}
 
-int dsp_random( int xx, int seed )
+int math_random( int xx, int seed )
 {
     asm("crc32 %0,%2,%3":"=r"(xx):"0"(xx),"r"(seed),"r"(0xEB31D82E));
     return xx;

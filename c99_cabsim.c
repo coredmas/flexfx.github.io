@@ -19,11 +19,11 @@ const char* usb_audio_input_name  = "Cabsim Audio In";
 const char* usb_midi_output_name  = "Cabsim MIDI Out";
 const char* usb_midi_input_name   = "Cabsim MIDI In";
 
-const int audio_sample_rate     = 48000;
-const int usb_output_chan_count = 2;
-const int usb_input_chan_count  = 2;
-const int i2s_channel_count     = 2;
-const int i2s_is_bus_master     = 1;
+const int audio_sample_rate     = 48000; // Default sample rate at boot-up
+const int audio_clock_mode      = 0; // 0=internal/master,1=external/master,2=slave
+const int usb_output_chan_count = 2; // 2 USB audio class 2.0 output channels
+const int usb_input_chan_count  = 2; // 2 USB audio class 2.0 input channels
+const int i2s_channel_count     = 2; // Channels per SDIN/SDOUT wire (2,4,or 8)
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 };
 
@@ -99,8 +99,8 @@ int _ampcab_dnsample_coeff[120] = // util_fir.py 0.04 0.10 1.0 110
     FQ(-0.000005139),FQ(-0.000001362),FQ(+0.000000447),FQ(+0.000000841),FQ(+0.000000541)
 };
 int _ampcab_upsample_coeff[120];
-
 int _ampcab_upsample_state[120], _ampcab_dnsample_state[120];
+
 int _ampcab_pwramp_coeff[6] = { 0,0,0,0,0,0 }, _ampcab_pwramp_state[4] = { 0,0,0,0 };
 int _ampcab_tone_data[7];
 int _ampcab_tone_coeff[8]={FQ(1.0),0,0,0,0,0,0,0}, _ampcab_tone_state[6];
@@ -116,19 +116,19 @@ void _calc_lowpass( int* coeffs, double min, double max, double val )
     calc_lowpass( coeffs, (min+val*(max-min)) / 576000.0, 0.500 );
 }
 
-void flexfx_control( int preset, byte parameters[20], int dsp_prop[6] )
+void audio_control( const double parameters[20], int property[6] )
 {
 	static int state = 1;
 	
-    double param_drive  = (double) parameters[0] / 100.0;
-    double param_bassG  = (double) parameters[1] / 100.0;
-    double param_bassF  = (double) parameters[2] / 100.0;
-    double param_midG   = (double) parameters[3] / 100.0;
-    double param_midF   = (double) parameters[4] / 100.0;
-    double param_trebG  = (double) parameters[5] / 100.0;
-    double param_trebF  = (double) parameters[6] / 100.0;
-    //double param_sag    = (double) parameters[7] / 100.0;
-    double param_volume = (double) parameters[8] / 100.0;
+    double param_drive  = (double) parameters[0];
+    double param_bassG  = (double) parameters[1];
+    double param_bassF  = (double) parameters[2];
+    double param_midG   = (double) parameters[3];
+    double param_midF   = (double) parameters[4];
+    double param_trebG  = (double) parameters[5];
+    double param_trebF  = (double) parameters[6];
+    //double param_sag    = (double) parameters[7];
+    double param_volume = (double) parameters[8];
 
     double drive_min  = 0.100, drive_max  = 0.999;
     double bassG_min  = 0.000, bassG_max  = 0.999;
@@ -142,20 +142,20 @@ void flexfx_control( int preset, byte parameters[20], int dsp_prop[6] )
 
     if( state == 1 )
     {
-        dsp_prop[0] = state; state = 2;
-        dsp_prop[1] = FQ( volume_min + param_volume * (volume_max - volume_min) );
+        property[0] = state; state = 2;
+        property[1] = FQ( volume_min + param_volume * (volume_max - volume_min) );
     }
     else if( state == 2 ) // Block, Gain, Bias, Slew
     {
-        dsp_prop[0] = state; state = 3;
-        dsp_prop[1] = FQ( 0.99999 ); // Block
-        dsp_prop[2] = FQ( drive_min + param_drive * (drive_max - drive_min) ); // Gain
-        dsp_prop[3] = FQ( 0.000 );   // Bias
-        dsp_prop[4] = FQ( 0.20 );    // Slew
+        property[0] = state; state = 3;
+        property[1] = FQ( 0.99999 ); // Block
+        property[2] = FQ( drive_min + param_drive * (drive_max - drive_min) ); // Gain
+        property[3] = FQ( 0.000 );   // Bias
+        property[4] = FQ( 0.20 );    // Slew
     }
     else if( state == 3 ) // Tone Stack part 1
     {
-        dsp_prop[0] = state; state = 4;
+        property[0] = state; state = 4;
         calc_tonestack( _ampcab_tone_data,
                         bassG_min + param_bassG * (bassG_max - bassG_min),
                         midG_min  + param_midG  * (midG_max  - midG_min),
@@ -163,16 +163,22 @@ void flexfx_control( int preset, byte parameters[20], int dsp_prop[6] )
                         bassF_min + param_bassF * (bassF_max - bassF_min),
                         midF_min  + param_midF  * (midF_max  - midF_min),
                         trebF_min + param_trebF * (trebF_max - trebF_min) );
-        memcpy( dsp_prop+1, _ampcab_tone_data+0, 5*sizeof(int) );
+        memcpy( property+1, _ampcab_tone_data+0, 5*sizeof(int) );
     }
     else if( state == 4 ) // Tone Stack part 2
     {
-        dsp_prop[0] = state; state = 1;
-        memcpy( dsp_prop+1, _ampcab_tone_data+5, 2*sizeof(int) );
+        property[0] = state; state = 1;
+        memcpy( property+1, _ampcab_tone_data+5, 2*sizeof(int) );
     }
 }
 
-void app_initialize( void )
+void audio_mixer( const int usb_output[32], int usb_input[32],
+                  const int i2s_output[32], int i2s_input[32],
+                  const int dsp_output[32], int dsp_input[32], const int property[6] )
+{
+}
+
+void dsp_initialize( void )
 {
     memset( _ampcab_upsample_state, 0, sizeof(_ampcab_upsample_state) );
     memset( _ampcab_dnsample_state, 0, sizeof(_ampcab_dnsample_state) );
@@ -186,7 +192,7 @@ void app_initialize( void )
     _ampcab_ir_coeff[0][0] = FQ(+0.8);
 }
 
-void app_thread1( int samples[32], const int property[6] )
+void dsp_thread1( int samples[32], const int property[6] )
 {
     _dsp_fir_up( samples, _ampcab_upsample_coeff, _ampcab_upsample_state, 120, 5 );
 
@@ -199,33 +205,33 @@ void app_thread1( int samples[32], const int property[6] )
     _dsp_fir_dn( samples, _ampcab_dnsample_coeff, _ampcab_dnsample_state, 120, 5 );
 }
 
-void app_thread2( int samples[32], const int property[6] )
+void dsp_thread2( int samples[32], const int property[6] )
 {
     samples[1] = 0; samples[2] = 1<<(QQ-1);
     samples[0] = dsp_convolve( samples[0], _ampcab_ir_coeff[0]+0*20*24, _ampcab_ir_state+0*20*24,
                                samples+1, samples+2, 20 );
 }
 
-void app_thread3( int samples[32], const int property[6] )
+void dsp_thread3( int samples[32], const int property[6] )
 {
     samples[0] = dsp_convolve( samples[0], _ampcab_ir_coeff[0]+1*20*24, _ampcab_ir_state+1*20*24,
                                samples+1, samples+2, 20 );
 }
 
-void app_thread4( int samples[32], const int property[6] )
+void dsp_thread4( int samples[32], const int property[6] )
 {
     samples[0] = dsp_convolve( samples[0], _ampcab_ir_coeff[0]+2*20*24, _ampcab_ir_state+2*20*24,
                                samples+1, samples+2, 20 );
     samples[0] = dsp_ext( samples[1], samples[2] );
 }
 
-void app_thread5( int samples[32], const int property[6] )
+void dsp_thread5( int samples[32], const int property[6] )
 {
     //samples[0] = dsp_convolve( samples[0], _ampcab_ir_coeff+3*20*24, _ampcab_ir_state+3*20*24,
     //                           samples+1, samples+2, 10 );
     //samples[0] = dsp_ext( samples[1], samples[2] );
 
-    static int volume = 0;
+    static int volume = 0, ir_sel = 0, ir_num, ir_idx = 0;
     //samples[0] = dsp_iir3( samples[0], _ampcab_tone_coeff, _ampcab_tone_state );
     samples[0] = dsp_mul ( samples[0], volume );
 
@@ -233,6 +239,27 @@ void app_thread5( int samples[32], const int property[6] )
     if( property[0] == 2 ) memcpy( _ampcab_pwramp_coeff, property+1, 5*sizeof(int) );
     if( property[0] == 3 ) memcpy( _ampcab_tone_coeff+0, property+1, 5*sizeof(int) );
     if( property[0] == 4 ) memcpy( _ampcab_tone_coeff+5, property+1, 2*sizeof(int) );
+    if( property[0] == 5 ) ir_sel = property[1];
+
+    int idx = 0, ratio = FQ(0.0);
+    if( ir_sel >= 0.00 && ir_sel < 0.10 ) { ir_num = 0; ratio = ir_sel - FQ(0.00); }
+    if( ir_sel >= 0.10 && ir_sel < 0.20 ) { ir_num = 1; ratio = ir_sel - FQ(0.10); }
+    if( ir_sel >= 0.20 && ir_sel < 0.30 ) { ir_num = 2; ratio = ir_sel - FQ(0.20); }
+    if( ir_sel >= 0.30 && ir_sel < 0.40 ) { ir_num = 3; ratio = ir_sel - FQ(0.30); }
+    if( ir_sel >= 0.40 && ir_sel < 0.50 ) { ir_num = 4; ratio = ir_sel - FQ(0.40); }
+    if( ir_sel >= 0.50 && ir_sel < 0.60 ) { ir_num = 5; ratio = ir_sel - FQ(0.50); }
+    if( ir_sel >= 0.60 && ir_sel < 0.70 ) { ir_num = 6; ratio = ir_sel - FQ(0.60); }
+    if( ir_sel >= 0.70 && ir_sel < 0.80 ) { ir_num = 7; ratio = ir_sel - FQ(0.70); }
+    if( ir_sel >= 0.80 && ir_sel < 0.90 ) { ir_num = 8; ratio = ir_sel - FQ(0.80); }
+    if( ir_sel >= 0.90 && ir_sel < 1.00 ) { ir_num = 9; ratio = ir_sel - FQ(0.90); }
+    ratio = dsp_mul( 16*ratio, FQ(10.0/16.0) );
+
+    int coef = _ampcab_ir_coeff[ir_num][ir_idx]/2 + _ampcab_ir_coeff[ir_num+1][ir_idx]/2;
+    int diff = coef - _ampcab_ir_coeff[0][ir_idx];
+    if( diff > +0.001 ) diff = +0.001; if( diff < -0.001 ) diff = -0.001;
+    _ampcab_ir_coeff[0][ir_idx] += diff;
+
+    if( ++ir_idx == 1680 ) ir_idx = 0;
 }
 
 int _ampcab_gain_lut[32768] =

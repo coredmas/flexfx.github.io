@@ -39,7 +39,7 @@ extern const char controller_script[];
 // propertys can be sent to DSP threads (by setting the DSP property ID to zero) at any time.
 // It's OK to use floating point calculations here as this thread is not a real-time audio thread.
 
-extern void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] );
+extern void dsp_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] );
 
 // The mixer function is called once per audio sample and is used to route USB, I2S and DSP samples.
 // This function should only be used to route samples and for very basic DSP processing - not for
@@ -48,7 +48,7 @@ extern void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6]
 // should be performed using fixed-point math.
 // NOTE: IIR, FIR, and BiQuad coeff and state data *must* be declared non-static global!
 
-extern void app_mixer( const int usb_output[32], int usb_input[32],
+extern void dsp_mixer( const int usb_output[32], int usb_input[32],
                        const int i2s_output[32], int i2s_input[32],
                        const int dsp_output[32], int dsp_input[32], const int property[6] );
 
@@ -60,15 +60,15 @@ extern void app_mixer( const int usb_output[32], int usb_input[32],
 // NOTE: IIR, FIR, and BiQuad coeff and state data *must* be declared non-static global!
 
 // Process samples and properties from the app_mixer function. Send results to stage 2.
-extern void app_thread1( int samples[32], const int property[6] );
+extern void dsp_thread1( int samples[32], const int property[6] );
 // Process samples and properties from stage 1. Send results to stage 3.
-extern void app_thread2( int samples[32], const int property[6] );
+extern void dsp_thread2( int samples[32], const int property[6] );
 // Process samples and properties from stage 2. Send results to stage 4.
-extern void app_thread3( int samples[32], const int property[6] );
+extern void dsp_thread3( int samples[32], const int property[6] );
 // Process samples and properties from stage 3. Send results to stage 5.
-extern void app_thread4( int samples[32], const int property[6] );
+extern void dsp_thread4( int samples[32], const int property[6] );
 // Process samples and properties from stage 4. Send results to the app_mixer function.
-extern void app_thread5( int samples[32], const int property[6] );
+extern void dsp_thread5( int samples[32], const int property[6] );
 
 // On-board FLASH read write functions.
 

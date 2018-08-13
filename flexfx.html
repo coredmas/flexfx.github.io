@@ -182,10 +182,18 @@ function _on_midi_connect( event )
     }
 }
 
+function array_to_ui1  (a) { return a[0]; }
+function array_to_ui2be(a) { return a[1]+256*a[0]; }
+function array_to_ui2le(a) { return a[0]+256*a[1]; }
+function array_to_ui4be(a) { return 16777216*a[0]+65536*a[1]+256*a[2]+a[3]; }
+function array_to_ui4le(a) { return a[0]+256*a[1]+65536*a[2]+16777216*a[3]; }
+
 function _on_midi_message( event )
 {
     var property = _midi_to_prop( event.data );
     if( property[0] == 0 ) return;
+    
+    //console.log(property[0].toString(16));
     
  	var unit = property[0] >> 16;
     if( !(unit in _midi_input_ports) ) _midi_input_ports[unit] = event.srcElement;
@@ -316,7 +324,7 @@ function _update_param( key )
 
     var prop = [(unit<<16)+0x2201+(preset<<4),0,0,0,0,0];
     var data = _parameter_data[unit][preset];
-    
+
     prop[1] = (data[ 0] << 24) + (data[ 1] << 16) + (data[ 2] << 8) + data[ 3];
     prop[2] = (data[ 4] << 24) + (data[ 5] << 16) + (data[ 6] << 8) + data[ 7];
     prop[3] = (data[ 8] << 24) + (data[ 9] << 16) + (data[10] << 8) + data[11];

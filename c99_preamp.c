@@ -15,11 +15,11 @@ const char* usb_audio_input_name  = "Preamp Audio In";
 const char* usb_midi_output_name  = "Preamp MIDI Out";
 const char* usb_midi_input_name   = "Preamp MIDI In";
 
-const int audio_sample_rate     = 192000;
-const int usb_output_chan_count = 2;
-const int usb_input_chan_count  = 2;
-const int i2s_channel_count     = 2;
-const int i2s_is_bus_master     = 1;
+const int audio_sample_rate     = 192000; // Default sample rate at boot-up
+const int audio_clock_mode      = 0; // 0=internal/master,1=external/master,2=slave
+const int usb_output_chan_count = 2; // 2 USB audio class 2.0 output channels
+const int usb_input_chan_count  = 2; // 2 USB audio class 2.0 input channels
+const int i2s_channel_count     = 2; // Channels per SDIN/SDOUT wire (2,4,or 8)
 
 const double pi = 3.14159265359;
 
@@ -149,20 +149,9 @@ void _calc_lowpass( int* coeffs, double min, double max, double val )
     calc_lowpass( coeffs, (min+val*(max-min)) / 576000.0, 0.500 );
 }
 
-void flexfx_control( int preset, byte parameters[20], int dsp_prop[6] )
+void audio_control( const double parameters[20][20], int property[6] )
 {
     static int state = 1;
-    
-    double param_drive  = (double) parameters[0] / 100.0;
-    double param_locut  = (double) parameters[1] / 100.0;
-    double param_emph   = (double) parameters[2] / 100.0;
-    double param_gain   = (double) parameters[3] / 100.0;
-    double param_slew   = (double) parameters[4] / 100.0;
-    double param_hicut  = (double) parameters[5] / 100.0;
-    double param_bias1  = (double) parameters[6] / 100.0;
-    double param_bias2  = (double) parameters[7] / 100.0;
-    double param_bias3  = (double) parameters[8] / 100.0;
-    double param_volume = (double) parameters[9] / 100.0;
     
     double A_locut_min = 0.995, A_locut_max = 0.99999;
     double A_emph_min  = 400,   A_emph_max  = 1500;
@@ -186,75 +175,81 @@ void flexfx_control( int preset, byte parameters[20], int dsp_prop[6] )
     double C_hicut_min = 3000,  C_hicut_max = 12000;
     double C_bias_min  = -0.01, C_bias_max  = +0.01;
     
-    double volume_min  = 0.100, volume_max  = 0.800;
+    double volume_min  = 0.200, volume_max  = 0.800;
     
     if( state == 1 )
     {
-        dsp_prop[0] = state; state = 0x11;
-        dsp_prop[1] = FQ( volume_min + param_volume * (volume_max - volume_min) );
+        property[0] = state; state = 0x11;
+        property[1] = FQ( volume_min + parameters[9] * (volume_max - volume_min) );
     }
     else if( state == 0x11 ) // Block, Gain, Bias, Slew
     {
-        dsp_prop[0] = state; state = 0x12;
-        dsp_prop[1] = FQ( A_locut_min + param_locut * (A_locut_max - A_locut_min) );
-        dsp_prop[2] = FQ( A_gain_min  + param_gain  * (A_gain_max  - A_gain_min) );
-        dsp_prop[3] = FQ( A_bias_min  + param_bias1 * (A_bias_max  - A_bias_min) );
-        dsp_prop[4] = FQ( A_slew_min  + param_slew  * (A_slew_max  - A_slew_min) );
+        property[0] = state; state = 0x12;
+        property[1] = FQ( A_locut_min + parameters[1] * (A_locut_max - A_locut_min) );
+        property[2] = FQ( A_gain_min  + parameters[3] * (A_gain_max  - A_gain_min) );
+        property[3] = FQ( A_bias_min  + parameters[6] * (A_bias_max  - A_bias_min) );
+        property[4] = FQ( A_slew_min  + parameters[4] * (A_slew_max  - A_slew_min) );
     }
     else if( state == 0x12 ) // Emphasis
     {
-        dsp_prop[0] = state; state = 0x13;
-        _calc_peaking( dsp_prop+1, A_emph_min, A_emph_max, param_emph );
+        property[0] = state; state = 0x13;
+        _calc_peaking( property+1, A_emph_min, A_emph_max, parameters[2] ); // Emphasis
     }
     else if( state == 0x13 ) // High Cut
     {
-        dsp_prop[0] = state; state = 0x21;
-        _calc_lowpass( dsp_prop+1, A_hicut_min, A_hicut_max, param_hicut );
+        property[0] = state; state = 0x21;
+        _calc_lowpass( property+1, A_hicut_min, A_hicut_max, parameters[5] );
     }
     else if( state == 0x21 ) // Block, Drive*Gain, Bias, Slew
     {
-        dsp_prop[0] = state; state = 0x22;
-        dsp_prop[1] = FQ( B_locut_min + param_locut * (B_locut_max - B_locut_min) );
+        property[0] = state; state = 0x22;
+        property[1] = FQ( B_locut_min + parameters[1] * (B_locut_max - B_locut_min) );
         
-        int drive = FQ( B_drive_min + param_drive * (B_drive_max - B_drive_min) );
-        int gain  = FQ( B_gain_min  + param_gain  * (B_gain_max  - B_gain_min) );
-        dsp_prop[2] = dsp_mul( drive, gain );
-        //dsp_prop[2] = FQ( B_gain_min  + param_gain  * (B_gain_max  - B_gain_min) );
+        int drive = FQ( B_drive_min + parameters[0] * (B_drive_max - B_drive_min) );
+        int gain  = FQ( B_gain_min  + parameters[3] * (B_gain_max  - B_gain_min) );
+        property[2] = dsp_mul( drive, gain );
+        //property[2] = FQ( B_gain_min  + param_gain  * (B_gain_max  - B_gain_min) );
         
-        dsp_prop[3] = FQ( B_bias_min  + param_bias2 * (B_bias_max  - B_bias_min) );
-        dsp_prop[4] = FQ( B_slew_min  + param_slew  * (B_slew_max  - B_slew_min) );
+        property[3] = FQ( B_bias_min  + parameters[7] * (B_bias_max  - B_bias_min) );
+        property[4] = FQ( B_slew_min  + parameters[4] * (B_slew_max  - B_slew_min) );
     }
     else if( state == 0x22 ) // Emphasis
     {
-        dsp_prop[0] = state; state = 0x23;
-        _calc_peaking( dsp_prop+1, B_emph_min, B_emph_max, param_emph );
+        property[0] = state; state = 0x23;
+        _calc_peaking( property+1, B_emph_min, B_emph_max, parameters[2] ); // Emphasis
     }
     else if( state == 0x23 ) // High Cut
     {
-        dsp_prop[0] = state; state = 0x31;
-        _calc_lowpass( dsp_prop+1, B_hicut_min, B_hicut_max, param_hicut );
+        property[0] = state; state = 0x31;
+        _calc_lowpass( property+1, B_hicut_min, B_hicut_max, parameters[5] );
     }
     else if( state == 0x31 ) // Block, Gain, Bias, Slew
     {
-        dsp_prop[0] = state; state = 0x32;
-        dsp_prop[1] = FQ( C_locut_min + param_locut * (C_locut_max - C_locut_min) );
-        dsp_prop[2] = FQ( C_gain_min  + param_gain  * (C_gain_max  - C_gain_min) );
-        dsp_prop[3] = FQ( C_bias_min  + param_bias3 * (C_bias_max  - C_bias_min) );
-        dsp_prop[4] = FQ( C_slew_min  + param_slew  * (C_slew_max  - C_slew_min) );
+        property[0] = state; state = 0x32;
+        property[1] = FQ( C_locut_min + parameters[1] * (C_locut_max - C_locut_min) );
+        property[2] = FQ( C_gain_min  + parameters[3] * (C_gain_max  - C_gain_min) );
+        property[3] = FQ( C_bias_min  + parameters[8] * (C_bias_max  - C_bias_min) );
+        property[4] = FQ( C_slew_min  + parameters[4] * (C_slew_max  - C_slew_min) );
     }
     else if( state == 0x32 ) // Emphasis
     {
-        dsp_prop[0] = state; state = 0x33;
-        _calc_peaking( dsp_prop+1, C_emph_min, C_emph_max, param_emph );
+        property[0] = state; state = 0x33;
+        _calc_peaking( property+1, C_emph_min, C_emph_max, parameters[2] ); // Emphasis
     }
     else if( state == 0x33 ) // High Cut
     {
-        dsp_prop[0] = state; state = 1;
-        _calc_lowpass( dsp_prop+1, C_hicut_min, C_hicut_max, param_hicut );
+        property[0] = state; state = 1;
+        _calc_lowpass( property+1, C_hicut_min, C_hicut_max, parameters[5] );
     }
 }
 
-void app_initialize( void )
+void audio_mixer( const int usb_output[32], int usb_input[32],
+                  const int i2s_output[32], int i2s_input[32],
+                  const int dsp_output[32], int dsp_input[32], const int property[6] )
+{
+}
+
+void dsp_initialize( void )
 {
     memset( _preamp_amp1_coeff, 0, sizeof(_preamp_amp1_coeff) );
     memset( _preamp_amp2_coeff, 0, sizeof(_preamp_amp2_coeff) );
@@ -270,33 +265,33 @@ void app_initialize( void )
     mix_fir_coeffs( _preamp_upsample_coeff, _preamp_dnsample_coeff, 72, 3 );
 }
 
-void app_thread1( int samples[32], const int property[6] )
+void dsp_thread1( int samples[32], const int property[6] )
 {
     _dsp_fir_up( samples, _preamp_upsample_coeff, _preamp_upsample_state, 72, 3 );
 }
 
-void app_thread2( int samples[32], const int property[6] )
+void dsp_thread2( int samples[32], const int property[6] )
 {
     samples[2] = _preamp_gain_model( samples[2], _preamp_amp1_coeff, _preamp_amp1_state );
     samples[1] = _preamp_gain_model( samples[1], _preamp_amp1_coeff, _preamp_amp1_state );
     samples[0] = _preamp_gain_model( samples[0], _preamp_amp1_coeff, _preamp_amp1_state );
 }
 
-void app_thread3( int samples[32], const int property[6] )
+void dsp_thread3( int samples[32], const int property[6] )
 {
     samples[2] = _preamp_gain_model( samples[2], _preamp_amp2_coeff, _preamp_amp2_state );
     samples[1] = _preamp_gain_model( samples[1], _preamp_amp2_coeff, _preamp_amp2_state );
     samples[0] = _preamp_gain_model( samples[0], _preamp_amp2_coeff, _preamp_amp2_state );
 }
 
-void app_thread4( int samples[32], const int property[6] )
+void dsp_thread4( int samples[32], const int property[6] )
 {
     samples[2] = _preamp_gain_model( samples[2], _preamp_amp3_coeff, _preamp_amp3_state );
     samples[1] = _preamp_gain_model( samples[1], _preamp_amp3_coeff, _preamp_amp3_state );
     samples[0] = _preamp_gain_model( samples[0], _preamp_amp3_coeff, _preamp_amp3_state );
 }
 
-void app_thread5( int samples[32], const int property[6] )
+void dsp_thread5( int samples[32], const int property[6] )
 {
     static int volume = 0;
     

@@ -3,7 +3,11 @@
 
 #include "xio.h"
 
-void flexfx_control( int preset, byte parameters[20], int dsp_prop[6] );
+void audio_control( const double parameters[20], int property[6]  );
+
+void audio_mixer( const int usb_output[32], int usb_input[32],
+                  const int i2s_output[32], int i2s_input[32],
+                  const int dsp_output[32], int dsp_input[32], const int property[6] );
 
 void flash_read ( int blocknum, byte buffer[4096] );
 void flash_write( int blocknum, const byte buffer[4096] );
@@ -72,7 +76,7 @@ extern int dsp_sine_14[16384], dsp_atan_14[16384], dsp_tanh_14[16384], dsp_nexp_
 // RR is the up-sampling/interpolation or down-sampling/decimation ratio
 // AH (high) and AL (low) form the 64-bit signed accumulator
 
-int  math_random ( int  gg, int seed );              // Random number, gg = previous value
+int  math_random ( int gg, int seed );               // Random number, gg = previous value
 int  math_sqr_x  ( int xx );                         // r = xx^0.5
 int  math_min_X  ( const int* xx, int nn );          // r = min(X[0:N-1])
 int  math_max_X  ( const int* xx, int nn );          // r = max(X[0:N-1])
