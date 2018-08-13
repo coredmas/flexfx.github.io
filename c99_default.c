@@ -26,7 +26,7 @@ void audio_control( const double parameters[20], int property[6] )
 }
 
 void audio_mixer( const int usb_output[32], int usb_input[32],
-                  const int i2s_output[32], int i2s_input[32],
+                  const int adc_output[32], int dac_input[32],
                   const int dsp_output[32], int dsp_input[32], const int property[6] )
 {
 	dac_input[0] = usb_output[0];

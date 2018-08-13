@@ -241,7 +241,7 @@ void dsp_thread5( int samples[32], const int property[6] )
     if( property[0] == 4 ) memcpy( _ampcab_tone_coeff+5, property+1, 2*sizeof(int) );
     if( property[0] == 5 ) ir_sel = property[1];
 
-    int idx = 0, ratio = FQ(0.0);
+    int ratio = FQ(0.0);
     if( ir_sel >= 0.00 && ir_sel < 0.10 ) { ir_num = 0; ratio = ir_sel - FQ(0.00); }
     if( ir_sel >= 0.10 && ir_sel < 0.20 ) { ir_num = 1; ratio = ir_sel - FQ(0.10); }
     if( ir_sel >= 0.20 && ir_sel < 0.30 ) { ir_num = 2; ratio = ir_sel - FQ(0.20); }
@@ -255,7 +255,7 @@ void dsp_thread5( int samples[32], const int property[6] )
     ratio = dsp_mul( 16*ratio, FQ(10.0/16.0) );
 
     int coef = _ampcab_ir_coeff[ir_num][ir_idx]/2 + _ampcab_ir_coeff[ir_num+1][ir_idx]/2;
-    int diff = coef - _ampcab_ir_coeff[0][ir_idx];
+    double diff = coef - _ampcab_ir_coeff[0][ir_idx];
     if( diff > +0.001 ) diff = +0.001; if( diff < -0.001 ) diff = -0.001;
     _ampcab_ir_coeff[0][ir_idx] += diff;
 

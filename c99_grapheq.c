@@ -32,7 +32,7 @@ void audio_control( const double parameters[20], int property[6] )
 	    param_band[ii] = parameters[ii];
 	    if( param_band[ii] > max_gain ) max_gain = param_band[ii];
 	}
-    double param_volume = (parameters[15];
+    double param_volume = parameters[15];
     double volume_min = 0.100, volume_max = 0.900;
     
     if( state == 1 ) // Volume, Gain

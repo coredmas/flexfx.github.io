@@ -149,7 +149,7 @@ void _calc_lowpass( int* coeffs, double min, double max, double val )
     calc_lowpass( coeffs, (min+val*(max-min)) / 576000.0, 0.500 );
 }
 
-void audio_control( const double parameters[20][20], int property[6] )
+void audio_control( const double parameters[20], int property[6] )
 {
     static int state = 1;
     

@@ -51,8 +51,8 @@ void dsp_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] )
         if( pots[0]>=0.50 && pots[0]<0.75 ) {idx1=2; idx2=3; ratio=(4*(pots[0]-0.50));}
         if( pots[0]>=0.75 && pots[0]<1.00 ) {idx1=3; idx2=4; ratio=(4*(pots[0]-0.75));}
 
-        double parameters[20] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
-        double targets[20] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+        double parameters[20] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+        double targets[20] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
         for( int ii = 0; ii < 20; ++ii ) {
             targets[ii] = _preset_data[20*idx1] * (1-ratio) + _preset_data[20*idx2] * ratio;
         }
