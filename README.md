@@ -379,8 +379,7 @@ FlexFX Properties
 ----------------------------------
 
 FlexFX applications can be controlled using FlexFX property exchanges over USB MIDI.
-A property is composed of a 16-bit IDC and five 32-bit data words.
-The 16-bit property ID must have a non-zero 16-bit value.
+A property is composed of a non-zero 16-bit ID and five 32-bit data words.
 
 An example property is shown below:
 
