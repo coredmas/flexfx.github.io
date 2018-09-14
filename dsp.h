@@ -1,16 +1,7 @@
-#ifndef INCLUDED_FLEXFX_H
-#define INCLUDED_FLEXFX_H
+#ifndef INCLUDED_DSP_H
+#define INCLUDED_DSP_H
 
 #include "xio.h"
-
-void audio_control( const double parameters[20], int property[6]  );
-
-void audio_mixer( const int usb_output[32], int usb_input[32],
-                  const int i2s_output[32], int i2s_input[32],
-                  const int dsp_output[32], int dsp_input[32], const int property[6] );
-
-void flash_read ( int blocknum, byte buffer[4096] );
-void flash_write( int blocknum, const byte buffer[4096] );
 
 // FQ converts Q28 fixed-point to floating point
 // QF converts floating-point to Q28 fixed-point

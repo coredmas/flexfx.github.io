@@ -4,7 +4,9 @@
 
 #include <math.h>
 #include <string.h>
-#include "flexfx.i"
+#include "dsp.h"
+#include "dsp.i"
+#include "c99.h"
 
 const char* product_name_string   = "C99 Delay";
 const char* usb_audio_output_name = "Delay Audio Out";
@@ -30,7 +32,7 @@ const char* control_labels[21] = { "C99 Delay",
                                    "Output Volume",
                                    "","","","","","","","","" };
 
-int _delay_dnsample_coeff[80] = // util_fir.py 0.036 0.125 1.0 108
+int _delay_dnsample_coeff[80] = // pass=0.036 stop=0.125 atten=108
 {
     FQ(+0.000001056),FQ(+0.000002210),FQ(+0.000001012),FQ(-0.000006332),FQ(-0.000023047),
     FQ(-0.000048192),FQ(-0.000072728),FQ(-0.000077788),FQ(-0.000038090),FQ(+0.000067758),
@@ -53,7 +55,7 @@ int _delay_upsample_coeff[80], _delay_dnsample_state[80], _delay_upsample_state[
 
 int _sine_lut[1024];
 
-void audio_control( const double parameters[20], int property[6] )
+void c99_control( const double parameters[20], int property[6] )
 {
 	static int state = 1;
 	
@@ -91,9 +93,9 @@ void audio_control( const double parameters[20], int property[6] )
     }
 }
 
-void audio_mixer( const int usb_output[32], int usb_input[32],
-                  const int adc_output[32], int dac_input[32],
-                  const int dsp_output[32], int dsp_input[32], const int property[6] )
+void c99_mixer( const int usb_output[32], int usb_input[32],
+                const int adc_output[32], int dac_input[32],
+                const int dsp_output[32], int dsp_input[32], const int property[6] )
 {
     dsp_input[1] = dsp_output[1];
 }
@@ -103,7 +105,7 @@ int _delay_base = 0, _delay_depth = 0, _delay_rate = 0, _delay_blend = 0;
 int _delay_diffuse = 0, _delay_fback = 0, _delay_volume = 0;
 int _delay_filter_coeff[5], _delay_filter_state[4];
 
-void dsp_initialize( void )
+void xio_initialize( void )
 {
     mix_fir_coeffs( _delay_upsample_coeff, _delay_dnsample_coeff, 80, 5 );
 }
@@ -118,7 +120,7 @@ input --+--> Delay ------> Modulation ----+--> Filter ---+--> Mixer --->
                +<----------Feedback-------+
 */
         
-void dsp_thread1( int samples[32], const int property[6] )
+void xio_thread1( int samples[32], const int property[6] )
 {
     static int delay_fifo[38400], insert = 0, remove = 0, phase = 0;
     static int samples_dn[5] = {0,0,0,0,0 }, samples_up[5] = {0,0,0,0,0 };
@@ -157,13 +159,13 @@ void dsp_thread1( int samples[32], const int property[6] )
     samples_up[2] = samples_up[1]; samples_up[1] = samples_up[0];
 }
 
-void dsp_thread2( int samples[32], const int property[6] )
+void xio_thread2( int samples[32], const int property[6] )
 {    
     //samples[1] = _delay_drive( samples[0], _delay_drive_coeff, _delay_drive_state );
     //samples[1] = samples[0];
 }
 
-void dsp_thread3( int samples[32], const int property[6] )
+void xio_thread3( int samples[32], const int property[6] )
 {
     int lfo, ii,ff, i1,i2,i3;
 
@@ -184,7 +186,7 @@ void dsp_thread3( int samples[32], const int property[6] )
     samples[2] = dsp_lagrange( ff, delay_fifo[i1], delay_fifo[i2], delay_fifo[i3] );
 }
 
-void dsp_thread4( int samples[32], const int property[6] )
+void xio_thread4( int samples[32], const int property[6] )
 {
     int lfo, ii,ff, i1,i2,i3;
     int rate = dsp_mul( _delay_rate, one_over_e );
@@ -206,7 +208,7 @@ void dsp_thread4( int samples[32], const int property[6] )
     samples[3] = dsp_lagrange( ff, delay_fifo[i1], delay_fifo[i2], delay_fifo[i3] );
 }
 
-void dsp_thread5( int samples[32], const int property[6] )
+void xio_thread5( int samples[32], const int property[6] )
 {
     //sample[1] = diffuse( sample[1], _delay_diffuse );
 

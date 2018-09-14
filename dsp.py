@@ -2,41 +2,41 @@ import os, sys
 
 if len(sys.argv) < 5:
 
-    print ""
-    print "Usage: python dsp.py fir <samp_freq> <pass_freq> <stop_freq> <-attenuation>"
-    print "       python dsp.py fir <samp_freq> <pass_freq> <stop_freq> <+tap_count>"
-    print ""
-    print "Usage: python dsp.py iir <type> <freq> <Q> <gain>"
-    print ""
-    print "       <type> filter type (notch, lowpass, highpass, allpass, bandpass,"
-    print "                           peaking, highshelf, or lowshelf"
-    print "       <freq> is cutoff frequency relative to Fs (0 <= freq < 0.5)"
-    print "       <Q> is the filter Q-factor"
-    print "       <gain> is the filter positive or negative gain in dB"
-    print ""
-    print "Usage: python dsp.py plot <datafile> time"
-    print "       python dsp.py plot <datafile> time [beg end]"
-    print "       python dsp.py plot <datafile> freq lin"
-    print "       python dsp.py plot <datafile> freq log"
-    print ""
-    print "       <datafile> Contains one sample value per line.  Each sample is an"
-    print "                  ASCII/HEX value (e.g. FFFF0001) representing a fixed-"
-    print "                  point sample value."
-    print "       time       Indicates that a time-domain plot should be shown"
-    print "       freq       Indicates that a frequency-domain plot should be shown"
-    print "       [beg end]  Optional; specifies the first and last sample in order to"
-    print "                  create a sub-set of data to be plotted"
-    print ""
-    print "       Create time-domain plot data in \'out.txt\' showing samples 100"
-    print "       through 300 ... bash$ python plot.py out.txt 100 300"
-    print ""
-    print "       Create frequency-domain plot data in \'out.txt\' showing the Y-axis"
-    print "       with a logarithmic scale ... bash$ python plot.py out.txt freq log"
-    print ""
-    print "Usage: python dsp.py wave file1 file2 ... fileN"
-    print ""
-    print "       Print floating point values of samples within a wave file."
-    print ""
+    print( "" )
+    print( "Usage: python dsp.py fir <samp_freq> <pass_freq> <stop_freq> <-attenuation>" )
+    print( "       python dsp.py fir <samp_freq> <pass_freq> <stop_freq> <+tap_count>" )
+    print( "" )
+    print( "Usage: python dsp.py iir <samp_freq> <type> <cutoff_freq> <Q> <gain>" )
+    print( "" )
+    print( "       <type> filter type (notch, lowpass, highpass, allpass, bandpass," )
+    print( "                           peaking, highshelf, or lowshelf" )
+    print( "       <freq> is cutoff frequency relative to Fs (0 <= freq < 0.5)" )
+    print( "       <Q> is the filter Q-factor" )
+    print( "       <gain> is the filter positive or negative gain in dB" )
+    print( "" )
+    print( "Usage: python dsp.py wave file1 file2 ... fileN" )
+    print( "" )
+    print( "       Print floating point values of samples within a wave file." )
+    print( "" )
+    print( "Usage: python dsp.py plot <datafile> time" )
+    print( "       python dsp.py plot <datafile> time [beg end]" )
+    print( "       python dsp.py plot <datafile> freq lin" )
+    print( "       python dsp.py plot <datafile> freq log" )
+    print( "" )
+    print( "       <datafile> Contains one sample value per line.  Each sample is an" )
+    print( "                  ASCII/HEX value (e.g. FFFF0001) representing a fixed-" )
+    print( "                  point sample value." )
+    print( "       time       Indicates that a time-domain plot should be shown" )
+    print( "       freq       Indicates that a frequency-domain plot should be shown" )
+    print( "       [beg end]  Optional; specifies the first and last sample in order to" )
+    print( "                  create a sub-set of data to be plotted" )
+    print( "" )
+    print( "       Create time-domain plot data in \'out.txt\' showing samples 100" )
+    print( "       through 300 ... bash$ python plot.py out.txt 100 300" )
+    print( "" )
+    print( "       Create frequency-domain plot data in \'out.txt\' showing the Y-axis" )
+    print( "       with a logarithmic scale ... bash$ python plot.py out.txt freq log" )
+    print( "" )
 
     exit(0)
 
@@ -116,7 +116,7 @@ def _make_biquad_notch( filter_freq, q_factor ):
 
 	plot_response( [b0,b1,b2], [a0,a1,a2], ymin=-60, ymax=6 )
 
-	print "FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f)" % (b0/a0,b1/a0,b2/a0,-a1/a0,-a2/a0)
+	print( "FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f)" % (b0/a0,b1/a0,b2/a0,-a1/a0,-a2/a0) )
 
 def _make_biquad_lowpass( filter_freq, q_factor ):
 
@@ -128,7 +128,7 @@ def _make_biquad_lowpass( filter_freq, q_factor ):
 
 	plot_response( [b0,b1,b2], [a0,a1,a2], ymin=-60, ymax=6 )
 
-	print "FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f)" % (b0/a0,b1/a0,b2/a0,-a1/a0,-a2/a0)
+	print( "FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f)" % (b0/a0,b1/a0,b2/a0,-a1/a0,-a2/a0) )
 
 def _make_biquad_highpass( filter_freq, q_factor ):
 
@@ -140,7 +140,7 @@ def _make_biquad_highpass( filter_freq, q_factor ):
 
 	plot_response( [b0,b1,b2], [a0,a1,a2], ymin=-60, ymax=6 )
 
-	print "FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f)" % (b0/a0,b1/a0,b2/a0,-a1/a0,-a2/a0)
+	print( "FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f)" % (b0/a0,b1/a0,b2/a0,-a1/a0,-a2/a0) )
 
 def _make_biquad_allpass( filter_freq, q_factor ):
 
@@ -152,7 +152,7 @@ def _make_biquad_allpass( filter_freq, q_factor ):
 
 	plot_response( [b0,b1,b2], [a0,a1,a2], ymin=-6, ymax=6 )
 
-	print "FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f)" % (b0/a0,b1/a0,b2/a0,-a1/a0,-a2/a0)
+	print( "FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f)" % (b0/a0,b1/a0,b2/a0,-a1/a0,-a2/a0) )
 
 from scipy.signal import butter, lfilter
 
@@ -191,7 +191,7 @@ def _make_biquad_bandpass( filter_freq, q_factor ):
     b0 = b[0]; b1 = b[1]; a0 = a[0]; a1 = a[1];
     plot_response( b, a )
 
-    print "FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f)" % (b0/a0,b1/a0,b2/a0,-a1/a0,-a2/a0)
+    print( "FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f)" % (b0/a0,b1/a0,b2/a0,-a1/a0,-a2/a0) )
 
 # gain can be + or -
 def _make_biquad_peaking( filter_freq, q_factor, gain_db ):
@@ -207,7 +207,7 @@ def _make_biquad_peaking( filter_freq, q_factor, gain_db ):
 	if gain_db  < 0: plot_response( [b0,b1,b2],[a0,a1,a2], ymin=-3+gain_db, ymax=3 )
 	if gain_db  > 0: plot_response( [b0,b1,b2],[a0,a1,a2], ymin=-3, ymax=3+gain_db )
 
-	print "FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f)" % (b0/a0,b1/a0,b2/a0,-a1/a0,-a2/a0)
+	print( "FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f)" % (b0/a0,b1/a0,b2/a0,-a1/a0,-a2/a0) )
 
 def _make_biquad_lowshelf( filter_freq, q_factor, gain_db ):
 
@@ -227,7 +227,7 @@ def _make_biquad_lowshelf( filter_freq, q_factor, gain_db ):
 	if gain_db  < 0: plot_response( [b0,b1,b2],[a0,a1,a2], ymin=-3+gain_db, ymax=3 )
 	if gain_db  > 0: plot_response( [b0,b1,b2],[a0,a1,a2], ymin=-3, ymax=3+gain_db )
 
-	print "FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f)" % (b0/a0,b1/a0,b2/a0,-a1/a0,-a2/a0)
+	print( "FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f)" % (b0/a0,b1/a0,b2/a0,-a1/a0,-a2/a0) )
 
 def _make_biquad_highshelf( filter_freq, q_factor, gain_db ):
 
@@ -247,7 +247,7 @@ def _make_biquad_highshelf( filter_freq, q_factor, gain_db ):
 	if gain_db  < 0: plot_response( [b0,b1,b2],[a0,a1,a2], ymin=-3+gain_db, ymax=3 )
 	if gain_db  > 0: plot_response( [b0,b1,b2],[a0,a1,a2], ymin=-3, ymax=3+gain_db )
 
-	print "FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f)" % (b0/a0,b1/a0,b2/a0,-a1/a0,-a2/a0)
+	print( "FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f)" % (b0/a0,b1/a0,b2/a0,-a1/a0,-a2/a0) )
 
 def _make_lowpass( filter_freq, q_factor ):
 
@@ -284,7 +284,7 @@ def _make_lowpass( filter_freq, q_factor ):
     
     plot_response( [B0,B1,B2,B3],[A0,A1,A2,A3] )
 
-    print "FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f)" % (B0/A0,B1/A0,B2/A0,B3/A0,-A1/A0,-A2/A0,-A3/A0)
+    print( "FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f),FQ(%+1.9f)" % (B0/A0,B1/A0,B2/A0,B3/A0,-A1/A0,-A2/A0,-A3/A0) )
 
 if sys.argv[1] == "iir":
 
@@ -295,11 +295,12 @@ if sys.argv[1] == "iir":
     np.seterr( all='ignore' )
 
     type = sys.argv[2]
-    freq = float( sys.argv[3] )
-    Q    = float( sys.argv[4] )
-    gain = float( sys.argv[5] )
+    fs   = float( sys.argv[3] )
+    freq = float( sys.argv[4] ) / fs
+    Q    = float( sys.argv[5] )
+    gain = float( sys.argv[6] )
 
-    if type == "lp":         _make_lowpass  ( freq, Q )
+    if type == "lp":         _make_lowpass         ( freq, Q )
     if type == "notch":      _make_biquad_notch    ( freq, Q )
     if type == "lowpass":    _make_biquad_lowpass  ( freq, Q )
     if type == "highpass":   _make_biquad_highpass ( freq, Q )
@@ -320,6 +321,84 @@ def find_range(f, x):
             lowermin = i + 1
             break
     return (lowermin, uppermin)
+
+def _assert( condition, message ):
+
+    if not condition:
+        print message
+        exit( 0 )
+
+def _parse_wave( wave_file ):
+
+    rate = 0; samples = None
+    (group_id,total_size,type_id) = struct.unpack( "<III", wave_file.read(12) )
+    _assert( group_id == 0x46464952, "Unknown File Format" ) # Signature for 'RIFF'
+    _assert( type_id  == 0x45564157, "Unknown File Format" ) # Signature for 'WAVE'
+    while True:
+        if total_size <= 8: break
+        data = wave_file.read(8)
+        if len(data) < 8: break;
+        (blockid,blocksz) = struct.unpack( "<II", data )
+        #print "WaveIn: BlockID=0x%04X BlockSize=%u" % (blockid,blocksz)
+        #print "WaveIn: ByteCount=%u" % (blocksz)
+        total_size -= 8
+        if blockid == 0x20746D66: # Signature for 'fmt'
+            if total_size <= 16: break
+            (format,channels,rate,thruput,align,width) = struct.unpack( "<HHIIHH", wave_file.read(16) )
+            #print "WaveIn: ByteCount=%u Channels=%u Rate=%u WordSize=%u" % (blocksz,channels,rate,width)
+            #print "WaveIn: Format=%u Alignment=%u" % (format,align)
+            total_size -= 16
+        elif blockid == 0x61746164: # Signature for 'data'
+            samples = [0] * (blocksz / (width/8))
+            count = 0
+            data = wave_file.read( blocksz )
+            if channels == 1:
+                while len(data) >= width/8:
+                    if width == 8:
+                        samples[count] = struct.unpack( "b", data[0:1] )[0] * 256 * 256 * 256
+                        samples[count]
+                        data = data[1:]
+                    if width == 16:
+                        samples[count]  = struct.unpack( "b", data[1:2] )[0] * 256 * 256 * 256
+                        samples[count] += struct.unpack( "B", data[0:1] )[0] * 256 * 256
+                        data = data[2:]
+                    if width == 24:
+                        samples[count]  = struct.unpack( "b", data[2:3] )[0] * 256 * 256 * 256
+                        samples[count] += struct.unpack( "B", data[1:2] )[0] * 256 * 256
+                        samples[count] += struct.unpack( "B", data[0:1] )[0] * 256
+                        data = data[3:]
+                    if width == 32:
+                        samples[count]  = struct.unpack( "b", data[3:4] )[0] * 256 * 256 * 256
+                        samples[count] += struct.unpack( "B", data[2:3] )[0] * 256 * 256
+                        samples[count] += struct.unpack( "B", data[1:2] )[0] * 256
+                        samples[count] += struct.unpack( "B", data[0:1] )[0]
+                        data = data[4:]
+                    count += 1
+            total_size -= blocksz
+    return (rate,samples)
+
+if sys.argv[1] == "wave":
+
+    data = []
+    count = 99999999
+
+    for name in sys.argv[2:]:
+
+        try: file = open( name, "rb" )
+        except IOError as err: file = None
+        _assert( file != None, "Unable to open file" )
+        if file != None:
+            (rate,samples) = _parse_wave( file )
+            if count > len(samples): count = len(samples)
+            data.append( samples )
+            file.close()
+
+    for row in range(0,count):
+        for col in range(0,len(data)):
+            #sys.stdout.write( "%08x " % (data[col][row] & 0xFFFFFFFF) )
+            val = float(data[col][row]) / (2 ** 31)
+            sys.stdout.write( "%+1.8f " % val )
+        sys.stdout.write( "\n" )
 
 if sys.argv[1] == "plot":
 
@@ -455,82 +534,3 @@ if sys.argv[1] == "plot":
         print( "SNR = %05.1fdB, THD+N = %04.1f%%" % \
                (20 * log10(total_rms) - 20 * log10(rms_flat), \
                THDN * 100 ))
-
-def _assert( condition, message ):
-
-    if not condition:
-        print message
-        exit( 0 )
-
-def _parse_wave( wave_file ):
-
-    rate = 0; samples = None
-    (group_id,total_size,type_id) = struct.unpack( "<III", wave_file.read(12) )
-    _assert( group_id == 0x46464952, "Unknown File Format" ) # Signature for 'RIFF'
-    _assert( type_id  == 0x45564157, "Unknown File Format" ) # Signature for 'WAVE'
-    while True:
-        if total_size <= 8: break
-        data = wave_file.read(8)
-        if len(data) < 8: break;
-        (blockid,blocksz) = struct.unpack( "<II", data )
-        #print "WaveIn: BlockID=0x%04X BlockSize=%u" % (blockid,blocksz)
-        #print "WaveIn: ByteCount=%u" % (blocksz)
-        total_size -= 8
-        if blockid == 0x20746D66: # Signature for 'fmt'
-            if total_size <= 16: break
-            (format,channels,rate,thruput,align,width) = struct.unpack( "<HHIIHH", wave_file.read(16) )
-            #print "WaveIn: ByteCount=%u Channels=%u Rate=%u WordSize=%u" % (blocksz,channels,rate,width)
-            #print "WaveIn: Format=%u Alignment=%u" % (format,align)
-            total_size -= 16
-        elif blockid == 0x61746164: # Signature for 'data'
-            samples = [0] * (blocksz / (width/8))
-            count = 0
-            data = wave_file.read( blocksz )
-            if channels == 1:
-                while len(data) >= width/8:
-                    if width == 8:
-                        samples[count] = struct.unpack( "b", data[0:1] )[0] * 256 * 256 * 256
-                        samples[count]
-                        data = data[1:]
-                    if width == 16:
-                        samples[count]  = struct.unpack( "b", data[1:2] )[0] * 256 * 256 * 256
-                        samples[count] += struct.unpack( "B", data[0:1] )[0] * 256 * 256
-                        data = data[2:]
-                    if width == 24:
-                        samples[count]  = struct.unpack( "b", data[2:3] )[0] * 256 * 256 * 256
-                        samples[count] += struct.unpack( "B", data[1:2] )[0] * 256 * 256
-                        samples[count] += struct.unpack( "B", data[0:1] )[0] * 256
-                        data = data[3:]
-                    if width == 32:
-                        samples[count]  = struct.unpack( "b", data[3:4] )[0] * 256 * 256 * 256
-                        samples[count] += struct.unpack( "B", data[2:3] )[0] * 256 * 256
-                        samples[count] += struct.unpack( "B", data[1:2] )[0] * 256
-                        samples[count] += struct.unpack( "B", data[0:1] )[0]
-                        data = data[4:]
-                    count += 1
-            total_size -= blocksz
-    return (rate,samples)
-
-if sys.argv[1] == "wave":
-
-    data = []
-    count = 99999999
-
-    for name in sys.argv[2:]:
-
-        try: file = open( name, "rb" )
-        except IOError as err: file = None
-        _assert( file != None, "Unable to open file" )
-        if file != None:
-            (rate,samples) = _parse_wave( file )
-            if count > len(samples): count = len(samples)
-            data.append( samples )
-            file.close()
-
-    for row in range(0,count):
-        for col in range(0,len(data)):
-            #sys.stdout.write( "%08x " % (data[col][row] & 0xFFFFFFFF) )
-            val = float(data[col][row]) / (2 ** 31)
-            sys.stdout.write( "%+1.8f " % val )
-        sys.stdout.write( "\n" )
-

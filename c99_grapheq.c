@@ -1,7 +1,8 @@
 #include <math.h>
 #include <string.h>
-#include "flexfx.h"
-#include "flexfx.i"
+#include "dsp.h"
+#include "dsp.i"
+#include "c99.h"
 
 const char* product_name_string   = "C99 Equalizer";
 const char* usb_audio_output_name = "GraphEQ Audio Out";
@@ -18,12 +19,15 @@ const int i2s_channel_count     = 2; // Channels per SDIN/SDOUT wire (2,4,or 8)
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 };
 
 const char* control_labels[21] = { "C99 Equalizer",
-                                   "01 - 56 Hz", "02 - 84 Hz", "03 - 126 Hz",
-                                   "04 - 190 Hz", "05 - 284 Hz", "06 - 427 Hz",
-                                   "07 - 640 Hz", "08 - 960 Hz", "Output Volume",
-                                   "","","","","","","","","","" };
+                                   "Band 01", "Band 02", "Band 03",
+                                   "Band 04", "Band 05", "Band 06",
+                                   "Band 07", "Band 08", "Band 09",
+                                   "Band 10", "Band 11", "Band 12",
+                                   "Band 13", "Band 14", "Band 15",
+                                   "Output Volume",
+                                   "", "", "", ""  };
 
-void audio_control( const double parameters[20], int property[6] )
+void c99_control( const double parameters[20], int property[6] )
 {
 	static int state = 1;
 	
@@ -51,15 +55,15 @@ void audio_control( const double parameters[20], int property[6] )
     }
 }
 
-void audio_mixer( const int usb_output[32], int usb_input[32],
-                  const int i2s_output[32], int i2s_input[32],
-                  const int dsp_output[32], int dsp_input[32], const int property[6] )
+void c99_mixer( const int usb_output[32], int usb_input[32],
+                const int adc_output[32], int dac_input[32],
+                const int dsp_output[32], int dsp_input[32], const int property[6] )
 {
 }
 
 int _grapheq_coeff[15*5], _grapheq_state[15*4];
 
-void dsp_initialize( void )
+void xio_initialize( void )
 {
     return;
     memset( _grapheq_coeff, 0, sizeof(_grapheq_coeff) );
@@ -68,7 +72,7 @@ void dsp_initialize( void )
     for( int ii = 0; ii < 15; ++ii ) _grapheq_coeff[5*ii] = FQ(+1.0);
 }
 
-void dsp_thread1( int samples[32], const int property[6] )
+void xio_thread1( int samples[32], const int property[6] )
 {
     return;
     static int volume = 0, gain = 0;
@@ -83,7 +87,7 @@ void dsp_thread1( int samples[32], const int property[6] )
     }
 }
 
-void dsp_thread2( int samples[32], const int property[6] ) {}
-void dsp_thread3( int samples[32], const int property[6] ) {}
-void dsp_thread4( int samples[32], const int property[6] ) {}
-void dsp_thread5( int samples[32], const int property[6] ) {}
+void xio_thread2( int samples[32], const int property[6] ) {}
+void xio_thread3( int samples[32], const int property[6] ) {}
+void xio_thread4( int samples[32], const int property[6] ) {}
+void xio_thread5( int samples[32], const int property[6] ) {}

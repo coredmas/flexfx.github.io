@@ -39,7 +39,7 @@ extern const char controller_script[];
 // propertys can be sent to DSP threads (by setting the DSP property ID to zero) at any time.
 // It's OK to use floating point calculations here as this thread is not a real-time audio thread.
 
-extern void dsp_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] );
+extern void xio_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] );
 
 // The mixer function is called once per audio sample and is used to route USB, I2S and DSP samples.
 // This function should only be used to route samples and for very basic DSP processing - not for
@@ -48,7 +48,7 @@ extern void dsp_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6]
 // should be performed using fixed-point math.
 // NOTE: IIR, FIR, and BiQuad coeff and state data *must* be declared non-static global!
 
-extern void dsp_mixer( const int usb_output[32], int usb_input[32],
+extern void xio_mixer( const int usb_output[32], int usb_input[32],
                        const int i2s_output[32], int i2s_input[32],
                        const int dsp_output[32], int dsp_input[32], const int property[6] );
 
@@ -60,32 +60,53 @@ extern void dsp_mixer( const int usb_output[32], int usb_input[32],
 // NOTE: IIR, FIR, and BiQuad coeff and state data *must* be declared non-static global!
 
 // Process samples and properties from the app_mixer function. Send results to stage 2.
-extern void dsp_thread1( int samples[32], const int property[6] );
+extern void xio_thread1( int samples[32], const int property[6] );
 // Process samples and properties from stage 1. Send results to stage 3.
-extern void dsp_thread2( int samples[32], const int property[6] );
+extern void xio_thread2( int samples[32], const int property[6] );
 // Process samples and properties from stage 2. Send results to stage 4.
-extern void dsp_thread3( int samples[32], const int property[6] );
+extern void xio_thread3( int samples[32], const int property[6] );
 // Process samples and properties from stage 3. Send results to stage 5.
-extern void dsp_thread4( int samples[32], const int property[6] );
+extern void xio_thread4( int samples[32], const int property[6] );
 // Process samples and properties from stage 4. Send results to the app_mixer function.
-extern void dsp_thread5( int samples[32], const int property[6] );
+extern void xio_thread5( int samples[32], const int property[6] );
 
 // On-board FLASH read write functions.
 
-void flash_read ( int blocknum, byte buffer[4096] );
-void flash_write( int blocknum, const byte buffer[4096] );
+void flash_read ( int page, byte data[256] );
+void flash_write( int page, const byte data[256] );
 
+unsigned timer_count( void );
 void timer_delay( int microseconds );
 
-// I2C functions for peripheral control (do not use these in real-time DSP threads).
+// Functions for peripheral control (*** do not use these in real-time DSP threads ***).
 
-void i2c_start( int speed );  // Set bit rate, assert an I2C start condition.
+void i2c_start( int speed );  // Set bit rate (bps), assert an I2C start condition.
 byte i2c_write( byte value ); // Write 8-bit data value.
 byte i2c_read ( void );       // Read 8-bit data value.
 void i2c_ack  ( byte ack );   // Assert the ACK/NACK bit after a read.
 void i2c_stop ( void );       // Assert an I2C stop condition.
 
-void port_set( int mask, int value ); // Write 0 or 1 to ports/pins indicated by 'mask'
-int  port_get( int mask );            // Read ports indicated by 'mask', set to HiZ state
+void spi_config  ( int speed );  // Set the SPI bit rate (bps).
+void spi_select  ( byte csel );  // Assert (csel==1) or de-select (csel==0) the chip select.
+byte spi_transfer( byte value ); // Write and read the next byte.
+
+void port_put( int mask, int value ); // Write 0 or 1 to ports/pins indicated by 'mask' where ...
+void port_set( int mask );            // ... each mask bit set to 1 specifies an action on that port ...
+void port_clr( int mask );            // ... and where mask bit pos 0 is port 0, pos 1 is port 1, etc.
+byte port_get( int mask );            // Read ports indicated by 'mask', set to HiZ state.
+
+void midi_send_start( void );      // Send MIDI start command to USB host.
+void midi_send_stop( void );       // Send MIDI stop command to USB host.
+void midi_send_beat( void );       // Send MIDI beat command to USB host.
+void midi_configure( double bpm ); // Enable (bpm>0) or disable (bpm<=0) MIDI beat clock.
+
+void serial_write( byte data ); // Write one byte to UART output
+byte serial_count( void );      // Return input FIFO data count
+byte serial_read ( void );      // Read one byte from UART input FIFO
+
+void log_chr( char val );
+void log_str( const char* text );
+void log_bin( const byte* data, int len );
+void log_hex( byte val );
 
 #endif

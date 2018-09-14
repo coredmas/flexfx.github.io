@@ -4,8 +4,9 @@
 
 #include <math.h>
 #include <string.h>
-#include "flexfx.h"
-#include "flexfx.i"
+#include "dsp.h"
+#include "dsp.i"
+#include "c99.h"
 
 const char* product_name_string   = "C99 Reverb";
 const char* usb_audio_output_name = "Reverb Audio Out";
@@ -25,7 +26,7 @@ const char* control_labels[11] = { "C99 Reverb",
                                    "","","","","","","","","",
                                    "Output Volume" };
 
-void audio_control( const double parameters[20], int property[6] )
+void c99_control( const double parameters[20], int property[6] )
 {
 	static int state = 1;
 
@@ -37,9 +38,9 @@ void audio_control( const double parameters[20], int property[6] )
     }
 }
 
-void audio_mixer( const int usb_output[32], int usb_input[32],
-                  const int i2s_output[32], int i2s_input[32],
-                  const int dsp_output[32], int dsp_input[32], const int property[6] )
+void c99_mixer( const int usb_output[32], int usb_input[32],
+                const int adc_output[32], int dac_input[32],
+                const int dsp_output[32], int dsp_input[32], const int property[6] )
 {
 }
 
@@ -79,7 +80,7 @@ inline int _allpass_filterR( int xx, int ii, int nn ) // yy[k] = xx[k] + g * xx[
     return yy;
 }
 
-void dsp_initialize( void )
+void xio_initialize( void )
 {
     memset( _comb_bufferL, 0, sizeof(_comb_bufferL) );
     memset( _comb_stateL,  0, sizeof(_comb_stateL) );
@@ -103,7 +104,7 @@ int _stereo_width   = FQ(0.2); // Parameter: Stereo width setting
 int _comb_damping   = FQ(0.2); // Parameter: Reflection damping factor (aka 'reflectivity')
 int _comb_feedbk    = FQ(0.2); // Parameter: Reflection feedback ratio (aka 'room size')
 
-void dsp_thread1( int samples[32], const int property[6] )
+void xio_thread1( int samples[32], const int property[6] )
 {
     static int index = 0; ++index; // Used to index into the sample FIFO delay buffer
     // Eight parallel comb filters ...
@@ -118,14 +119,14 @@ void dsp_thread1( int samples[32], const int property[6] )
     samples[2] = _allpass_filterL( samples[2], index, 3 );
 }
 
-void dsp_thread2( int samples[32], const int property[6] )
+void xio_thread2( int samples[32], const int property[6] )
 {
 }
 
-void dsp_thread3( int samples[32], const int property[6] ) {}
-void dsp_thread4( int samples[32], const int property[6] ) {}
+void xio_thread3( int samples[32], const int property[6] ) {}
+void xio_thread4( int samples[32], const int property[6] ) {}
 
-void dsp_thread5( int samples[32], const int property[6] )
+void xio_thread5( int samples[32], const int property[6] )
 {
     samples[0] = dsp_mul( samples[0], _reverb_volume );
 

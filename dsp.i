@@ -1,4 +1,4 @@
-#include "flexfx.h"
+#include "dsp.h"
 
 #define _dsp_mul( xx, yy ) \
 { \
@@ -219,46 +219,6 @@ static inline int _dsp_fir( int xx, const int* cc, int* ss, int nn )
         case  4: _fir_step0(ii,rr); break; \
     } \
 }
-
-// nn/rr is integer
-
-/*
-c0 c1 c2 c3 c4 c5 c6 c7 c8
-x0  0  0 s3  0  0 s6  0  0
-c0 c1 c2 c3 c4 c5 c6 c7 c8
- 0 x0  0  0 s3  0  0 s6  0
-c0 c1 c2 c3 c4 c5 c6 c7 c8
- 0  0 x0  0  0 s3  0  0 s6
-c0 c1 c2 c3 c4 c5 c6 c7 c8
-x1  0  0 x0  0  0 s3  0  0
-c0 c1 c2 c3 c4 c5 c6 c7 c8
- 0 x1  0  0 x0  0  0 s3  0
-c0 c1 c2 c3 c4 c5 c6 c7 c8
- 0  0 x1  0  0 x0  0  0 s3
-c0 c1 c2 c3 c4 c5 c6 c7 c8
-x2  0  0 x1  0  0 x0  0  0
-c0 c1 c2 c3 c4 c5 c6 c7 c8
- 0 x2  0  0 x1  0  0 x0  0
-c0 c1 c2 c3 c4 c5 c6 c7 c8
- 0  0 x2  0  0 x1  0  0 x0
-
-c0 c3 c6 c1 c4 c7 c2 c5 c8
-x2 x1 x0
-         x2 x1 x0
-                  x2 x1 x0
-
-
-y0 = c0 c1 c2 c3 c4 c5 c6 c7 c8
-     s2 s3 s4 s5 s6 s7 s8 s9 sA
-
-     c0 c1 c2 c3 c4 c5 c6 c7 c8
-     s1 s2 s3 s4 s5 s6 s7 s8 s9
-
-     c0 c1 c2 c3 c4 c5 c6 c7 c8
-     s0 s1 s2 s3 s4 s5 s6 s7 s8
-
-
-*/
 
 static inline void _dsp_fir_up( int* xx, const int* cc, int* ss, int nn, int rr )
 {

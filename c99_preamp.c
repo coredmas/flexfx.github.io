@@ -7,7 +7,9 @@
 
 #include <math.h>
 #include <string.h>
-#include "flexfx.i"
+#include "dsp.h"
+#include "dsp.i"
+#include "c99.h"
 
 const char* product_name_string   = "C99 Preamp";
 const char* usb_audio_output_name = "Preamp Audio Out";
@@ -149,7 +151,7 @@ void _calc_lowpass( int* coeffs, double min, double max, double val )
     calc_lowpass( coeffs, (min+val*(max-min)) / 576000.0, 0.500 );
 }
 
-void audio_control( const double parameters[20], int property[6] )
+void c99_control( const double parameters[20], int property[6] )
 {
     static int state = 1;
     
@@ -243,13 +245,13 @@ void audio_control( const double parameters[20], int property[6] )
     }
 }
 
-void audio_mixer( const int usb_output[32], int usb_input[32],
-                  const int i2s_output[32], int i2s_input[32],
-                  const int dsp_output[32], int dsp_input[32], const int property[6] )
+void c99_mixer( const int usb_output[32], int usb_input[32],
+                const int adc_output[32], int dac_input[32],
+                const int dsp_output[32], int dsp_input[32], const int property[6] )
 {
 }
 
-void dsp_initialize( void )
+void xio_initialize( void )
 {
     memset( _preamp_amp1_coeff, 0, sizeof(_preamp_amp1_coeff) );
     memset( _preamp_amp2_coeff, 0, sizeof(_preamp_amp2_coeff) );
@@ -265,33 +267,33 @@ void dsp_initialize( void )
     mix_fir_coeffs( _preamp_upsample_coeff, _preamp_dnsample_coeff, 72, 3 );
 }
 
-void dsp_thread1( int samples[32], const int property[6] )
+void xio_thread1( int samples[32], const int property[6] )
 {
     _dsp_fir_up( samples, _preamp_upsample_coeff, _preamp_upsample_state, 72, 3 );
 }
 
-void dsp_thread2( int samples[32], const int property[6] )
+void xio_thread2( int samples[32], const int property[6] )
 {
     samples[2] = _preamp_gain_model( samples[2], _preamp_amp1_coeff, _preamp_amp1_state );
     samples[1] = _preamp_gain_model( samples[1], _preamp_amp1_coeff, _preamp_amp1_state );
     samples[0] = _preamp_gain_model( samples[0], _preamp_amp1_coeff, _preamp_amp1_state );
 }
 
-void dsp_thread3( int samples[32], const int property[6] )
+void xio_thread3( int samples[32], const int property[6] )
 {
     samples[2] = _preamp_gain_model( samples[2], _preamp_amp2_coeff, _preamp_amp2_state );
     samples[1] = _preamp_gain_model( samples[1], _preamp_amp2_coeff, _preamp_amp2_state );
     samples[0] = _preamp_gain_model( samples[0], _preamp_amp2_coeff, _preamp_amp2_state );
 }
 
-void dsp_thread4( int samples[32], const int property[6] )
+void xio_thread4( int samples[32], const int property[6] )
 {
     samples[2] = _preamp_gain_model( samples[2], _preamp_amp3_coeff, _preamp_amp3_state );
     samples[1] = _preamp_gain_model( samples[1], _preamp_amp3_coeff, _preamp_amp3_state );
     samples[0] = _preamp_gain_model( samples[0], _preamp_amp3_coeff, _preamp_amp3_state );
 }
 
-void dsp_thread5( int samples[32], const int property[6] )
+void xio_thread5( int samples[32], const int property[6] )
 {
     static int volume = 0;
     

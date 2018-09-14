@@ -46,16 +46,13 @@ function ui_title( unit, name )
     hh += "</tr/tbody></table>";
  
     hh += "<table class='flexfx'><thead>";
-    hh += "<td class='preset' style='text-align:left !important;'>Parameter</td>";	
+    hh += "<tr><td style='text-align:left !important;'></td>";	
 	for( pp = 0; pp < 5; ++pp )
 	{
         var key = (unit<<16); var id = "preset"+(key+(pp<<8)).toString(16);
-        hh += "<td class='preset' id='"+id+"'>"+'Preset '+(pp+1)+"</td>";
-        ss += "$('"+id+"').onclick = function(e) {";
-        for( ii = 0; ii < 5; ++ii ) ss += "$('preset"+(key+(ii<<8)).toString(16)+"').innerHTML='Preset "+(ii+1)+"';";
-        ss += "$('"+id+"').innerHTML='[Preset "+(pp+1)+"]';";
-        ss += "_set_preset("+(key+(pp<<8))+");};";
+        hh += "<td class='___preset' id='preset"+id+"'>"+'00 '+"</td>";
     }
+    hh += "</tr>";
     hh += "</thead>";
    
 	return [hh,ss];
@@ -174,6 +171,10 @@ function _on_midi_connect( event )
         	unit = ++_unit_count;
             _midi_output_ports[unit] = port.value;
     }}
+    
+    //console.log(_unit_count);
+    //console.log(_port_list);
+    
     if( Object.keys(_port_list).length == _unit_count && _unit_count > 0 )
     {
         _on_midi_connect_done = 1;
@@ -231,7 +232,7 @@ function _on_midi_message( event )
 			{
 				progress = (1600.0 * _transfer_count[unit]) / _transfer_size[unit];
 				if( progress > 99 ) progress = 99;
-				$('dfu'+unit).innerHTML = progress.toPrecision(2) + "\% Complete";
+				$('dfu'+unit).innerHTML = progress.toPrecision(2) + "\% Complete";				
 			}
 			_transfer_count[unit] += 1;
 		}
@@ -241,7 +242,25 @@ function _on_midi_message( event )
 			var property = [(unit<<16)+0x1003,0,0,0,0,0];
 			_midi_output_ports[unit].send( _prop_to_midi( property ));
 			$('dfu'+unit).innerHTML = "Finished";
+			
+			//var elem = document.getElementById( 'page'+unit.toString(16) );
+			//elem.parentNode.removeChild( elem );
+			//_load_interface( unit );
+			
 		}
+    }
+    else if( (property[0] & 0xFF0F) == 0x2102)
+    {
+	    console.log( property[0].toString(16), property[1].toString(16) );
+	    var pp = 0;
+	    var key = (unit<<16); var id = "preset"+(key+(pp<<8)).toString(16);
+
+
+	    var key = unit << 16;
+	    var id = "preset"+((unit<<16).toString(16));
+	    console.log(key,id);
+	    
+
     }
     // 20nn - Read effect title (N=0) or label for parameter N (1 <= N <= 16)
     else if( (property[0] & 0xFF00) == 0x2000 )
@@ -261,24 +280,8 @@ function _on_midi_message( event )
             _midi_output_ports[unit].send( prop );
         }
     }
-    // 2100 - Read the current preset_num,volume,tone,preset,bypass settings
-    // 2102 - Notification of changes to preset_num,volume,tone,preset,bypass settings
-    else if( (property[0] & 0xFFFF) == 0x2100 || (property[0] & 0xFFFF) == 0x2102 )
-    {
-        var unit = (property[0] >> 16) & 15;
-        var preset = property[1];
-        var key = "preset" + ((unit<<16)+(preset<<8)).toString(16);
-        
-        //if( $(key) != undefined )
-        //{
-        //  _current_preset[unit] = property[1];
-        //  $(key).click();
-        //}
-        var prop = _prop_to_midi( [(unit<<16)+0x2200,0,0,0,0,0] );
-        _midi_output_ports[unit].send( prop );
-    }
-    // 22p0 - Read preset parameter values for preset P (0 <= P < 16)
-    else if( (property[0] & 0xFF0F) == 0x2200)
+    // 21p0 - Read preset parameter values for preset P (0 <= P < 16)
+    else if( (property[0] & 0xFF0F) == 0x2100)
     {
         var unit = (property[0] >> 16) & 15;
         var preset = (property[0] & 0x00F0) >> 4;
@@ -292,7 +295,7 @@ function _on_midi_message( event )
             params[4*ii+3] = (property[ii+1] >>  0) & 255;
         }
         _parameter_data[unit].push( params );
-
+        
         for( var ii = 0; ii < 20; ++ii )
         {
             var key = (unit<<16)+(preset<<8)+ii;
@@ -300,39 +303,39 @@ function _on_midi_message( event )
             $(key.toString(16)).value = params[ii];
         }        
         if( ++preset < 5 ) {
-            var prop = _prop_to_midi( [(unit<<16)+0x2200+(preset<<4),0,0,0,0,0] );
+            var prop = _prop_to_midi( [(unit<<16)+0x2100+(preset<<4),0,0,0,0,0] );
             _midi_output_ports[unit].send( prop );
         }
     }
 }
 
-// 2101 - Write the current preset_num and volume,tone,preset,bypass settings
-function _set_preset( key )
-{
-	var unit = (key>>16)&255, preset = (key>>8)&15;
-    var prop = [(unit<<16)+0x2101,preset,0,0,0,0];
-    _midi_output_ports[unit].send( _prop_to_midi( prop ));
-}
-
-// 22p1 - Write preset parameter values for preset P (0 <= P < 16)
+// 21p1 - Write preset parameter values for preset P (0 <= P < 16)
 function _update_param( key )
 {
 	var unit = (key>>16)&255, preset = (key>>8)&15, param = key&255;
     var data = _parameter_data[ preset ];
-
+    
 	_parameter_data[unit][preset][param] = parseInt($(key.toString(16)).value);
 
-    var prop = [(unit<<16)+0x2201+(preset<<4),0,0,0,0,0];
+    var prop = [(unit<<16)+0x2101+(preset<<4),0,0,0,0,0];
     var data = _parameter_data[unit][preset];
-
+    
     prop[1] = (data[ 0] << 24) + (data[ 1] << 16) + (data[ 2] << 8) + data[ 3];
     prop[2] = (data[ 4] << 24) + (data[ 5] << 16) + (data[ 6] << 8) + data[ 7];
     prop[3] = (data[ 8] << 24) + (data[ 9] << 16) + (data[10] << 8) + data[11];
     prop[4] = (data[12] << 24) + (data[13] << 16) + (data[14] << 8) + data[15];
     prop[5] = (data[16] << 24) + (data[17] << 16) + (data[18] << 8) + data[19];
-    
+
     _midi_output_ports[unit].send( _prop_to_midi( prop ));
 }
+
+// 2201 - Write the current preset_num and volume,tone,preset,bypass settings
+//function _set_preset( key )
+//{
+//	var unit = (key>>16)&255, preset = (key>>8)&15;
+//    var prop = [(unit<<16)+0x2201,preset,0,0,0,0];
+//    _midi_output_ports[unit].send( _prop_to_midi( prop ));
+//}
 
 function _move_interfaceL( unit )
 {
