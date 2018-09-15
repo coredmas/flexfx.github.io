@@ -1,3 +1,5 @@
+https://www.kickstarter.com/projects/689850781/flexfxtm-programmable-digital-audio-effects-platfo
+
 FlexFX&trade;
 ==================================
 
