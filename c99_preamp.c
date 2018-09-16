@@ -300,7 +300,7 @@ void xio_thread5( int samples[32], const int property[6] )
     _dsp_fir_dn( samples, _preamp_dnsample_coeff, _preamp_dnsample_state, 72, 3 ) ;
     
     samples[0] = dsp_mul( samples[0], volume );
-    samples[0] = dsp_mul( samples[0], FQ(0.2) ); // Compensate for preamp gain.
+    samples[0] = dsp_mul( samples[0], FQ(0.02) ); // Compensate for preamp gain.
 
     if( property[0] == 1 ) volume = property[1];
     

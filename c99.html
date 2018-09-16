@@ -49,8 +49,8 @@ function ui_title( unit, name )
     hh += "<tr><td style='text-align:left !important;'></td>";	
 	for( pp = 0; pp < 5; ++pp )
 	{
-        var key = (unit<<16); var id = "preset"+(key+(pp<<8)).toString(16);
-        hh += "<td class='___preset' id='preset"+id+"'>"+'00 '+"</td>";
+        var key = (unit<<16); var id = (key+(pp<<8)).toString(16);
+        hh += "<td class='___preset' id='preset"+id+"'>"+'00% '+"</td>";
     }
     hh += "</tr>";
     hh += "</thead>";
@@ -251,16 +251,25 @@ function _on_midi_message( event )
     }
     else if( (property[0] & 0xFF0F) == 0x2102)
     {
-	    console.log( property[0].toString(16), property[1].toString(16) );
-	    var pp = 0;
-	    var key = (unit<<16); var id = "preset"+(key+(pp<<8)).toString(16);
-
-
-	    var key = unit << 16;
-	    var id = "preset"+((unit<<16).toString(16));
-	    console.log(key,id);
-	    
-
+    	var r1,r2,r3,r4,r5, key, id;
+    	var knob = property[1];
+    	if(      knob < 100 ) { r1=100-knob; r2=knob; r3=0; r4=0; r5=0; }
+    	else if( knob < 200 ) { knob -= 100; r1=0; r2=100-knob; r3=knob; r4=0; r5=0; }
+    	else if( knob < 300 ) { knob -= 200; r1=0; r2=0; r3=100-knob; r4=knob; r5=0; }
+    	else if( knob < 400 ) { knob -= 300; r1=0; r2=0; r3=0; r4=100-knob; r5=knob; }
+    	
+    	if(r1>99)r1=99; if(r2>99)r2=99; if(r3>99)r3=99; if(r4>99)r4=99; if(r5>99)r5=99;
+    	
+	    key = (unit<<16); id = "preset"+(key+(0<<8)).toString(16);
+	    if( r1 < 10 ) $(id).innerHTML = "0"+r1+"%"; else $(id).innerHTML = r1+"%";
+	    key = (unit<<16); id = "preset"+(key+(1<<8)).toString(16);
+	    if( r2 < 10 ) $(id).innerHTML = "0"+r2+"%"; else $(id).innerHTML = r2+"%";
+	    key = (unit<<16); id = "preset"+(key+(2<<8)).toString(16);
+	    if( r3 < 10 ) $(id).innerHTML = "0"+r3+"%"; else $(id).innerHTML = r3+"%";
+	    key = (unit<<16); id = "preset"+(key+(3<<8)).toString(16);
+	    if( r4 < 10 ) $(id).innerHTML = "0"+r4+"%"; else $(id).innerHTML = r4+"%";
+	    key = (unit<<16); id = "preset"+(key+(4<<8)).toString(16);
+	    if( r5 < 10 ) $(id).innerHTML = "0"+r5+"%"; else $(id).innerHTML = r5+"%";
     }
     // 20nn - Read effect title (N=0) or label for parameter N (1 <= N <= 16)
     else if( (property[0] & 0xFF00) == 0x2000 )
