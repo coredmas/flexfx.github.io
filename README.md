@@ -127,7 +127,7 @@ extern const char controller_script[];
 // propertys can be sent to DSP threads (by setting the DSP property ID to zero) at any time.
 // It's OK to use floating point calculations here as this thread is not a real-time audio thread.
 
-extern void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] );
+extern void xio_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6] );
 
 // The mixer function is called once per audio sample and is used to route USB, I2S and DSP samples.
 // This function should only be used to route samples and for very basic DSP processing - not for
@@ -136,7 +136,7 @@ extern void app_control( const int rcv_prop[6], int snd_prop[6], int dsp_prop[6]
 // should be performed using fixed-point math.
 // NOTE: IIR, FIR, and BiQuad coeff and state data *must* be declared non-static global!
 
-extern void app_mixer( const int usb_output[32], int usb_input[32],
+extern void xio_mixer( const int usb_output[32], int usb_input[32],
                        const int i2s_output[32], int i2s_input[32],
                        const int dsp_output[32], int dsp_input[32], const int property[6] );
 
@@ -148,42 +148,49 @@ extern void app_mixer( const int usb_output[32], int usb_input[32],
 // NOTE: IIR, FIR, and BiQuad coeff and state data *must* be declared non-static global!
 
 // Process samples and properties from the app_mixer function. Send results to stage 2.
-extern void app_thread1( int samples[32], const int property[6] );
+extern void xio_thread1( int samples[32], const int property[6] );
 // Process samples and properties from stage 1. Send results to stage 3.
-extern void app_thread2( int samples[32], const int property[6] );
+extern void xio_thread2( int samples[32], const int property[6] );
 // Process samples and properties from stage 2. Send results to stage 4.
-extern void app_thread3( int samples[32], const int property[6] );
+extern void xio_thread3( int samples[32], const int property[6] );
 // Process samples and properties from stage 3. Send results to stage 5.
-extern void app_thread4( int samples[32], const int property[6] );
+extern void xio_thread4( int samples[32], const int property[6] );
 // Process samples and properties from stage 4. Send results to the app_mixer function.
-extern void app_thread5( int samples[32], const int property[6] );
+extern void xio_thread5( int samples[32], const int property[6] );
 
-// FLASH read write functions.
+// On-board FLASH read write functions.
 
-void flash_read ( int blocknum, byte buffer[4096] );
-void flash_write( int blocknum, const byte buffer[4096] );
+void flash_read ( int page, byte data[256] );
+void flash_write( int page, const byte data[256] );
 
+unsigned timer_count( void );
 void timer_delay( int microseconds );
 
-// I2C functions for peripheral control (do not use these in real-time DSP threads).
+// Functions for peripheral control (*** do not use these in real-time DSP threads ***).
 
-void i2c_start( int speed );  // Set bit rate, assert an I2C start condition.
+void i2c_start( int speed );  // Set bit rate (bps), assert an I2C start condition.
 byte i2c_write( byte value ); // Write 8-bit data value.
 byte i2c_read ( void );       // Read 8-bit data value.
 void i2c_ack  ( byte ack );   // Assert the ACK/NACK bit after a read.
 void i2c_stop ( void );       // Assert an I2C stop condition.
 
-void port_set( int mask, int value ); // Write 0 or 1 to ports/pins indicated by 'mask'
-int  port_get( int mask );            // Read ports indicated by 'mask', set to HiZ state
+void spi_config  ( int speed );  // Set the SPI bit rate (bps).
+void spi_select  ( byte csel );  // Assert (csel==1) or de-select (csel==0) the chip select.
+byte spi_transfer( byte value ); // Write and read the next byte.
+
+void port_put( int mask, int value ); // Write 0 or 1 to ports/pins indicated by 'mask' where ...
+void port_set( int mask );            // ... each mask bit set to 1 specifies an action on that port ...
+void port_clr( int mask );            // ... and where mask bit pos 0 is port 0, pos 1 is port 1, etc.
+byte port_get( int mask );            // Read ports indicated by 'mask', set to HiZ state.
 
 #endif
 ```
 
-FLEXFX.H
+DSP.H
 
 ```C
-#ifndef INCLUDED_FLEXFX_H
-#define INCLUDED_FLEXFX_H
+#ifndef INCLUDED_DSP_H
+#define INCLUDED_DSP_H
 
 #include "xio.h"
 
@@ -358,23 +365,23 @@ const int output_drive_type     = 0;     // 0 for instrument level, 1 for line l
 
 const int i2s_sync_word[8] = { 0xFFFFFFFF,0x00000000,0,0,0,0,0,0 }; // I2S WCLK values per slot
 
-void app_control( const int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
+void xio_control( const int rcv_prop[6], int usb_prop[6], int dsp_prop[6] )
 {
 }
 
-void app_mixer( const int usb_output[32], int usb_input[32],
+void xio_mixer( const int usb_output[32], int usb_input[32],
                 const int adc_output[32], int dac_input[32],
                 const int dsp_output[32], int dsp_input[32], const int property[6] )
 {
 }
 
-void app_initialize( void ) {}
+void xio_initialize( void ) {}
 
-void app_thread1( int samples[32], const int property[6] ) {}
-void app_thread2( int samples[32], const int property[6] ) {}
-void app_thread3( int samples[32], const int property[6] ) {}
-void app_thread4( int samples[32], const int property[6] ) {}
-void app_thread5( int samples[32], const int property[6] ) {}
+void xio_thread1( int samples[32], const int property[6] ) {}
+void xio_thread2( int samples[32], const int property[6] ) {}
+void xio_thread3( int samples[32], const int property[6] ) {}
+void xio_thread4( int samples[32], const int property[6] ) {}
+void xio_thread5( int samples[32], const int property[6] ) {}
 ```
 
 FlexFX Properties
@@ -402,21 +409,23 @@ For detailed information regarding the encapsulation of FlexFX properties within
 that's used to send/receive properties to FlexFX applications via USB.
 
 ```
-ID        DIRECTION        DESCRIPTION
-1xxx      Bidirectional    FlexFX default/built-in properties
-1000      Bidirectional    Identify the device, return ID (3DEGFLEX) and version numbers
-1001      Bidirectional    Begin firmware upgrade, echoed back to host
-1002      Bidirectional    Next 32 bytes of firmware image data, echoed
-1003      Host to Device   End firmware upgrade and reset (no USB property echo!)
-101t      Bidirectional    Return tile T's DSP processing loads (1 <= t <= 3);
+ID       DIRECTION        DESCRIPTION
 
-2xxx      Bidirectional    FlexFX/C99 HTML-configured effects applications properties
-20nn      Bidirectional    Read effect title (N=0) or label for parameter N (1 <= N <= 20)
-210p      Bidirectional    Read preset parameter values for preset P (0 <= P < 16)
-211p      Bidirectional    Write preset parameter values for preset P (0 <= P < 16)
+0x0001   Bidirectional    Identify the device, return ID (3DEGFLEX) and version numbers
+0x0002   Bidirectional    Begin firmware upgrade, echoed back to host
+0x0003   Bidirectional    Next 32 bytes of firmware image data, echoed
+0x0004   Host to Device   End firmware upgrade and reset (no USB property echo!)
+0x0005   Bidirectional    Return four knob positions and footswitch state
+0x0006   Bidirectional    Return the effect title string (up to 20 characters)
+0x0007   Bidirectional    Return a parameter label for parameter 1 (up to 20 characters)
+...
+0x001a   Bidirectional    Return a parameter label for parameter 20 (up to 20 characters)
+0x001b   Bidirectional    Read or write 20 parameters (0 for read, 1..99 to write) for preset #1
+...
+0x001f   Bidirectional    Read or write 20 parameters (0 for read, 1..99 to write) for preset #1
 ```
 
-#### FlexFX ID = 0x1000: Identify; return ID (3DEGFLEX) and versions
+#### FlexFX ID = 0x0001: Identify; return ID (3DEGFLEX) and versions
 
 ```
 USB host ---- [ 0x1000,    0,    0,    0,       0, 0 ] ---> Device
@@ -424,7 +433,7 @@ USB host <--- [ 0x1000, 3DEG, FLEX, serial_num, 0, 0 ] ---- Device
 ```
 The USB host can use this property to solicit information about that attached device and determine whether or not it is a FlexFX device.  The device will return the flexfx signature words, its serial number, and will echo property words #4 and #5.  Currently the HTML interfrace ('flexfx.html') uses words #4 and #5 to echo back unique ID's used to bind HTML web application instances to a particular USB-attached FlexFX device.
 
-#### FlexFX ID = 0x1001: Begin firmware upgrade
+#### FlexFX ID = 0x0002: Begin firmware upgrade
 
 ```
 USB host ---- [ 0x1001, 0, 0, 0, 0, 0 ] ---> Device
@@ -432,7 +441,7 @@ USB host <--- [ 0x1001, 0, 0, 0, 0, 0 ] ---- Device
 ```
 Open the FLASH device and erase it to begin the firmware upgrade process.
 
-#### FlexFX ID = 0x1002: Continue firmware upgrade
+#### FlexFX ID = 0x0003: Continue firmware upgrade
 
 ```
 USB host ---- [ 0x1002, data1, data2, data3, data4, data5 ] ---> Device
@@ -440,7 +449,7 @@ USB host <--- [ 0x1002, data1, data2, data3, data4, data5 ] ---- Device
 ```
 Write the next 40 bytes of firmware data to FLASH.
 
-#### FlexFX ID = 0x1003: End firmware upgrade
+#### FlexFX ID = 0x0004: End firmware upgrade
 
 ```
 USB host ---- [ 0x1003, 0, 0, 0, 0, 0 ] ---> Device
@@ -448,15 +457,7 @@ USB host <--- [ 0x1003, 0, 0, 0, 0, 0 ] ---- Device
 ```
 Close thge FLASH device and reboot to end the firmware upgrade process.
 
-#### FlexFX ID = 0x101t: Return tile T's DSP processing loads
-
-```
-USB host ---- [ 0x100t,     0,     0,     0,     0,     0 ] ---> Device  (t = 0)
-USB host <--- [ 0x1000, load1, load2, load3, load4, load5 ] ---- Device
-```
-Returns the current processing load for each of the five DSP threads.  Values returned are the number of clock ticks (100ns per tick) elapsed per single DSP thread execution pass.  Note that one execution pass occurs for each audio sample.  Therefore if the sampling frequency is 48 kHz then the maximum number of clock ticks allowable, to prevent audio sample underflow, would be 2083 ticks (100000000/48000).
-
-#### FlexFX ID = 0x20nn: Read effect title (N=0) or label for parameter N (1 <= N <= 20)
+#### FlexFX ID = 0x0005: Read effect title (N=0) or label for parameter N (1 <= N <= 20)
 
 ```
 USB host ---- [ 0x20nn,     0,     0,     0,     0,     0 ] ---> Device
@@ -468,7 +469,7 @@ Eeach line contains 20 bytes of text with each 32-bit property word (property[1]
 210p      Bidirectional    Read preset parameter values for preset P (0 <= P < 16)
 211p      Bidirectional    Write preset parameter values for preset P (0 <= P < 16)
 
-#### FlexFX ID = 0x210p: Read preset parameter values for preset P (0 <= P < 16)
+#### FlexFX ID = 0x0006 - 0x0019: Read preset parameter values for preset P (0 <= P < 16)
 
 ```
 USB host ---- [ 0x210p,           0,           0,            0,             0,             0 ] ---> Device
@@ -477,14 +478,14 @@ USB host <--- [ 0x210p, values[1:4], values[5:8], values[9:12], values[13:16], v
 
 Returns all parameter values for preset P.  Each parameter value ranges from 0 to 99.
 
-#### FlexFX ID = 0x210p: Write preset parameter values for preset P (0 <= P < 16)
+#### FlexFX ID = 0x1a: Write preset parameter values for preset P (0 <= P < 16)
 
 ```
 USB host ---- [ 0x211p, values[1:4], values[5:8], values[9:12], values[13:16], values[17:20] ] ---> Device
 USB host <--- [ 0x211p, values[1:4], values[5:8], values[9:12], values[13:16], values[17:20] ] ---- Device
 ```
 
-Writes/updates all parameter values for preset P.  Each parameter value ranges from 0 to 99.
+Writes/updates all parameter values for preset P.  Each parameter value ranges from 1 to 99.
 
 Programming Tools
 -------------------------------------
@@ -501,48 +502,6 @@ MIDI Input Devices:  0='FlexFX'
 ```
 
 #### Usage #2
-
-Indefinitely display properties being sent from the DSP board, enumerated as USB MIDI device #0, to the USB host (CRTL-C to terminate).  The first six columns are the 32-bit property ID and five property values printed in hex/ASCII.  The last five columns are the same five property values converted from Q28 fixed-point to floating point.  These rows are printed at a very high rate - as fast as Python can obtain the USB data over MIDI and print to the console. 
-```
-bash$ python xio.py 0
-FFFFFFFF  0478ee7b 08f1dcf7 0478ee7b 00dcd765 fd3f6eac  +0.27952 +0.55905 +0.27952 +0.05392 -0.17201
-FFFFFFFF  0472eb5b 08e5d6b6 0472eb5b 00f5625e fd3ef034  +0.27806 +0.55611 +0.27806 +0.05991 -0.17213
-FFFFFFFF  0472eb5b 08e5d6b6 0472eb5b 00f5625e fd3ef034  +0.27806 +0.55611 +0.27806 +0.05991 -0.17213
-FFFFFFFF  0478ee7b 08f1dcf7 0478ee7b 00dcd765 fd3f6eac  +0.27952 +0.55905 +0.27952 +0.05392 -0.17201
-...
-```
-This video shows the 'flexfx.py' script receiving properties from the DSP board and printing them to the console.
-For this example FlexFX firmware is capturing four potentiometer values, packaging them up into a property,
-and sending the property to the USB host (see code below).
-One of the pots is being turned back and fourth resulting in changes to the corresponding property value.
-https://raw.githubusercontent.com/markseel/flexfx_kit/master/flexfx.py.usage2.mp4
-```
-static void adc_read( double values[4] )
-{
-    byte ii, hi, lo, value;
-    i2c_start( 100000 ); // Set bit clock to 400 kHz and assert start condition.
-    i2c_write( 0x52+1 ); // Select I2C peripheral for Read.
-    for( ii = 0; ii < 4; ++ii ) {
-        hi = i2c_read(); i2c_ack(0); // Read low byte, assert ACK.
-        lo = i2c_read(); i2c_ack(ii==3); // Read high byte, assert ACK (NACK on last read).
-        value = (hi<<4) + (lo>>4); // Select correct value and store ADC sample.
-        values[hi>>4] = ((double)value)/256.0; // Convert from byte to double (0<=val<1.0).
-    }
-    i2c_stop();
-}
-void control( double parameters[20], int property[6] )
-{
-    // If outgoing USB or DSP properties are still use then come back later ...
-    if( usb_prop[0] != 0 || usb_prop[0] != 0 ) return;
-    // Read the potentiometers -- convert the values from float to Q28 using the FQ macro.
-    double values[4]; adc_read( values );
-    // Create property with three Q28 pot values to send to USB host
-    property[0] = 0x01010000; dsp_prop[4] = dsp_prop[5] = 0;
-    property[1] = FQ(values[0]); property[2] = FQ(values[1]); property[3] = FQ(values[2]);
-}
-```
-
-#### Usage #3
 
 Burn a custom firmware application to the DSP board's FLASH memory (board is enumerated as MIDI device #0).  This takes about 10 seconds.
 ```
