@@ -81,10 +81,16 @@ All one has to do then is add DSP code and any relevant custom property handling
 Each processing thread is allocated approximately 100 MIPS and executes once per audio cycle.
 All threads are executed once per audio cycle and therefore operate on USB and I2S sample data one audio frame at a time.
 
+Prebuilt Effects
+----------------------------------
+
+The FlexFX kit contains highly optimized effects for delay, overdrive, equalization, reverb, and cabinet simulation as part of the FlexFX C99 project. These effects are in source and binary (\*.bin) form and can be used for free on FlexFX boards.  All effects support full control over each effect's presets and parameter settings via FlexFX properties sent and received over USB/MIDI using the 'xio.py' script, 'c99.html' Google Chrome HTML interface, or any other
+application programmed to use USB/MIDI for FlexFX property data transfer.
+
 Programming Interface
 -----------------------------------------
 
-The 'xio.h' file defines the application interface for USB/I2S audio and MIDI applications while 'flexfx.h' defines DSP functions and helper functions for creating audio effects applications.
+The 'xio.h' file defines the application interface for USB/I2S audio and MIDI applications while 'dsp.i'/'dsp.h' define DSP macros/functions and helper functions for creating audio effects applications.
 
 XIO.H
 
@@ -345,10 +351,12 @@ void calc_tonestack( int cc[7], double gb, double gm, double gt, double vb, doub
 Minimal Application
 -----------------------------------------
 
-The application programmer only needs to add control and audip processing code to create a complete application.  The code below is a complete application.  Just add code to the 'app\_control', 'app\_mixer', and 'app\_thread' functions.
+The application programmer only needs to add control and audip processing code to create a complete application.  The code below is a complete application.  Just add code to the 'xio\_control', 'xio\_mixer', and 'xio\_thread' functions.
 
 ```C
 #include "xio.h"
+#include "dsp.i"
+#include "dsp.h"
 
 const char* product_name_string   = "Example";           // The product name
 const char* usb_audio_output_name = "Example Audio Out"; // USB audio output name
@@ -405,9 +413,6 @@ FlexFX properties are transfered via over USB/MIDI using MIDI SYSEX messages.
 The FlexFX framework handles parsing and rendering of MIDI SYSEX encapulated FlexFX data therefore the user
 application need not deal with MIDi SYSEX - the audio firmware only sees 16-bit ID and five 32-word property values.
 
-For detailed information regarding the encapsulation of FlexFX properties within MIDI SYSEX see the 'flexfx.py' script
-that's used to send/receive properties to FlexFX applications via USB.
-
 ```
 ID       DIRECTION        DESCRIPTION
 
@@ -428,40 +433,40 @@ ID       DIRECTION        DESCRIPTION
 #### FlexFX ID = 0x0001: Identify; return ID (3DEGFLEX) and versions
 
 ```
-USB host ---- [ 0x1000,    0,    0,    0,       0, 0 ] ---> Device
-USB host <--- [ 0x1000, 3DEG, FLEX, serial_num, 0, 0 ] ---- Device
+USB host ---- [ 0x0001,    0,    0,    0,       0, 0 ] ---> Device
+USB host <--- [ 0x0001, 3DEG, FLEX, serial_num, 0, 0 ] ---- Device
 ```
 The USB host can use this property to solicit information about that attached device and determine whether or not it is a FlexFX device.  The device will return the flexfx signature words, its serial number, and will echo property words #4 and #5.  Currently the HTML interfrace ('flexfx.html') uses words #4 and #5 to echo back unique ID's used to bind HTML web application instances to a particular USB-attached FlexFX device.
 
 #### FlexFX ID = 0x0002: Begin firmware upgrade
 
 ```
-USB host ---- [ 0x1001, 0, 0, 0, 0, 0 ] ---> Device
-USB host <--- [ 0x1001, 0, 0, 0, 0, 0 ] ---- Device
+USB host ---- [ 0x0002, 0, 0, 0, 0, 0 ] ---> Device
+USB host <--- [ 0x0002, 0, 0, 0, 0, 0 ] ---- Device
 ```
 Open the FLASH device and erase it to begin the firmware upgrade process.
 
 #### FlexFX ID = 0x0003: Continue firmware upgrade
 
 ```
-USB host ---- [ 0x1002, data1, data2, data3, data4, data5 ] ---> Device
-USB host <--- [ 0x1002, data1, data2, data3, data4, data5 ] ---- Device
+USB host ---- [ 0x0003, data1, data2, data3, data4, data5 ] ---> Device
+USB host <--- [ 0x0003, data1, data2, data3, data4, data5 ] ---- Device
 ```
 Write the next 40 bytes of firmware data to FLASH.
 
 #### FlexFX ID = 0x0004: End firmware upgrade
 
 ```
-USB host ---- [ 0x1003, 0, 0, 0, 0, 0 ] ---> Device
-USB host <--- [ 0x1003, 0, 0, 0, 0, 0 ] ---- Device
+USB host ---- [ 0x0004, 0, 0, 0, 0, 0 ] ---> Device
+USB host <--- [ 0x0004, 0, 0, 0, 0, 0 ] ---- Device
 ```
 Close thge FLASH device and reboot to end the firmware upgrade process.
 
 #### FlexFX ID = 0x0005: Read effect title (N=0) or label for parameter N (1 <= N <= 20)
 
 ```
-USB host ---- [ 0x20nn,     0,     0,     0,     0,     0 ] ---> Device
-USB host <--- [ 0x20nn, text1, text2, text3, text4, text5 ] ---- Device
+USB host ---- [ 0x0005,     0,     0,     0,     0,     0 ] ---> Device
+USB host <--- [ 0x0006, text1, text2, text3, text4, text5 ] ---- Device
 ```
 Returns the ASCII/text for the attached device's name and parameter labels.
 Eeach line contains 20 bytes of text with each 32-bit property word (property[1] ... property[5]) containing four 8-bit ASCII characters.
@@ -469,20 +474,22 @@ Eeach line contains 20 bytes of text with each 32-bit property word (property[1]
 210p      Bidirectional    Read preset parameter values for preset P (0 <= P < 16)
 211p      Bidirectional    Write preset parameter values for preset P (0 <= P < 16)
 
-#### FlexFX ID = 0x0006 - 0x0019: Read preset parameter values for preset P (0 <= P < 16)
+#### FlexFX ID = 0x0006 - 0x0019: Read preset parameter values
 
 ```
-USB host ---- [ 0x210p,           0,           0,            0,             0,             0 ] ---> Device
-USB host <--- [ 0x210p, values[1:4], values[5:8], values[9:12], values[13:16], values[17:20] ] ---- Device
+USB host ---- [ 0x0006,           0,           0,            0,             0,             0 ] ---> Device
+USB host <--- [ 0x0006, values[1:4], values[5:8], values[9:12], values[13:16], values[17:20] ] ---- Device
 ```
 
 Returns all parameter values for preset P.  Each parameter value ranges from 0 to 99.
 
-#### FlexFX ID = 0x1a: Write preset parameter values for preset P (0 <= P < 16)
+#### FlexFX ID = 0x1a: Write preset parameter values for preset
 
 ```
-USB host ---- [ 0x211p, values[1:4], values[5:8], values[9:12], values[13:16], values[17:20] ] ---> Device
-USB host <--- [ 0x211p, values[1:4], values[5:8], values[9:12], values[13:16], values[17:20] ] ---- Device
+USB host ---- [ 0x0006, values[1:4], values[5:8], values[9:12], values[13:16], values[17:20] ] ---> Device
+USB host <--- [ 0x0006, values[1:4], values[5:8], values[9:12], values[13:16], values[17:20] ] ---- Device
+
+where 1 <= value <= 99
 ```
 
 Writes/updates all parameter values for preset P.  Each parameter value ranges from 1 to 99.
@@ -512,7 +519,7 @@ bash$ python xio.py 0 c99_cabsim.bin
 Design Tools
 --------------------------------
 
-There are four Python scripts to aid with algorithm and filter design.  The FIR and IIR design scripts require that the Python packeges 'scipy' and 'matplotlib' are installed.
+The 'dsp.py' Python script has functions to aid with algorithm and filter design.  The FIR and IIR related functions require that the Python packeges 'scipy' and 'matplotlib' are installed.
 
 #### FIR Filter Design Script
 
@@ -620,9 +627,3 @@ bash$ python dsp.py plot output.txt freq log
 bash$ python dsp.py plot output.txt time 0 150
 ```
 ![alt tag](https://raw.githubusercontent.com/markseel/flexfx_kit/master/util_plot.png)
-
-Prebuilt Effects
-----------------------------------
-
-The FlexFX kit contains highly optimized effects for delay, overdrive, equalization, reverb, and cabinet simulation as part of the FlexFX C99 project. These effects are in source and binary (\*.bin) form and can be used for free on FlexFX boards.  All effects support full control over each effect's presets and parameter settings via FlexFX properties sent and received over USB/MIDI using the 'xio.py' script, 'flexfx.html' Google Chrome HTML interface, or any other
-application programmed to use USB/MIDI for FlexFX property data transfer.
